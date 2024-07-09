@@ -1,19 +1,21 @@
 # pragma version 0.3.10
 # pragma optimize gas
 # pragma evm-version paris
-# (c) Curve.Fi, 2020-2023
+
+version: public(constant(String[8])) = "2.1.0"
+
+# (c) Curve.Fi, 2020-2024
 # AMM Math for 2-coin Curve Cryptoswap Pools
 #
 # Unless otherwise agreed on, only contracts owned by Curve DAO or
 # Swiss Stake GmbH are allowed to call this contract.
 
 """
-@title CurveTwocryptoMathOptimized
+@title CurveTwocryptoMath
 @author Curve.Fi
-@license Copyright (c) Curve.Fi, 2020-2023 - all rights reserved
+@license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice Curve AMM Math for 2 unpegged assets (e.g. ETH <> USD).
 """
-version: public(constant(String[8])) = "2.1.0"
 
 N_COINS: constant(uint256) = 2
 A_MULTIPLIER: constant(uint256) = 10000

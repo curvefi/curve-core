@@ -1,10 +1,13 @@
 # pragma version 0.3.10
 # pragma optimize codesize
 # pragma evm-version paris
+
+version: public(constant(String[8])) = "7.0.0"
+
 """
 @title CurveStableSwapMetaNG
 @author Curve.Fi
-@license Copyright (c) Curve.Fi, 2020-2023 - all rights reserved
+@license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice Stableswap Metapool implementation for 2 coins. Supports pegged assets.
 @dev Metapools are pools where the coin on index 1 is a liquidity pool token
      of another pool. This exposes methods such as exchange_underlying, which
@@ -267,7 +270,6 @@ ORACLE_BIT_MASK: constant(uint256) = (2**32 - 1) * 256**28
 name: public(immutable(String[64]))
 symbol: public(immutable(String[32]))
 decimals: public(constant(uint8)) = 18
-version: public(constant(String[8])) = "7.0.0"
 
 balanceOf: public(HashMap[address, uint256])
 allowance: public(HashMap[address, HashMap[address, uint256]])

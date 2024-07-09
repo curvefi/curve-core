@@ -1,15 +1,15 @@
 # @version 0.3.10
+# pragma evm-version paris
+
+version: public(constant(String[8])) = "1.1.0"  # ng pools
 
 """
 @title CurveRouter
 @author Curve.Fi
-@license Copyright (c) Curve.Fi, 2020-2023 - all rights reserved
+@license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice Performs up to 5 swaps in a single transaction
         Can do estimations with get_dy and get_dx
 """
-
-version: public(constant(String[8])) = "1.1.0"  # ng pools
-
 
 from vyper.interfaces import ERC20
 
