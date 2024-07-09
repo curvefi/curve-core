@@ -14,6 +14,9 @@
 @license Copyright (c) Curve.Fi, 2020-2023 - all rights reserved
 @notice Curve AMM Math for 3 unpegged assets (e.g. ETH, BTC, USD).
 """
+version: public(constant(String[8])) = "2.0.0"
+
+# ----------------------------------------------------------------------------
 
 N_COINS: constant(uint256) = 3
 A_MULTIPLIER: constant(uint256) = 10000
@@ -23,8 +26,6 @@ MAX_GAMMA: constant(uint256) = 5 * 10**16
 
 MIN_A: constant(uint256) = N_COINS**N_COINS * A_MULTIPLIER / 100
 MAX_A: constant(uint256) = N_COINS**N_COINS * A_MULTIPLIER * 1000
-
-version: public(constant(String[8])) = "v2.0.0"
 
 
 # ------------------------ AMM math functions --------------------------------
