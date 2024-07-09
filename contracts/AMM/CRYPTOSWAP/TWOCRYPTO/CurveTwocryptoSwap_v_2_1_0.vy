@@ -8,6 +8,9 @@
 @notice A Curve AMM pool for 2 unpegged assets (e.g. WETH, USD).
 @dev All prices in the AMM are with respect to the first token in the pool.
 """
+version: public(constant(String[8])) = "2.1.0"
+
+# ----------------------------------------------------------------------------
 
 from vyper.interfaces import ERC20
 implements: ERC20  # <--------------------- AMM contract is also the LP token.
@@ -100,7 +103,6 @@ event NewParameters:
     allowed_extra_profit: uint256
     adjustment_step: uint256
     ma_time: uint256
-    xcp_ma_time: uint256
 
 event RampAgamma:
     initial_A: uint256
@@ -132,12 +134,9 @@ factory: public(immutable(Factory))
 
 cached_price_scale: uint256  # <------------------------ Internal price scale.
 cached_price_oracle: uint256  # <------- Price target given by moving average.
-cached_xcp_oracle: uint256  # <----------- EMA of totalSupply * virtual_price.
 
 last_prices: public(uint256)
 last_timestamp: public(uint256)    # idx 0 is for prices, idx 1 is for xcp.
-last_xcp: public(uint256)
-xcp_ma_time: public(uint256)
 
 initial_A_gamma: public(uint256)
 initial_A_gamma_time: public(uint256)
@@ -183,14 +182,13 @@ MIN_A: constant(uint256) = N_COINS**N_COINS * A_MULTIPLIER / 10
 MAX_A: constant(uint256) = N_COINS**N_COINS * A_MULTIPLIER * 1000
 MAX_A_CHANGE: constant(uint256) = 10
 MIN_GAMMA: constant(uint256) = 10**10
-MAX_GAMMA: constant(uint256) = 5 * 10**16
+MAX_GAMMA: constant(uint256) = 199 * 10**15 # 1.99 * 10**17
 
 # ----------------------- ERC20 Specific vars --------------------------------
 
 name: public(immutable(String[64]))
 symbol: public(immutable(String[32]))
 decimals: public(constant(uint8)) = 18
-version: public(constant(String[8])) = "v2.0.0"
 
 balanceOf: public(HashMap[address, uint256])
 allowance: public(HashMap[address, HashMap[address, uint256]])
@@ -258,9 +256,8 @@ def __init__(
     self.cached_price_scale = initial_price
     self.cached_price_oracle = initial_price
     self.last_prices = initial_price
-    self.last_timestamp = self._pack_2(block.timestamp, block.timestamp)
+    self.last_timestamp = block.timestamp
     self.xcp_profit_a = 10**18
-    self.xcp_ma_time = 62324  # <--------- 12 hours default on contract start.
 
     #         Cache DOMAIN_SEPARATOR. If chain.id is not CACHED_CHAIN_ID, then
     #     DOMAIN_SEPARATOR will be re-calculated each time `permit` is called.
@@ -558,9 +555,6 @@ def add_liquidity(
         self.xcp_profit = 10**18
         self.xcp_profit_a = 10**18
 
-        # Initialise xcp oracle here:
-        self.cached_xcp_oracle = d_token  # <--- virtual_price * totalSupply / 10**18
-
         self.mint(receiver, d_token)
 
     assert d_token >= min_mint_amount, "Slippage"
@@ -640,38 +634,6 @@ def remove_liquidity(
         self._transfer_out(i, withdraw_amounts[i], receiver)
 
     log RemoveLiquidity(msg.sender, withdraw_amounts, total_supply - _amount)
-
-    # --------------------------- Upkeep xcp oracle --------------------------
-
-    # Update xcp since liquidity was removed:
-    xp: uint256[N_COINS] = self.xp(self.balances, self.cached_price_scale)
-    last_xcp: uint256 = isqrt(xp[0] * xp[1])  # <----------- Cache it for now.
-
-    last_timestamp: uint256[2] = self._unpack_2(self.last_timestamp)
-    if last_timestamp[1] < block.timestamp:
-
-        cached_xcp_oracle: uint256 = self.cached_xcp_oracle
-        alpha: uint256 = MATH.wad_exp(
-            -convert(
-                unsafe_div(
-                    unsafe_sub(block.timestamp, last_timestamp[1]) * 10**18,
-                    self.xcp_ma_time  # <---------- xcp ma time has is longer.
-                ),
-                int256,
-            )
-        )
-
-        self.cached_xcp_oracle = unsafe_div(
-            last_xcp * (10**18 - alpha) + cached_xcp_oracle * alpha,
-            10**18
-        )
-        last_timestamp[1] = block.timestamp
-
-        # Pack and store timestamps:
-        self.last_timestamp = self._pack_2(last_timestamp[0], last_timestamp[1])
-
-    # Store last xcp
-    self.last_xcp = last_xcp
 
     return withdraw_amounts
 
@@ -880,11 +842,11 @@ def tweak_price(
     old_xcp_profit: uint256 = self.xcp_profit
     old_virtual_price: uint256 = self.virtual_price
 
-    # ----------------------- Update Oracles if needed -----------------------
+    # ------------------ Update Price Oracle if needed -----------------------
 
-    last_timestamp: uint256[2] = self._unpack_2(self.last_timestamp)
+    last_timestamp: uint256 = self.last_timestamp
     alpha: uint256 = 0
-    if last_timestamp[0] < block.timestamp:  # 0th index is for price_oracle.
+    if last_timestamp < block.timestamp:  # 0th index is for price_oracle.
 
         #   The moving average price oracle is calculated using the last_price
         #      of the trade at the previous block, and the price oracle logged
@@ -895,7 +857,7 @@ def tweak_price(
         alpha = MATH.wad_exp(
             -convert(
                 unsafe_div(
-                    unsafe_sub(block.timestamp, last_timestamp[0]) * 10**18,
+                    unsafe_sub(block.timestamp, last_timestamp) * 10**18,
                     rebalancing_params[2]  # <----------------------- ma_time.
                 ),
                 int256,
@@ -913,32 +875,7 @@ def tweak_price(
         )
 
         self.cached_price_oracle = price_oracle
-        last_timestamp[0] = block.timestamp
-
-    # ----------------------------------------------------- Update xcp oracle.
-
-    if last_timestamp[1] < block.timestamp:
-
-        cached_xcp_oracle: uint256 = self.cached_xcp_oracle
-        alpha = MATH.wad_exp(
-            -convert(
-                unsafe_div(
-                    unsafe_sub(block.timestamp, last_timestamp[1]) * 10**18,
-                    self.xcp_ma_time  # <---------- xcp ma time has is longer.
-                ),
-                int256,
-            )
-        )
-
-        self.cached_xcp_oracle = unsafe_div(
-            self.last_xcp * (10**18 - alpha) + cached_xcp_oracle * alpha,
-            10**18
-        )
-
-        # Pack and store timestamps:
-        last_timestamp[1] = block.timestamp
-
-    self.last_timestamp = self._pack_2(last_timestamp[0], last_timestamp[1])
+        self.last_timestamp = block.timestamp
 
     #  `price_oracle` is used further on to calculate its vector distance from
     # price_scale. This distance is used to calculate the amount of adjustment
@@ -982,11 +919,8 @@ def tweak_price(
         #         ensure new virtual_price is not less than old virtual_price,
         #                                        else the pool suffers a loss.
         if self.future_A_gamma_time < block.timestamp:
-            assert virtual_price > old_virtual_price, "Loss"
-
-        # -------------------------- Cache last_xcp --------------------------
-
-        self.last_xcp = xcp  # geometric_mean(D * price_scale)
+            # this usually reverts when withdrawing a very small amount of LP tokens
+            assert virtual_price > old_virtual_price # dev: virtual price decreased
 
     self.xcp_profit = xcp_profit
 
@@ -1032,10 +966,6 @@ def tweak_price(
 
             # ------------------------------------------ Update D with new xp.
             D: uint256 = MATH.newton_D(A_gamma[0], A_gamma[1], xp, 0)
-
-            for k in range(N_COINS):
-                frac: uint256 = xp[k] * 10**18 / D  # <----- Check validity of
-                assert (frac > 10**16 - 1) and (frac < 10**20 + 1)  #   p_new.
 
             # ------------------------------------- Convert xp to real prices.
             xp = [
@@ -1531,7 +1461,7 @@ def internal_price_oracle() -> uint256:
     """
     price_oracle: uint256 = self.cached_price_oracle
     price_scale: uint256 = self.cached_price_scale
-    last_prices_timestamp: uint256 = self._unpack_2(self.last_timestamp)[0]
+    last_prices_timestamp: uint256 = self.last_timestamp
 
     if last_prices_timestamp < block.timestamp:  # <------------ Update moving
         #                                                   average if needed.
@@ -1660,41 +1590,6 @@ def price_oracle() -> uint256:
     @return uint256 Price oracle value of kth coin.
     """
     return self.internal_price_oracle()
-
-
-@external
-@view
-@nonreentrant("lock")
-def xcp_oracle() -> uint256:
-    """
-    @notice Returns the oracle value for xcp.
-    @dev The oracle is an exponential moving average, with a periodicity
-         determined by `self.xcp_ma_time`.
-         `TVL` is xcp, calculated as either:
-            1. virtual_price * total_supply, OR
-            2. self.get_xcp(...), OR
-            3. MATH.geometric_mean(xp)
-    @return uint256 Oracle value of xcp.
-    """
-
-    last_prices_timestamp: uint256 = self._unpack_2(self.last_timestamp)[1]
-    cached_xcp_oracle: uint256 = self.cached_xcp_oracle
-
-    if last_prices_timestamp < block.timestamp:
-
-        alpha: uint256 = MATH.wad_exp(
-            -convert(
-                unsafe_div(
-                    unsafe_sub(block.timestamp, last_prices_timestamp) * 10**18,
-                    self.xcp_ma_time
-                ),
-                int256,
-            )
-        )
-
-        return (self.last_xcp * (10**18 - alpha) + cached_xcp_oracle * alpha) / 10**18
-
-    return cached_xcp_oracle
 
 
 @external
@@ -1884,7 +1779,7 @@ def ramp_A_gamma(
     @param future_time The timestamp at which the ramping will end.
     """
     assert msg.sender == factory.admin()  # dev: only owner
-    assert block.timestamp > self.initial_A_gamma_time + (MIN_RAMP_TIME - 1)  # dev: ramp undergoing
+    assert block.timestamp > self.future_A_gamma_time # dev: ramp undergoing
     assert future_time > block.timestamp + MIN_RAMP_TIME - 1  # dev: insufficient time
 
     A_gamma: uint256[2] = self._A_gamma()
@@ -1897,12 +1792,12 @@ def ramp_A_gamma(
     assert future_gamma < MAX_GAMMA + 1
 
     ratio: uint256 = 10**18 * future_A / A_gamma[0]
-    assert ratio < 10**18 * MAX_A_CHANGE + 1
-    assert ratio > 10**18 / MAX_A_CHANGE - 1
+    assert ratio < 10**18 * MAX_A_CHANGE + 1 # dev: A change too high
+    assert ratio > 10**18 / MAX_A_CHANGE - 1 # dev: A change too low
 
     ratio = 10**18 * future_gamma / A_gamma[1]
-    assert ratio < 10**18 * MAX_A_CHANGE + 1
-    assert ratio > 10**18 / MAX_A_CHANGE - 1
+    assert ratio < 10**18 * MAX_A_CHANGE + 1 # dev: gamma change too high
+    assert ratio > 10**18 / MAX_A_CHANGE - 1 # dev: gamma change too low
 
     self.initial_A_gamma = initial_A_gamma
     self.initial_A_gamma_time = block.timestamp
@@ -1952,7 +1847,6 @@ def apply_new_parameters(
     _new_allowed_extra_profit: uint256,
     _new_adjustment_step: uint256,
     _new_ma_time: uint256,
-    _new_xcp_ma_time: uint256,
 ):
     """
     @notice Commit new parameters.
@@ -1963,7 +1857,6 @@ def apply_new_parameters(
     @param _new_allowed_extra_profit The new allowed extra profit.
     @param _new_adjustment_step The new adjustment step.
     @param _new_ma_time The new ma time. ma_time is time_in_seconds/ln(2).
-    @param _new_xcp_ma_time The new ma time for xcp oracle.
     """
     assert msg.sender == factory.admin()  # dev: only owner
 
@@ -2014,14 +1907,6 @@ def apply_new_parameters(
         [new_allowed_extra_profit, new_adjustment_step, new_ma_time]
     )
 
-    # Set xcp oracle moving average window time:
-    new_xcp_ma_time: uint256 = _new_xcp_ma_time
-    if new_xcp_ma_time < 872542:
-        assert new_xcp_ma_time > 86  # dev: xcp MA time should be longer than 60/ln(2)
-    else:
-        new_xcp_ma_time = self.xcp_ma_time
-    self.xcp_ma_time = new_xcp_ma_time
-
     # ---------------------------------- LOG ---------------------------------
 
     log NewParameters(
@@ -2031,5 +1916,4 @@ def apply_new_parameters(
         new_allowed_extra_profit,
         new_adjustment_step,
         new_ma_time,
-        _new_xcp_ma_time,
     )

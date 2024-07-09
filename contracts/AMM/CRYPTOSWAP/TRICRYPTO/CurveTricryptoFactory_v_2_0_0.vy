@@ -1,11 +1,15 @@
-# @version 0.3.10
-
+# pragma version 0.3.10
+# pragma optimize gas
+# pragma evm-version paris
 """
-@title CurveTricryptoFactory
+@title CurveL2TricryptoFactory
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2020-2023 - all rights reserved
 @notice Permissionless 3-coin cryptoswap pool deployer and registry
 """
+version: public(constant(String[8])) = "2.0.0"
+
+# ----------------------------------------------------------------------------
 
 interface TricryptoPool:
     def balances(i: uint256) -> uint256: view
@@ -29,11 +33,6 @@ event TricryptoPoolDeployed:
     packed_prices: uint256
     deployer: address
 
-
-event LiquidityGaugeDeployed:
-    pool: address
-    gauge: address
-
 event UpdateFeeReceiver:
     _old_fee_receiver: address
     _new_fee_receiver: address
@@ -42,10 +41,6 @@ event UpdatePoolImplementation:
     _implemention_id: uint256
     _old_pool_implementation: address
     _new_pool_implementation: address
-
-event UpdateGaugeImplementation:
-    _old_gauge_implementation: address
-    _new_gauge_implementation: address
 
 event UpdateMathImplementation:
     _old_math_implementation: address
@@ -61,9 +56,9 @@ event TransferOwnership:
 
 
 struct PoolArray:
-    liquidity_gauge: address
     coins: address[N_COINS]
     decimals: uint256[N_COINS]
+    implementation: address
 
 
 N_COINS: constant(uint256) = 3
@@ -88,7 +83,6 @@ future_admin: public(address)
 fee_receiver: public(address)
 
 pool_implementations: public(HashMap[uint256, address])
-gauge_implementation: public(address)
 views_implementation: public(address)
 math_implementation: public(address)
 
@@ -238,6 +232,7 @@ def deploy_pool(
     self.pool_count = length + 1
     self.pool_data[pool].decimals = decimals
     self.pool_data[pool].coins = _coins
+    self.pool_data[pool].implementation = pool_implementation
 
     # add coins to market:
     self._add_coins_to_market(_coins[0], _coins[1], pool)
@@ -275,24 +270,6 @@ def _add_coins_to_market(coin_a: address, coin_b: address, pool: address):
     self.market_counts[key] = length + 1
 
 
-@external
-def deploy_gauge(_pool: address) -> address:
-    """
-    @notice Deploy a liquidity gauge for a factory pool
-    @param _pool Factory pool address to deploy a gauge for
-    @return Address of the deployed gauge
-    """
-    assert self.pool_data[_pool].coins[0] != empty(address), "Unknown pool"
-    assert self.pool_data[_pool].liquidity_gauge == empty(address), "Gauge already deployed"
-    assert self.gauge_implementation != empty(address), "Gauge implementation not set"
-
-    gauge: address = create_from_blueprint(self.gauge_implementation, _pool, code_offset=3)
-    self.pool_data[_pool].liquidity_gauge = gauge
-
-    log LiquidityGaugeDeployed(_pool, gauge)
-    return gauge
-
-
 # <--- Admin / Guarded Functionality --->
 
 
@@ -327,19 +304,6 @@ def set_pool_implementation(
     )
 
     self.pool_implementations[_implementation_index] = _pool_implementation
-
-
-@external
-def set_gauge_implementation(_gauge_implementation: address):
-    """
-    @notice Set gauge implementation
-    @dev Set to empty(address) to prevent deployment of new gauges
-    @param _gauge_implementation Address of the new token implementation
-    """
-    assert msg.sender == self.admin, "dev: admin only"
-
-    log UpdateGaugeImplementation(self.gauge_implementation, _gauge_implementation)
-    self.gauge_implementation = _gauge_implementation
 
 
 @external
@@ -390,6 +354,17 @@ def accept_transfer_ownership():
 
 
 # <--- Factory Getters --->
+
+
+@view
+@external
+def get_implementation_address(_pool: address) -> address:
+    """
+    @notice Get the address of the implementation contract used for a factory pool
+    @param _pool Pool address
+    @return Implementation contract address
+    """
+    return self.pool_data[_pool].implementation
 
 
 @view
@@ -473,18 +448,6 @@ def get_coin_indices(
                 return i, j
 
     raise "Coins not found"
-
-
-@view
-@external
-def get_gauge(_pool: address) -> address:
-    """
-    @notice Get the address of the liquidity gauge contract for a factory pool
-    @dev Returns `empty(address)` if a gauge has not been deployed
-    @param _pool Pool address
-    @return Implementation contract address
-    """
-    return self.pool_data[_pool].liquidity_gauge
 
 
 @view

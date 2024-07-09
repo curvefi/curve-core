@@ -13,17 +13,18 @@
 @license Copyright (c) Curve.Fi, 2020-2023 - all rights reserved
 @notice Curve AMM Math for 2 unpegged assets (e.g. ETH <> USD).
 """
+version: public(constant(String[8])) = "2.1.0"
 
 N_COINS: constant(uint256) = 2
 A_MULTIPLIER: constant(uint256) = 10000
 
 MIN_GAMMA: constant(uint256) = 10**10
-MAX_GAMMA: constant(uint256) = 2 * 10**15
+MAX_GAMMA_SMALL: constant(uint256) = 2 * 10**16
+MAX_GAMMA: constant(uint256) = 199 * 10**15 # 1.99 * 10**17
 
 MIN_A: constant(uint256) = N_COINS**N_COINS * A_MULTIPLIER / 10
 MAX_A: constant(uint256) = N_COINS**N_COINS * A_MULTIPLIER * 1000
 
-version: public(constant(String[8])) = "v2.0.0"
 
 
 # ------------------------ AMM math functions --------------------------------
@@ -139,7 +140,7 @@ def _cbrt(x: uint256) -> uint256:
 
 @internal
 @pure
-def _newton_y(ANN: uint256, gamma: uint256, x: uint256[N_COINS], D: uint256, i: uint256) -> uint256:
+def _newton_y(ANN: uint256, gamma: uint256, x: uint256[N_COINS], D: uint256, i: uint256, lim_mul: uint256) -> uint256:
     """
     Calculating x[i] given other balances x[0..N_COINS-1] and invariant D
     ANN = A * N**N
@@ -150,7 +151,7 @@ def _newton_y(ANN: uint256, gamma: uint256, x: uint256[N_COINS], D: uint256, i: 
     y: uint256 = D**2 / (x_j * N_COINS**2)
     K0_i: uint256 = (10**18 * N_COINS) * x_j / D
 
-    assert (K0_i > 10**16*N_COINS - 1) and (K0_i < 10**20*N_COINS + 1)  # dev: unsafe values x[i]
+    assert (K0_i >= unsafe_div(10**36, lim_mul)) and (K0_i <= lim_mul)  # dev: unsafe values x[i]
 
     convergence_limit: uint256 = max(max(x_j / 10**14, D / 10**14), 100)
 
@@ -212,10 +213,13 @@ def newton_y(ANN: uint256, gamma: uint256, x: uint256[N_COINS], D: uint256, i: u
     assert ANN > MIN_A - 1 and ANN < MAX_A + 1  # dev: unsafe values A
     assert gamma > MIN_GAMMA - 1 and gamma < MAX_GAMMA + 1  # dev: unsafe values gamma
     assert D > 10**17 - 1 and D < 10**15 * 10**18 + 1 # dev: unsafe values D
+    lim_mul: uint256 = 100 * 10**18  # 100.0
+    if gamma > MAX_GAMMA_SMALL:
+        lim_mul = unsafe_div(unsafe_mul(lim_mul, MAX_GAMMA_SMALL), gamma)  # smaller than 100.0
 
-    y: uint256 = self._newton_y(ANN, gamma, x, D, i)
+    y: uint256 = self._newton_y(ANN, gamma, x, D, i, lim_mul)
     frac: uint256 = y * 10**18 / D
-    assert (frac >= 10**16 - 1) and (frac < 10**20 + 1)  # dev: unsafe value for y
+    assert (frac >= unsafe_div(10**36 / N_COINS, lim_mul)) and (frac <= unsafe_div(lim_mul, N_COINS))  # dev: unsafe value for y
 
     return y
 
@@ -234,6 +238,10 @@ def get_y(
     assert _ANN > MIN_A - 1 and _ANN < MAX_A + 1  # dev: unsafe values A
     assert _gamma > MIN_GAMMA - 1 and _gamma < MAX_GAMMA + 1  # dev: unsafe values gamma
     assert _D > 10**17 - 1 and _D < 10**15 * 10**18 + 1 # dev: unsafe values D
+    lim_mul: uint256 = 100 * 10**18  # 100.0
+    if _gamma > MAX_GAMMA_SMALL:
+        lim_mul = unsafe_div(unsafe_mul(lim_mul, MAX_GAMMA_SMALL), _gamma)  # smaller than 100.0
+    lim_mul_signed: int256 = convert(lim_mul, int256)
 
     ANN: int256 = convert(_ANN, int256)
     gamma: int256 = convert(_gamma, int256)
@@ -246,7 +254,7 @@ def get_y(
 
     # K0_i: int256 = (10**18 * N_COINS) * x_j / D
     K0_i: int256 = unsafe_div(10**18 * N_COINS * x_j, D)
-    assert (K0_i > 10**16 * N_COINS - 1) and (K0_i < 10**20 * N_COINS + 1)  # dev: unsafe values x[i]
+    assert (K0_i >= unsafe_div(10**36, lim_mul_signed)) and (K0_i <= lim_mul_signed)  # dev: unsafe values x[i]
 
     ann_gamma2: int256 = ANN * gamma2
 
@@ -327,7 +335,7 @@ def get_y(
         sqrt_val = convert(isqrt(convert(sqrt_arg, uint256)), int256)
     else:
         return [
-            self._newton_y(_ANN, _gamma, _x, _D, i),
+            self._newton_y(_ANN, _gamma, _x, _D, i, lim_mul),
             0
         ]
 
@@ -358,7 +366,7 @@ def get_y(
     y_out: uint256[2] = [convert(unsafe_div(unsafe_div(unsafe_mul(unsafe_div(D**2, x_j), root), 4), 10**18), uint256), convert(root, uint256)]
 
     frac: uint256 = unsafe_div(y_out[0] * 10**18, _D)
-    assert (frac >= 10**16 - 1) and (frac < 10**20 + 1)  # dev: unsafe value for y
+    assert (frac >= unsafe_div(10**36 / N_COINS, lim_mul)) and (frac <= unsafe_div(lim_mul, N_COINS))  # dev: unsafe value for y
 
     return y_out
 
@@ -446,7 +454,7 @@ def newton_D(ANN: uint256, gamma: uint256, x_unsorted: uint256[N_COINS], K0_prev
 
             for _x in x:
                 frac: uint256 = _x * 10**18 / D
-                assert (frac >= 10**16 - 1) and (frac < 10**20 + 1)  # dev: unsafe values x[i]
+                assert (frac > 10**16 / N_COINS - 1) and (frac < 10**20 / N_COINS + 1)  # dev: unsafe values x[i]
             return D
 
     raise "Did not converge"

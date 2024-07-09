@@ -8,6 +8,9 @@
 @notice A Curve AMM pool for 3 unpegged assets (e.g. WETH, BTC, USD).
 @dev All prices in the AMM are with respect to the first token in the pool.
 """
+version: public(constant(String[8])) = "2.0.0"
+
+# ----------------------------------------------------------------------------
 
 from vyper.interfaces import ERC20
 implements: ERC20  # <--------------------- AMM contract is also the LP token.
@@ -196,7 +199,6 @@ PRICE_MASK: constant(uint256) = 2**PRICE_SIZE - 1
 name: public(immutable(String[64]))
 symbol: public(immutable(String[32]))
 decimals: public(constant(uint8)) = 18
-version: public(constant(String[8])) = "v2.0.0"
 
 balanceOf: public(HashMap[address, uint256])
 allowance: public(HashMap[address, HashMap[address, uint256]])
