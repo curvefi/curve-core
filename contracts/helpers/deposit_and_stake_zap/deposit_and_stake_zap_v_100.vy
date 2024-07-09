@@ -6,6 +6,9 @@
 @license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice A zap to add liquidity to pool and deposit into gauge in one transaction
 """
+version: public(constant(String[8])) = "1.0.0"
+
+# ----------------------------------------------------------------------------
 
 MAX_COINS: constant(uint256) = 8
 ETH_ADDRESS: constant(address) = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE

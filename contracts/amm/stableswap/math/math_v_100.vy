@@ -7,6 +7,9 @@
 @license Copyright (c) Curve.Fi, 2020-2023 - all rights reserved
 @notice Math for StableSwapMetaNG implementation
 """
+version: public(constant(String[8])) = "1.0.0"
+
+# ----------------------------------------------------------------------------
 
 MAX_COINS: constant(uint256) = 8
 MAX_COINS_128: constant(int128) = 8

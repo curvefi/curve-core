@@ -7,6 +7,9 @@
 @notice Auxiliary contract for Stableswap-NG containing utility methods for
         integrators
 """
+version: public(constant(String[8])) = "1.0.0"
+
+# ----------------------------------------------------------------------------
 
 interface StableSwapNG:
     def N_COINS() -> uint256: view

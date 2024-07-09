@@ -8,6 +8,9 @@
         is a Stableswap-ng implementation as well.
 @dev Contract assumes Metapools have 2 coins.
 """
+version: public(constant(String[8])) = "1.0.0"
+
+# ----------------------------------------------------------------------------
 
 interface ERC20:
     def transfer(receiver: address, amount: uint256): nonpayable

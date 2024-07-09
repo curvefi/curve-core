@@ -267,7 +267,7 @@ ORACLE_BIT_MASK: constant(uint256) = (2**32 - 1) * 256**28
 name: public(immutable(String[64]))
 symbol: public(immutable(String[32]))
 decimals: public(constant(uint8)) = 18
-version: public(constant(String[8])) = "v7.0.0"
+version: public(constant(String[8])) = "7.0.0"
 
 balanceOf: public(HashMap[address, uint256])
 allowance: public(HashMap[address, HashMap[address, uint256]])

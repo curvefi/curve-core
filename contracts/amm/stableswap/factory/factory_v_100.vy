@@ -6,6 +6,9 @@
 @license Copyright (c) Curve.Fi, 2023 - all rights reserved
 @notice Permissionless pool deployer and registry
 """
+version: public(constant(String[8])) = "1.0.0"
+
+# ----------------------------------------------------------------------------
 
 struct PoolArray:
     base_pool: address
