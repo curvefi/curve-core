@@ -1,7 +1,10 @@
 # pragma version 0.3.10
 # pragma evm-version paris
+
+version: public(constant(String[8])) = "1.0.0"
+
 """
-@title MetaZapNG
+@title CurveMetaZap
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2021 - all rights reserved
 @notice A generalised zap contract for Stableswap-ng metapools where the base pool

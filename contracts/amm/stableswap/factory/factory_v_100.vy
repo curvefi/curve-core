@@ -1,9 +1,12 @@
 # pragma version 0.3.10
 # pragma evm-version shanghai
+
+version: public(constant(String[8])) = "1.0.0"
+
 """
-@title CurveStableswapFactoryNG
+@title CurveStableSwapFactory
 @author Curve.Fi
-@license Copyright (c) Curve.Fi, 2023 - all rights reserved
+@license Copyright (c) Curve.Fi, 2023-2024 - all rights reserved
 @notice Permissionless pool deployer and registry
 """
 

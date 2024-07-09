@@ -1,16 +1,16 @@
 # pragma version 0.3.10
 # pragma optimize gas
 # pragma evm-version paris
+
+version: public(constant(String[8])) = "2.0.0"
+
 """
-@title CurveTricryptoOptimized
+@title CurveTricryptoSwap
 @author Curve.Fi
-@license Copyright (c) Curve.Fi, 2023 - all rights reserved
+@license Copyright (c) Curve.Fi, 2023-2024 - all rights reserved
 @notice A Curve AMM pool for 3 unpegged assets (e.g. WETH, BTC, USD).
 @dev All prices in the AMM are with respect to the first token in the pool.
 """
-version: public(constant(String[8])) = "2.0.0"
-
-# ----------------------------------------------------------------------------
 
 from vyper.interfaces import ERC20
 implements: ERC20  # <--------------------- AMM contract is also the LP token.

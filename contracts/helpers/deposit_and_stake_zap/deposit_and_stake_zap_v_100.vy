@@ -1,4 +1,7 @@
-# @version 0.3.9
+# @version 0.3.10
+# pragma evm-version paris
+
+version: public(constant(String[8])) = "1.0.0"
 
 """
 @title CurveDeposit&StakeZap

@@ -1,16 +1,16 @@
 # pragma version 0.3.10
 # pragma optimize gas
 # pragma evm-version paris
+
+version: public(constant(String[8])) = "2.0.0"
+
 """
-@title CurveCryptoViews2Optimized
+@title CurveTricryptoViews
 @author Curve.Fi
-@license Copyright (c) Curve.Fi, 2020-2023 - all rights reserved
+@license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice This contract contains view-only external methods which can be
         gas-inefficient when called from smart contracts.
 """
-version: public(constant(String[8])) = "2.0.0"
-
-# ----------------------------------------------------------------------------
 
 from vyper.interfaces import ERC20
 
@@ -19,8 +19,8 @@ interface Curve:
     def MATH() -> Math: view
     def A() -> uint256: view
     def gamma() -> uint256: view
-    def price_scale() -> uint256: view
-    def price_oracle() -> uint256: view
+    def price_scale(i: uint256) -> uint256: view
+    def price_oracle(i: uint256) -> uint256: view
     def get_virtual_price() -> uint256: view
     def balances(i: uint256) -> uint256: view
     def D() -> uint256: view
@@ -48,16 +48,13 @@ interface Math:
         D: uint256,
         i: uint256,
     ) -> uint256[2]: view
-    def newton_y(
-        ANN: uint256,
-        gamma: uint256,
-        x: uint256[N_COINS],
-        D: uint256,
-        i: uint256,
+    def cbrt(x: uint256) -> uint256: view
+    def reduction_coefficient(
+        x: uint256[N_COINS], fee_gamma: uint256
     ) -> uint256: view
 
 
-N_COINS: constant(uint256) = 2
+N_COINS: constant(uint256) = 3
 PRECISION: constant(uint256) = 10**18
 
 
@@ -166,16 +163,20 @@ def _calc_D_ramp(
     gamma: uint256,
     xp: uint256[N_COINS],
     precisions: uint256[N_COINS],
-    price_scale: uint256,
+    price_scale: uint256[N_COINS - 1],
     swap: address
 ) -> uint256:
 
     math: Math = Curve(swap).MATH()
+
     D: uint256 = Curve(swap).D()
     if Curve(swap).future_A_gamma_time() > block.timestamp:
         _xp: uint256[N_COINS] = xp
         _xp[0] *= precisions[0]
-        _xp[1] = _xp[1] * price_scale * precisions[1] / PRECISION
+        for k in range(N_COINS - 1):
+            _xp[k + 1] = (
+                _xp[k + 1] * price_scale[k] * precisions[k + 1] / PRECISION
+            )
         D = math.newton_D(A, gamma, _xp, 0)
 
     return D
@@ -196,7 +197,7 @@ def _get_dx_fee(
 
     xp: uint256[N_COINS] = empty(uint256[N_COINS])
     precisions: uint256[N_COINS] = empty(uint256[N_COINS])
-    price_scale: uint256 = 0
+    price_scale: uint256[N_COINS-1] = empty(uint256[N_COINS-1])
     D: uint256 = 0
     token_supply: uint256 = 0
     A: uint256 = 0
@@ -207,14 +208,15 @@ def _get_dx_fee(
     # adjust xp with output dy. dy contains fee element, which we handle later
     # (hence this internal method is called _get_dx_fee)
     xp[j] -= dy
-    xp = [xp[0] * precisions[0], xp[1] * price_scale * precisions[1] / PRECISION]
+    xp[0] *= precisions[0]
+    for k in range(N_COINS - 1):
+        xp[k + 1] = xp[k + 1] * price_scale[k] * precisions[k + 1] / PRECISION
 
     x_out: uint256[2] = math.get_y(A, gamma, xp, D, i)
     dx: uint256 = x_out[0] - xp[i]
     xp[i] = x_out[0]
-
     if i > 0:
-        dx = dx * PRECISION / price_scale
+        dx = dx * PRECISION / price_scale[i - 1]
     dx /= precisions[i]
 
     return dx, xp
@@ -233,7 +235,7 @@ def _get_dy_nofee(
 
     xp: uint256[N_COINS] = empty(uint256[N_COINS])
     precisions: uint256[N_COINS] = empty(uint256[N_COINS])
-    price_scale: uint256 = 0
+    price_scale: uint256[N_COINS-1] = empty(uint256[N_COINS-1])
     D: uint256 = 0
     token_supply: uint256 = 0
     A: uint256 = 0
@@ -243,17 +245,15 @@ def _get_dy_nofee(
 
     # adjust xp with input dx
     xp[i] += dx
-    xp = [
-        xp[0] * precisions[0],
-        xp[1] * price_scale * precisions[1] / PRECISION
-    ]
+    xp[0] *= precisions[0]
+    for k in range(N_COINS - 1):
+        xp[k + 1] = xp[k + 1] * price_scale[k] * precisions[k + 1] / PRECISION
 
     y_out: uint256[2] = math.get_y(A, gamma, xp, D, j)
-
     dy: uint256 = xp[j] - y_out[0] - 1
     xp[j] = y_out[0]
     if j > 0:
-        dy = dy * PRECISION / price_scale
+        dy = dy * PRECISION / price_scale[j - 1]
     dy /= precisions[j]
 
     return dy, xp
@@ -269,7 +269,7 @@ def _calc_dtoken_nofee(
 
     xp: uint256[N_COINS] = empty(uint256[N_COINS])
     precisions: uint256[N_COINS] = empty(uint256[N_COINS])
-    price_scale: uint256 = 0
+    price_scale: uint256[N_COINS-1] = empty(uint256[N_COINS-1])
     D0: uint256 = 0
     token_supply: uint256 = 0
     A: uint256 = 0
@@ -285,14 +285,12 @@ def _calc_dtoken_nofee(
         for k in range(N_COINS):
             xp[k] -= amounts[k]
 
-    xp = [
-        xp[0] * precisions[0],
-        xp[1] * price_scale * precisions[1] / PRECISION
-    ]
-    amountsp = [
-        amountsp[0]* precisions[0],
-        amountsp[1] * price_scale * precisions[1] / PRECISION
-    ]
+    xp[0] *= precisions[0]
+    amountsp[0] *= precisions[0]
+    for k in range(N_COINS - 1):
+        p: uint256 = price_scale[k] * precisions[k + 1]
+        xp[k + 1] = xp[k + 1] * p / PRECISION
+        amountsp[k + 1] = amountsp[k + 1] * p / PRECISION
 
     D: uint256 = math.newton_D(A, gamma, xp, 0)
     d_token: uint256 = token_supply * D / D0
@@ -320,22 +318,27 @@ def _calc_withdraw_one_coin(
     math: Math = Curve(swap).MATH()
 
     xx: uint256[N_COINS] = empty(uint256[N_COINS])
+    price_scale: uint256[N_COINS-1] = empty(uint256[N_COINS-1])
     for k in range(N_COINS):
         xx[k] = Curve(swap).balances(k)
+        if k > 0:
+            price_scale[k - 1] = Curve(swap).price_scale(k - 1)
 
     precisions: uint256[N_COINS] = Curve(swap).precisions()
     A: uint256 = Curve(swap).A()
     gamma: uint256 = Curve(swap).gamma()
+    xp: uint256[N_COINS] = precisions
     D0: uint256 = 0
     p: uint256 = 0
 
-    price_scale_i: uint256 = Curve(swap).price_scale() * precisions[1]
-    xp: uint256[N_COINS] = [
-        xx[0] * precisions[0],
-        unsafe_div(xx[1] * price_scale_i, PRECISION)
-    ]
-    if i == 0:
-        price_scale_i = PRECISION * precisions[0]
+    price_scale_i: uint256 = PRECISION * precisions[0]
+    xp[0] *= xx[0]
+    for k in range(1, N_COINS):
+
+        p = price_scale[k-1]
+        if i == k:
+            price_scale_i = p * xp[i]
+        xp[k] = xp[k] * xx[k] * p / PRECISION
 
     if Curve(swap).future_A_gamma_time() > block.timestamp:
         D0 = math.newton_D(A, gamma, xp, 0)
@@ -362,15 +365,10 @@ def _calc_withdraw_one_coin(
 @internal
 @view
 def _fee(xp: uint256[N_COINS], swap: address) -> uint256:
-
+    math: Math = Curve(swap).MATH()
     packed_fee_params: uint256 = Curve(swap).packed_fee_params()
-    fee_params: uint256[3] = self._unpack_3(packed_fee_params)
-    f: uint256 = xp[0] + xp[1]
-    f = fee_params[2] * 10**18 / (
-        fee_params[2] + 10**18 -
-        (10**18 * N_COINS**N_COINS) * xp[0] / f * xp[1] / f
-    )
-
+    fee_params: uint256[3] = self._unpack(packed_fee_params)
+    f: uint256 = math.reduction_coefficient(xp, fee_params[2])
     return (fee_params[0] * f + fee_params[1] * (10**18 - f)) / 10**18
 
 
@@ -380,7 +378,7 @@ def _prep_calc(swap: address) -> (
     uint256[N_COINS],
     uint256,
     uint256,
-    uint256,
+    uint256[N_COINS-1],
     uint256,
     uint256,
     uint256[N_COINS]
@@ -392,7 +390,9 @@ def _prep_calc(swap: address) -> (
     for k in range(N_COINS):
         xp[k] = Curve(swap).balances(k)
 
-    price_scale: uint256 = Curve(swap).price_scale()
+    price_scale: uint256[N_COINS - 1] = empty(uint256[N_COINS - 1])
+    for k in range(N_COINS - 1):
+        price_scale[k] = Curve(swap).price_scale(k)
 
     A: uint256 = Curve(swap).A()
     gamma: uint256 = Curve(swap).gamma()
@@ -405,7 +405,7 @@ def _prep_calc(swap: address) -> (
 
 @internal
 @view
-def _unpack_3(_packed: uint256) -> uint256[3]:
+def _unpack(_packed: uint256) -> uint256[3]:
     """
     @notice Unpacks a uint256 into 3 integers (values must be <= 10**18)
     @param val The uint256 to unpack

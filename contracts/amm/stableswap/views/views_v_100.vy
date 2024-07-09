@@ -1,9 +1,12 @@
 # pragma version 0.3.10
 # pragma evm-version shanghai
+
+version: public(constant(String[8])) = "1.0.0"
+
 """
-@title CurveStableSwapNGViews
+@title CurveStableSwapViews
 @author Curve.Fi
-@license Copyright (c) Curve.Fi, 2020-2023 - all rights reserved
+@license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice Auxiliary contract for Stableswap-NG containing utility methods for
         integrators
 """
