@@ -5,7 +5,7 @@
 version: public(constant(String[8])) = "2.0.0"
 
 """
-@title CurveL2TricryptoFactory
+@title CurveTricryptoFactory
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice Permissionless 3-coin cryptoswap pool deployer and registry

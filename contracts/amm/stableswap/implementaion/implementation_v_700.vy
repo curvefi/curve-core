@@ -5,7 +5,7 @@
 version: public(constant(String[8])) = "7.0.0"
 
 """
-@title CurveStableSwapNG
+@title CurveStableSwap
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice Stableswap implementation for up to 8 coins with no rehypothecation,

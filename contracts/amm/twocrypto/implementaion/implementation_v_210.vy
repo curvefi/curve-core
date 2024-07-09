@@ -5,7 +5,7 @@
 version: public(constant(String[8])) = "2.1.0"
 
 """
-@title CurveTwocrypto
+@title CurveTwocryptoSwap
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2023 - all rights reserved
 @notice A Curve AMM pool for 2 unpegged assets (e.g. WETH, USD).
