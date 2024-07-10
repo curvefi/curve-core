@@ -3,6 +3,7 @@
 
 """
 @title CurveStableSwapFactory
+@custom:version 1.0.0
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2023-2024 - all rights reserved
 @notice Permissionless pool deployer and registry

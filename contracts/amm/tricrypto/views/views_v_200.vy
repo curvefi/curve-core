@@ -4,6 +4,7 @@
 
 """
 @title CurveTricryptoViews
+@custom:version 2.0.0
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice This contract contains view-only external methods which can be

@@ -4,6 +4,7 @@
 
 """
 @title CurveStableSwap
+@custom:version 7.0.0
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice Stableswap implementation for up to 8 coins with no rehypothecation,

@@ -3,6 +3,7 @@
 
 """
 @title CurveStableSwapViews
+@custom:version 1.0.0
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice Auxiliary contract for Stableswap-NG containing utility methods for

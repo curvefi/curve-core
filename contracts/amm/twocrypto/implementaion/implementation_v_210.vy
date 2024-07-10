@@ -4,6 +4,7 @@
 
 """
 @title CurveTwocryptoSwap
+@custom:version 2.1.0
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2023 - all rights reserved
 @notice A Curve AMM pool for 2 unpegged assets (e.g. WETH, USD).

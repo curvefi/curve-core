@@ -4,6 +4,7 @@
 
 """
 @title CurveStableSwapMeta
+@custom:version 7.0.0
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice Stableswap Metapool implementation for 2 coins. Supports pegged assets.

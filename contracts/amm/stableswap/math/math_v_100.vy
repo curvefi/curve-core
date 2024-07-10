@@ -4,6 +4,7 @@
 
 """
 @title CurveStableSwapMath
+@custom:version 1.0.0
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice Math for StableSwapMetaNG implementation
