@@ -3,6 +3,7 @@
 
 """
 @title CurveMetaZap
+@custom:version 1.0.0
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2021 - all rights reserved
 @notice A generalised zap contract for Stableswap-ng metapools where the base pool

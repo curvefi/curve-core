@@ -3,6 +3,7 @@
 
 """
 @title CurveRouter
+@custom:version 1.1.0
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice Performs up to 5 swaps in a single transaction
