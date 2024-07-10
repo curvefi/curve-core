@@ -2,8 +2,6 @@
 # pragma optimize gas
 # pragma evm-version paris
 
-version: public(constant(String[8])) = "2.0.0"
-
 """
 @title CurveTricryptoViews
 @author Curve.Fi
@@ -13,6 +11,10 @@ version: public(constant(String[8])) = "2.0.0"
 """
 
 from vyper.interfaces import ERC20
+
+# ------------------------------- Version ------------------------------------
+
+version: public(constant(String[8])) = "2.0.0"
 
 
 interface Curve:

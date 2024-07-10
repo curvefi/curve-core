@@ -2,8 +2,6 @@
 # pragma optimize gas
 # pragma evm-version paris
 
-version: public(constant(String[8])) = "2.0.0"
-
 # (c) Curve.Fi, 2020-2024
 # AMM Math for 3-coin Curve Cryptoswap Pools
 #
@@ -16,6 +14,11 @@ version: public(constant(String[8])) = "2.0.0"
 @license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice Curve AMM Math for 3 unpegged assets (e.g. ETH, BTC, USD).
 """
+
+# ------------------------------- Version ------------------------------------
+
+version: public(constant(String[8])) = "2.0.0"
+
 
 N_COINS: constant(uint256) = 3
 A_MULTIPLIER: constant(uint256) = 10000

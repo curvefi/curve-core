@@ -2,8 +2,6 @@
 # pragma optimize codesize
 # pragma evm-version shanghai
 
-version: public(constant(String[8])) = "7.0.0"
-
 """
 @title CurveStableSwap
 @author Curve.Fi
@@ -59,6 +57,10 @@ from vyper.interfaces import ERC20Detailed
 from vyper.interfaces import ERC4626
 
 implements: ERC20
+
+# ------------------------------- Version ---------------------------------
+
+version: public(constant(String[8])) = "7.0.0"
 
 # ------------------------------- Interfaces ---------------------------------
 

@@ -2,8 +2,6 @@
 # pragma optimize gas
 # pragma evm-version paris
 
-version: public(constant(String[8])) = "2.0.0"
-
 """
 @title CurveTricryptoSwap
 @author Curve.Fi
@@ -14,6 +12,10 @@ version: public(constant(String[8])) = "2.0.0"
 
 from vyper.interfaces import ERC20
 implements: ERC20  # <--------------------- AMM contract is also the LP token.
+
+# ------------------------------- Version ------------------------------------
+
+version: public(constant(String[8])) = "2.0.0"
 
 # --------------------------------- Interfaces -------------------------------
 

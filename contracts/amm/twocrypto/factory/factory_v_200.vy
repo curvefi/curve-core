@@ -2,14 +2,18 @@
 # pragma optimize gas
 # pragma evm-version paris
 
-version: public(constant(String[8])) = "2.0.0"
-
 """
 @title CurveTwocryptoSwapFactory
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice Permissionless 2-coin cryptoswap pool deployer and registry
 """
+
+# ------------------------------- Version ------------------------------------
+
+version: public(constant(String[8])) = "2.0.0"
+
+# --------------------------------- Interfaces -------------------------------
 
 interface TwocryptoPool:
     def balances(i: uint256) -> uint256: view

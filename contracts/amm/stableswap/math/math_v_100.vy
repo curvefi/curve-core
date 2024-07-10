@@ -2,14 +2,17 @@
 # pragma optimize gas
 # pragma evm-version shanghai
 
-version: public(constant(String[8])) = "1.0.0"
-
 """
 @title CurveStableSwapMath
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice Math for StableSwapMetaNG implementation
 """
+
+# ------------------------------- Version ---------------------------------
+
+version: public(constant(String[8])) = "1.0.0"
+
 
 MAX_COINS: constant(uint256) = 8
 MAX_COINS_128: constant(int128) = 8
