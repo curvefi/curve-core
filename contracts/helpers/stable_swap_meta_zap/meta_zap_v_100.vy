@@ -1,16 +1,18 @@
 # pragma version 0.3.10
 # pragma evm-version paris
 
-version: public(constant(String[8])) = "1.0.0"
-
 """
 @title CurveMetaZap
+@custom:version 1.0.0
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2021 - all rights reserved
 @notice A generalised zap contract for Stableswap-ng metapools where the base pool
         is a Stableswap-ng implementation as well.
 @dev Contract assumes Metapools have 2 coins.
 """
+
+version: public(constant(String[8])) = "1.0.0"
+
 
 interface ERC20:
     def transfer(receiver: address, amount: uint256): nonpayable
