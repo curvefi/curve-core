@@ -21,7 +21,7 @@ interface Pool2:
 interface Pool3:
     def add_liquidity(amounts: uint256[3], min_mint_amount: uint256): nonpayable
 
-interface PoolStableNg:
+interface StableSwap:
     def add_liquidity(_amounts: DynArray[uint256, MAX_COINS], _min_mint_amount: uint256): nonpayable
 
 interface MetaZap:
@@ -66,11 +66,11 @@ def deposit_and_stake(
     assert n_coins <= MAX_COINS, 'n_coins must be <=MAX_COINS'
 
     # Ensure allowance for swap or zap
-    for i in range(MAX_COINS):
-        if i == n_coins:
-            break
+    for i in range(n_coins, bound=MAX_COINS):
+
         if amounts[i] == 0 or ERC20(coins[i]).allowance(self, deposit) > 0:
             continue
+
         ERC20(coins[i]).approve(deposit, max_value(uint256), default_return_value=True)
 
     # Ensure allowance for gauge
@@ -78,9 +78,7 @@ def deposit_and_stake(
         ERC20(lp_token).approve(gauge, max_value(uint256))
 
     # Transfer coins from owner
-    for i in range(MAX_COINS):
-        if i == n_coins:
-            break
+    for i in range(n_coins, bound=MAX_COINS):
 
         if amounts[i] > 0:
             assert ERC20(coins[i]).transferFrom(msg.sender, self, amounts[i], default_return_value=True)
@@ -89,7 +87,7 @@ def deposit_and_stake(
     if pool != empty(address):  # meta-pool deposit with underlying coins, deposit is zap here
         MetaZap(deposit).add_liquidity(pool, amounts, min_mint_amount)
     elif use_dynarray:  # plain stable pool
-        PoolStableNg(deposit).add_liquidity(amounts, min_mint_amount)
+        StableSwap(deposit).add_liquidity(amounts, min_mint_amount)
     else:
         if n_coins == 2:  # twocrypto or meta-pool deposit with wrapped coins
             Pool2(deposit).add_liquidity([amounts[0], amounts[1]], min_mint_amount)
@@ -105,9 +103,3 @@ def deposit_and_stake(
     Gauge(gauge).deposit(lp_token_amount, msg.sender)
 
     return lp_token_amount
-
-
-@payable
-@external
-def __default__():
-    pass
