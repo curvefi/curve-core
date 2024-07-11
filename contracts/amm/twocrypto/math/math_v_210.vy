@@ -2,8 +2,6 @@
 # pragma optimize gas
 # pragma evm-version paris
 
-version: public(constant(String[8])) = "2.1.0"
-
 # (c) Curve.Fi, 2020-2024
 # AMM Math for 2-coin Curve Cryptoswap Pools
 #
@@ -12,10 +10,16 @@ version: public(constant(String[8])) = "2.1.0"
 
 """
 @title CurveTwocryptoMath
+@custom:version 2.1.0
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice Curve AMM Math for 2 unpegged assets (e.g. ETH <> USD).
 """
+
+# ------------------------------- Version ------------------------------------
+
+version: public(constant(String[8])) = "2.1.0"
+
 
 N_COINS: constant(uint256) = 2
 A_MULTIPLIER: constant(uint256) = 10000

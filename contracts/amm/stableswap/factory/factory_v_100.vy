@@ -1,14 +1,18 @@
 # pragma version 0.3.10
 # pragma evm-version shanghai
 
-version: public(constant(String[8])) = "1.0.0"
-
 """
 @title CurveStableSwapFactory
+@custom:version 1.0.0
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2023-2024 - all rights reserved
 @notice Permissionless pool deployer and registry
 """
+# ------------------------------- Version ---------------------------------
+
+version: public(constant(String[8])) = "1.0.0"
+
+# ------------------------------- Interfaces ---------------------------------
 
 struct PoolArray:
     base_pool: address

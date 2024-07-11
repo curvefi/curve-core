@@ -2,10 +2,9 @@
 # pragma optimize codesize
 # pragma evm-version paris
 
-version: public(constant(String[8])) = "7.0.0"
-
 """
 @title CurveStableSwapMeta
+@custom:version 7.0.0
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice Stableswap Metapool implementation for 2 coins. Supports pegged assets.
@@ -65,6 +64,10 @@ from vyper.interfaces import ERC20Detailed
 from vyper.interfaces import ERC4626
 
 implements: ERC20
+
+# ------------------------------- Version ------------------------------------
+
+version: public(constant(String[8])) = "7.0.0"
 
 # ------------------------------- Interfaces ---------------------------------
 
