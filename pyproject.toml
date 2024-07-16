@@ -14,8 +14,35 @@ pre-commit = "^3.7.1"
 rich = "^13.7.1"
 pytest = "^8.2.2"
 poetry = "^1.8.3"
+pydantic-settings = "^2.3.4"
+click = "^8.1.7"
 
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.2"
+isort = "^5.13.2"
+
+[tool.black]
+exclude = '''
+(
+  /(
+    \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | build
+    | dist
+  )/
+)
+'''
+line-length = 120
+target_version = ['py310']
+
+[tool.isort]
+profile = "black"
+py_version = 310
+line_length = 120
+known_first_party = "poetry"
