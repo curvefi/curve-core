@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "curve-lite"
+version = "0.1.0"
+description = "Deploys all smart contracts related to Curve Finance on any EVM compatible chain."
+authors = ["Curve.Fi"]
+license = "Copyright (c) 2024 Curve.Fi"
+readme = "README.md"
+packages = [{include = "curve_lite"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+titanoboa-zksync = {git = "https://github.com/DanielSchiavini/titanoboa-zksync.git", rev = "9c162ba56a176bf2ba1b211b61fc175a6bcd1111"}
+pre-commit = "^3.7.1"
+rich = "^13.7.1"
+pytest = "^8.2.2"
+poetry = "^1.8.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
