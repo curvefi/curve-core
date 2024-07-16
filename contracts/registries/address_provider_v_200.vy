@@ -7,7 +7,7 @@
 @license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice An entrypoint contract for Curve's various registries
 @dev Allows adding arbitrary IDs instead of sequential IDs.
-     Mapping for non Ethereum deployments 
+     Mapping for non Ethereum deployments
      (empty IDs are specific to mainnet):
         0: ---- empty ----
         1: ---- empty ----

@@ -133,7 +133,7 @@ def _get_registry_handlers_from_pool(_pool: address) -> address[MAX_REGISTRIES]:
 
     if pool_registry_handler[0] == empty(address):
         raise "no registry"
-    
+
     return pool_registry_handler
 
 
@@ -218,7 +218,7 @@ def find_pool_for_coins(
         for j in range(0, 65536):
 
             pool = RegistryHandler(registry).find_pool_for_coins(_from, _to, j)
-            
+
             if pool == empty(address):
                 break
 
