@@ -144,3 +144,6 @@ pip-selfcheck.json
 .DS_Store
 tmp*
 pyarmor-regfile.zip
+
+### Specific for project
+settings/env
