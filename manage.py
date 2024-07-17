@@ -1,7 +1,7 @@
 import click
 
+from scripts.tests import test_commands
 from settings.logger import setup_logger
-from tests import test_commands
 
 setup_logger()
 

@@ -14,20 +14,27 @@ def test_chain_id():
 
 def test_evm_version():
     capabilities = boa.env.capabilities.describe_capabilities()
+    result = "PASSED"
     if capabilities != "cancun":
-        logger.warning("Chain doesn't support cancun, version %r", capabilities)
+        result = "FAILED"
+
+    logger.info("Chain version is %r... %s", capabilities, result)
 
 
 def test_create2deployer_deployed():
     code = boa.env._rpc.fetch("eth_getCode", ["0x13b0D85CcB8bf860b6b79AF3029fCA081AE9beF2", "latest"])
     if code is None:
-        logger.warning("Chain doesn't have create2deployer")
+        logger.info("Chain doesn't have create2deployer... FAILED")
+    else:
+        logger.info("Chain has create2deployer... PASSED")
 
 
 def test_multicall3_deployed():
     code = boa.env._rpc.fetch("eth_getCode", ["0xcA11bde05977b3631167028862bE2a173976CA11", "latest"])
     if code is None:
-        logger.warning("Chain doesn't have multicall")
+        logger.info("Chain doesn't have multicall... FAILED")
+    else:
+        logger.info("Chain has multicall... PASSED")
 
 
 def test_pre_deploy():
