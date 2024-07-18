@@ -21,15 +21,11 @@ def test_evm_version():
         result = "FAILED"
 
     logger.info("Chain version is %r... %s", capabilities, result)
-    return (
-        result == "PASSED"
-    )  # TODO: check if chain has a certain minimum evm version: PARIS
+    return result == "PASSED"  # TODO: check if chain has a certain minimum evm version: PARIS
 
 
 def test_create2deployer_deployed():
-    code = boa.env._rpc.fetch(
-        "eth_getCode", [CREATE2DEPLOYER_ADDRESS, "latest"]
-    )
+    code = boa.env._rpc.fetch("eth_getCode", [CREATE2DEPLOYER_ADDRESS, "latest"])
     if code is None:
         logger.info("Chain doesn't have create2deployer... FAILED")
         return False
@@ -38,9 +34,7 @@ def test_create2deployer_deployed():
 
 
 def test_multicall3_deployed():
-    code = boa.env._rpc.fetch(
-        "eth_getCode", ["0xcA11bde05977b3631167028862bE2a173976CA11", "latest"]
-    )
+    code = boa.env._rpc.fetch("eth_getCode", ["0xcA11bde05977b3631167028862bE2a173976CA11", "latest"])
     if code is None:
         logger.info("Chain doesn't have multicall... FAILED")
         return False
