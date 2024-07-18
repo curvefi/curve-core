@@ -2,7 +2,7 @@ import logging
 
 import click
 
-from .pre_deploy import test_pre_deploy
+from scripts.tests.pre_deployment import test_pre_deploy
 
 logger = logging.getLogger(__name__)
 

@@ -6,7 +6,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=Path(BASE_DIR, "settings", "env"))
+    model_config = SettingsConfigDict(
+        env_file=Path(BASE_DIR, "settings", "env")
+    )
 
     DEBUG: bool = False
     DEV: bool = False

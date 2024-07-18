@@ -1,0 +1,5 @@
+router:
+  address: '0x0880cf17Bd263d3d3a5c09D2D86cCecA3CcbD97c'
+  contract_file: contracts/helpers/router/router_v_110.vy
+  latest_git_commit_hash: b51fe356ae83cb23d363f5d048b3e7d47215512f
+  version: 1.1.0

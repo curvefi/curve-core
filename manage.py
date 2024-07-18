@@ -7,7 +7,8 @@ setup_logger()
 
 
 @click.group("commands")
-def commands(): ...
+def commands():
+    ...
 
 
 if __name__ == "__main__":

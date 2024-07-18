@@ -11,7 +11,9 @@ def main(WETH):
     latest_router = ""
 
     # deploy router
-    router = boa.load(f"contracts/helpers/router/{latest_router}", WETH)  # noqa: F841
+    router = boa.load(
+        f"contracts/helpers/router/{latest_router}", WETH
+    )  # noqa: F841
 
     # add to config file:
     _add_to_config(router)
