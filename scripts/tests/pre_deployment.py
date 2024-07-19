@@ -44,8 +44,6 @@ def test_multicall3_deployed():
 
 
 def test_pre_deploy():
-    boa.set_network_env(settings.WEB3_PROVIDER_URL)
-
     logger.info("Running pre deploy tests...")
 
     test_chain_id()
