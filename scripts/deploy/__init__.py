@@ -21,5 +21,6 @@ def run_deploy_all(chain_name: str) -> None:
 
 @deploy_commands.command("router", short_help="deploy router")
 @click.argument("chain_name", type=click.STRING)
-def run_deploy_router(chain_name: str) -> None:
-    deploy_router(chain_name)
+@click.argument("weth", type=click.STRING)
+def run_deploy_router(chain_name: str, weth: str) -> None:
+    deploy_router(chain_name, weth)

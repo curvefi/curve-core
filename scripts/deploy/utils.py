@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import subprocess
@@ -32,8 +33,20 @@ def deploy_contract(contract_folder: Path, chain_name: str, *args):
 
     # deploy contract if nothing has been deployed, or if deployed contract is old
     if version_a_gt_version_b(version_latest_contract, deployed_contract_version):
+
         # deploy contract
         deployed_contract = boa.load(latest_contract, *args)
+
+        # store abi
+        relpath = get_relative_path(contract_folder)
+        abi_path = relpath.replace("contracts", "abi")
+        abi_file = f".{abi_path}/{os.path.basename(latest_contract).replace('.vy', '.json')}"
+
+        if not os.path.exists(f".{abi_path}"):
+            os.makedirs(f".{abi_path}")
+
+        with open(abi_file, "w") as abi_file:
+            json.dump(deployed_contract.abi, abi_file, indent=4)
 
         # update deployment yaml file
         save_deployment_metadata(os.path.basename(contract_folder), deployed_contract, deployment_file, args)
