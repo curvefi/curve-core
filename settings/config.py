@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=Path(BASE_DIR, "settings", "env"))
 
-    DEBUG: bool = False
+    DEBUG: bool = True  # TODO: set to False when ready
     DEV: bool = False
 
     WEB3_PROVIDER_URL: str

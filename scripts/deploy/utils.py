@@ -1,26 +1,28 @@
 import os
 import re
 import subprocess
-import sys
 import time
+from pathlib import Path
 
 import boa
 import yaml
+from boa.contracts.vyper.vyper_contract import VyperContract
 from eth_utils import keccak
 
-sys.path.append("./")
+from settings.config import BASE_DIR
 
-from scripts.deployment.constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRESS
+from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRESS
 
 
-def deploy_contract(contract_folder, deployment_file, *args):
+def deploy_contract(contract_folder: Path, chain_name: str, *args):
+    deployment_file = Path(BASE_DIR, "deployments", f"{chain_name}.yaml")
+
     # fetch latest contract
-    contract_designation = os.path.split(contract_folder)[-1]
-    latest_contract = fetch_latest_contract(contract_designation, contract_folder)
+    latest_contract = fetch_latest_contract(contract_folder)
     version_latest_contract = get_version_from_filename(latest_contract)
 
     # check if it has been deployed already
-    deployed_contract_dict = get_deployment(contract_designation, deployment_file)
+    deployed_contract_dict = get_deployment(os.path.basename(contract_folder), deployment_file)
 
     deployed_contract_version = "0.0.0"  # contract has never been deployed
     if deployed_contract_dict:
@@ -32,7 +34,7 @@ def deploy_contract(contract_folder, deployment_file, *args):
         deployed_contract = boa.load(latest_contract, *args)
 
         # update deployment yaml file
-        save_deployment_metadata(contract_designation, deployed_contract, deployment_file)
+        save_deployment_metadata(os.path.basename(contract_folder), deployed_contract, deployment_file, args)
 
     else:
         # return contract object of existing deployment
@@ -58,31 +60,28 @@ def get_latest_commit_hash(file_path):
         return None
 
 
-def fetch_latest_contract(contract_designation, folder_path="contracts/helpers/router"):
+def fetch_latest_contract(contract_folder: Path) -> Path:
     # Regex pattern to match version numbers in filenames
-    pattern = re.compile(rf"{contract_designation}_v_(\d+).vy")
-
-    # List all files in the directory
-    files = os.listdir(folder_path)
+    contract_name = os.path.basename(contract_folder)
+    pattern = re.compile(rf"{contract_name}_v_(\d+).vy")
 
     # Filter and sort files by version number
     versions = []
-    for file in files:
-        match = pattern.match(file)
+    for file in contract_folder.iterdir():
+        match = pattern.match(os.path.basename(file))
         if match:
             version = int(match.group(1))
             versions.append((version, file))
 
     if not versions:
-        raise FileNotFoundError(f"No versions found for contract {contract_designation}")
+        raise FileNotFoundError(f"No versions found for contract {contract_name}")
 
     # Get the file with the highest version number
     latest_version = max(versions, key=lambda x: x[0])
+    return latest_version[1]
 
-    return os.path.join(folder_path, latest_version[1])
 
-
-def get_version_from_filename(filename):
+def get_version_from_filename(filename: Path):
     # Extract the version part (e.g., v_110) from the filename
     version_str = os.path.basename(filename).split("_")[-1].split(".")[0]
 
@@ -98,41 +97,38 @@ def version_a_gt_version_b(a, b):
     return list(map(int, a.split("."))) > list(map(int, b.split(".")))
 
 
-def get_deployment(contract_designation, deployment_file):
-    if not os.path.exists(deployment_file):
+def get_deployment(contract_designation: str, deployment_file: Path):
+    if not deployment_file.exists():
         return ""
 
     with open(deployment_file, "r") as file:
         deployments = yaml.safe_load(file)
 
     if contract_designation in deployments.keys():
-        return deployments[contract_designation]
+        return deployments["contracts"][contract_designation]
 
     return {}
 
 
 def save_deployment_metadata(
-    contract_designation,
-    contract_object,
-    deployment_file,
-    abi_encoded_ctor,
+    contract_designation: str,
+    contract_object: VyperContract,
+    deployment_file: Path,
+    abi_encoded_constructor_args: list,
 ):
     if not os.path.exists(deployment_file):
-        deployments = {}
+        deployments = {"contracts": {}}
     else:
         with open(deployment_file, "r") as file:
             deployments = yaml.safe_load(file)
 
-    if not "contracts" in deployments.keys():
-        deployments["contracts"] = {}
-
     deployments["contracts"][contract_designation] = {
         "version": contract_object.version().strip(),
-        "contract_file": contract_object.filename,
+        "contract_file": get_relative_path(contract_object.filename),
         "latest_git_commit_hash": get_latest_commit_hash(contract_object.filename),
         "address": contract_object.address.strip(),
         "deployment_timestamp": int(time.time()),
-        "abi_encoded_constructor_args": abi_encoded_ctor,
+        "abi_encoded_constructor_args": ",".join(abi_encoded_constructor_args),
     }
 
     with open(deployment_file, "w") as file:
@@ -155,3 +151,16 @@ def deploy_via_create2(contract_file, abi_encoded_ctor="", is_blueprint=False):
     precomputed_address = create2deployer.computeAddress(CREATE2_SALT, keccak(deployment_bytecode))
     create2deployer.deploy(0, CREATE2_SALT, deployment_bytecode)
     return contract_obj.at(precomputed_address)
+
+
+def get_relative_path(contract_file: str) -> str:
+    result = ""
+    rel_path = False
+    for el in str(contract_file).split("/"):
+        if el == "contracts":
+            rel_path = True
+
+        if rel_path:
+            result += "/" + el
+
+    return result
