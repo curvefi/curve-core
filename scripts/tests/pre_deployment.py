@@ -2,7 +2,7 @@ import logging
 
 import boa
 
-from scripts.deployment.utils import CREATE2DEPLOYER_ADDRESS
+from scripts.deploy.utils import CREATE2DEPLOYER_ADDRESS
 from settings.config import settings
 
 logger = logging.getLogger(__name__)
