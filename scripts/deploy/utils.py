@@ -6,7 +6,9 @@ from pathlib import Path
 
 import boa
 import yaml
+from boa.contracts.abi.abi_contract import ABIFunction
 from boa.contracts.vyper.vyper_contract import VyperContract
+from boa.util.abi import abi_encode
 from eth_utils import keccak
 
 from settings.config import BASE_DIR
@@ -114,7 +116,7 @@ def save_deployment_metadata(
     contract_designation: str,
     contract_object: VyperContract,
     deployment_file: Path,
-    abi_encoded_constructor_args: list,
+    ctor_args: list,
 ):
     if not os.path.exists(deployment_file):
         deployments = {"contracts": {}}
@@ -122,13 +124,39 @@ def save_deployment_metadata(
         with open(deployment_file, "r") as file:
             deployments = yaml.safe_load(file)
 
+    # get abi-encoded ctor args:
+    ctor_abi_object = ABIFunction(
+        next(i for i in contract_object.abi if i["type"] == "constructor"), contract_name="ctor_abi"
+    )
+    abi_args = ctor_abi_object._merge_kwargs(*ctor_args)
+    encoded_args = abi_encode(ctor_abi_object.signature, abi_args)
+
+    # fetch data from contract pragma:
+    compiler_version = "0.0.0"
+    pattern = r"# pragma version ([\d.]+)"
+    match = re.search(pattern, contract_object.compiler_data.source_code)
+    if match:
+        compiler_version = match.group(1)
+    else:
+        raise ValueError("Compiler Version is set incorrectly")
+
+    # latest git commit hash:
+    latest_git_commit_for_file = get_latest_commit_hash(contract_object.filename)
+    contract_relative_path = get_relative_path(contract_object.filename)
+    github_url = f"https://github.com/curvefi/curve-lite/blob/{latest_git_commit_for_file}{contract_relative_path}"
+
+    # store contract deployment metadata:
     deployments["contracts"][contract_designation] = {
-        "version": contract_object.version().strip(),
-        "contract_file": get_relative_path(contract_object.filename),
-        "latest_git_commit_hash": get_latest_commit_hash(contract_object.filename),
+        "contract_version": contract_object.version().strip(),
+        "contract_github_url": github_url,
         "address": contract_object.address.strip(),
         "deployment_timestamp": int(time.time()),
-        "abi_encoded_constructor_args": ",".join(abi_encoded_constructor_args),
+        "constructor_args_encoded": encoded_args.hex(),
+        "compiler_settings": {
+            "compiler_version": compiler_version,
+            "optimisation_level": contract_object.compiler_data.settings.optimize._name_,
+            "evm_version": contract_object.compiler_data.settings.evm_version,
+        },
     }
 
     with open(deployment_file, "w") as file:
