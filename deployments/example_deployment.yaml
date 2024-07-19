@@ -1,4 +1,14 @@
 contracts:
+  address_provider:
+    address: '0x0880cf17Bd263d3d3a5c09D2D86cCecA3CcbD97c'
+    compiler_settings:
+      compiler_version: 0.3.10
+      evm_version: paris
+      optimisation_level: GAS
+    constructor_args_encoded: ''
+    contract_github_url: https://github.com/curvefi/curve-lite/blob//contracts/registries/address_provider/address_provider_v_201.vy
+    contract_version: 2.0.1
+    deployment_timestamp: 1721389169
   router:
     address: '0x0880cf17Bd263d3d3a5c09D2D86cCecA3CcbD97c'
     compiler_settings:
