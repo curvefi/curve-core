@@ -1,0 +1,217 @@
+[
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "get_dx",
+        "inputs": [
+            {
+                "name": "i",
+                "type": "int128"
+            },
+            {
+                "name": "j",
+                "type": "int128"
+            },
+            {
+                "name": "dy",
+                "type": "uint256"
+            },
+            {
+                "name": "pool",
+                "type": "address"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "get_dy",
+        "inputs": [
+            {
+                "name": "i",
+                "type": "int128"
+            },
+            {
+                "name": "j",
+                "type": "int128"
+            },
+            {
+                "name": "dx",
+                "type": "uint256"
+            },
+            {
+                "name": "pool",
+                "type": "address"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "get_dx_underlying",
+        "inputs": [
+            {
+                "name": "i",
+                "type": "int128"
+            },
+            {
+                "name": "j",
+                "type": "int128"
+            },
+            {
+                "name": "dy",
+                "type": "uint256"
+            },
+            {
+                "name": "pool",
+                "type": "address"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "get_dy_underlying",
+        "inputs": [
+            {
+                "name": "i",
+                "type": "int128"
+            },
+            {
+                "name": "j",
+                "type": "int128"
+            },
+            {
+                "name": "dx",
+                "type": "uint256"
+            },
+            {
+                "name": "pool",
+                "type": "address"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "calc_token_amount",
+        "inputs": [
+            {
+                "name": "_amounts",
+                "type": "uint256[]"
+            },
+            {
+                "name": "_is_deposit",
+                "type": "bool"
+            },
+            {
+                "name": "pool",
+                "type": "address"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "calc_withdraw_one_coin",
+        "inputs": [
+            {
+                "name": "_burn_amount",
+                "type": "uint256"
+            },
+            {
+                "name": "i",
+                "type": "int128"
+            },
+            {
+                "name": "pool",
+                "type": "address"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "dynamic_fee",
+        "inputs": [
+            {
+                "name": "i",
+                "type": "int128"
+            },
+            {
+                "name": "j",
+                "type": "int128"
+            },
+            {
+                "name": "pool",
+                "type": "address"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "version",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "VERSION",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ]
+    }
+]

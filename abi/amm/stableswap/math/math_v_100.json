@@ -1,0 +1,130 @@
+[
+    {
+        "stateMutability": "pure",
+        "type": "function",
+        "name": "get_y",
+        "inputs": [
+            {
+                "name": "i",
+                "type": "int128"
+            },
+            {
+                "name": "j",
+                "type": "int128"
+            },
+            {
+                "name": "x",
+                "type": "uint256"
+            },
+            {
+                "name": "xp",
+                "type": "uint256[]"
+            },
+            {
+                "name": "_amp",
+                "type": "uint256"
+            },
+            {
+                "name": "_D",
+                "type": "uint256"
+            },
+            {
+                "name": "_n_coins",
+                "type": "uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "pure",
+        "type": "function",
+        "name": "get_D",
+        "inputs": [
+            {
+                "name": "_xp",
+                "type": "uint256[]"
+            },
+            {
+                "name": "_amp",
+                "type": "uint256"
+            },
+            {
+                "name": "_n_coins",
+                "type": "uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "pure",
+        "type": "function",
+        "name": "get_y_D",
+        "inputs": [
+            {
+                "name": "A",
+                "type": "uint256"
+            },
+            {
+                "name": "i",
+                "type": "int128"
+            },
+            {
+                "name": "xp",
+                "type": "uint256[]"
+            },
+            {
+                "name": "D",
+                "type": "uint256"
+            },
+            {
+                "name": "_n_coins",
+                "type": "uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "pure",
+        "type": "function",
+        "name": "exp",
+        "inputs": [
+            {
+                "name": "x",
+                "type": "int256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "version",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ]
+    }
+]
