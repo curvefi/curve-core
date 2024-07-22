@@ -5,6 +5,8 @@ import click
 from settings.config import get_chain_settings
 
 from .amm.stableswap import deploy_infra as stableswap_deploy
+from .amm.tricrypto import deploy_infra as tricrypto_deploy
+from .amm.twocrypto import deploy_infra as twocrypto_deploy
 from .helpers.router import deploy_router
 from .models import CurveNetworkSettings
 from .registries.address_provider import deploy_address_provider
@@ -38,6 +40,14 @@ def run_deploy_all(chain: str) -> None:
     stableswap_deploy(chain, chain_settings)
     logger.info("Deployed address provider at %r", chain)
 
+    logger.info("Deploying tricrypto at %r", chain)
+    tricrypto_deploy(chain, chain_settings)
+    logger.info("Deployed tricrypto at %r", chain)
+
+    logger.info("Deploying twocrypto at %r", chain)
+    twocrypto_deploy(chain, chain_settings)
+    logger.info("Deployed twocrypto at %r", chain)
+
 
 @deploy_commands.command("router", short_help="deploy router")
 @click.argument("chain", type=click.STRING)
@@ -69,3 +79,31 @@ def run_deploy_stableswap(chain: str) -> None:
     logger.info("Deploying stableswap at %r", chain)
     stableswap_deploy(chain, chain_settings)
     logger.info("Deployed stableswap at %r", chain)
+
+
+@deploy_commands.command("tricrypto", short_help="deploy tricrypto infra")
+@click.argument("chain", type=click.STRING)
+def run_deploy_tricrypto(chain: str) -> None:
+    settings = get_chain_settings(chain)
+
+    chain_settings = CurveNetworkSettings(
+        dao_ownership_contract=settings.owner, fee_receiver_address=settings.fee_receiver
+    )
+
+    logger.info("Deploying tricrypto at %r", chain)
+    tricrypto_deploy(chain, chain_settings)
+    logger.info("Deployed tricrypto at %r", chain)
+
+
+@deploy_commands.command("twocrypto", short_help="deploy twocrypto infra")
+@click.argument("chain", type=click.STRING)
+def run_deploy_twocrypto(chain: str) -> None:
+    settings = get_chain_settings(chain)
+
+    chain_settings = CurveNetworkSettings(
+        dao_ownership_contract=settings.owner, fee_receiver_address=settings.fee_receiver
+    )
+
+    logger.info("Deploying twocrypto at %r", chain)
+    twocrypto_deploy(chain, chain_settings)
+    logger.info("Deployed twocrypto at %r", chain)

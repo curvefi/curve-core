@@ -1,0 +1,198 @@
+[
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "get_y",
+        "inputs": [
+            {
+                "name": "_ANN",
+                "type": "uint256"
+            },
+            {
+                "name": "_gamma",
+                "type": "uint256"
+            },
+            {
+                "name": "x",
+                "type": "uint256[3]"
+            },
+            {
+                "name": "_D",
+                "type": "uint256"
+            },
+            {
+                "name": "i",
+                "type": "uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256[2]"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "newton_D",
+        "inputs": [
+            {
+                "name": "ANN",
+                "type": "uint256"
+            },
+            {
+                "name": "gamma",
+                "type": "uint256"
+            },
+            {
+                "name": "x_unsorted",
+                "type": "uint256[3]"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "newton_D",
+        "inputs": [
+            {
+                "name": "ANN",
+                "type": "uint256"
+            },
+            {
+                "name": "gamma",
+                "type": "uint256"
+            },
+            {
+                "name": "x_unsorted",
+                "type": "uint256[3]"
+            },
+            {
+                "name": "K0_prev",
+                "type": "uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "get_p",
+        "inputs": [
+            {
+                "name": "_xp",
+                "type": "uint256[3]"
+            },
+            {
+                "name": "_D",
+                "type": "uint256"
+            },
+            {
+                "name": "_A_gamma",
+                "type": "uint256[2]"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256[2]"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "cbrt",
+        "inputs": [
+            {
+                "name": "x",
+                "type": "uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "geometric_mean",
+        "inputs": [
+            {
+                "name": "_x",
+                "type": "uint256[3]"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "reduction_coefficient",
+        "inputs": [
+            {
+                "name": "x",
+                "type": "uint256[3]"
+            },
+            {
+                "name": "fee_gamma",
+                "type": "uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "wad_exp",
+        "inputs": [
+            {
+                "name": "_power",
+                "type": "int256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "version",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ]
+    }
+]
