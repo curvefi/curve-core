@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 import subprocess
@@ -11,14 +12,21 @@ from boa.contracts.abi.abi_contract import ABIFunction
 from boa.contracts.vyper.vyper_contract import VyperContract
 from boa.util.abi import abi_encode
 from eth_utils import keccak
+from pydantic_settings import BaseSettings
 
-from settings.config import BASE_DIR
+from settings.config import BASE_DIR, RollupType, get_chain_settings
 
 from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRESS
 
+logger = logging.getLogger(__name__)
 
-def deploy_contract(contract_folder: Path, chain_name: str, *args):
+
+def deploy_contract(chain_name: str, category: str, contract_folder: Path, *args, as_blueprint: bool = False):
     deployment_file = Path(BASE_DIR, "deployments", f"{chain_name}.yaml")
+    chain_settings = get_chain_settings(chain_name)
+
+    if chain_settings.rollup_type == RollupType.zksync and as_blueprint is True:
+        raise NotImplementedError("ZKSync blueprints deployment not implemented")
 
     # fetch latest contract
     latest_contract = fetch_latest_contract(contract_folder)
@@ -34,8 +42,14 @@ def deploy_contract(contract_folder: Path, chain_name: str, *args):
     # deploy contract if nothing has been deployed, or if deployed contract is old
     if version_a_gt_version_b(version_latest_contract, deployed_contract_version):
 
-        # deploy contract
-        deployed_contract = boa.load(latest_contract, *args)
+        if chain_settings.rollup_type != RollupType.zksync:
+            # deploy contract
+            if not as_blueprint:
+                deployed_contract = boa.load_partial(latest_contract).deploy(*args)
+            else:
+                deployed_contract = boa.load_partial(latest_contract).deploy_as_blueprint(*args)
+        else:
+            deployed_contract = boa.load_partial(latest_contract, chain_name).deploy_as_blueprint(*args)
 
         # store abi
         relpath = get_relative_path(contract_folder)
@@ -47,9 +61,18 @@ def deploy_contract(contract_folder: Path, chain_name: str, *args):
 
         with open(abi_file, "w") as abi_file:
             json.dump(deployed_contract.abi, abi_file, indent=4)
+            abi_file.write("\n")
 
         # update deployment yaml file
-        save_deployment_metadata(os.path.basename(contract_folder), deployed_contract, deployment_file, args)
+        save_deployment_metadata(
+            category,
+            os.path.basename(contract_folder),
+            chain_settings,
+            deployed_contract,
+            deployment_file,
+            args,
+            as_blueprint=as_blueprint,
+        )
 
     else:
         # return contract object of existing deployment
@@ -126,26 +149,33 @@ def get_deployment(contract_designation: str, deployment_file: Path):
 
 
 def save_deployment_metadata(
+    category: str,
     contract_designation: str,
+    chain_settings: BaseSettings,
     contract_object: VyperContract,
     deployment_file: Path,
     ctor_args: list,
+    as_blueprint: bool = False,
 ):
     if not os.path.exists(deployment_file):
-        deployments = {"contracts": {}}
+        deployments = {"contracts": {category: {}}}
     else:
         with open(deployment_file, "r") as file:
             deployments = yaml.safe_load(file)
+    if category not in deployments["contracts"]:
+        deployments["contracts"][category] = {}
 
     # get abi-encoded ctor args:
-    ctor_abi_object = ABIFunction(
-        next(i for i in contract_object.abi if i["type"] == "constructor"), contract_name="ctor_abi"
-    )
-    abi_args = ctor_abi_object._merge_kwargs(*ctor_args)
-    encoded_args = abi_encode(ctor_abi_object.signature, abi_args)
+    if ctor_args:
+        ctor_abi_object = ABIFunction(
+            next(i for i in contract_object.abi if i["type"] == "constructor"), contract_name="ctor_abi"
+        )
+        abi_args = ctor_abi_object._merge_kwargs(*ctor_args)
+        encoded_args = abi_encode(ctor_abi_object.signature, abi_args).hex()
+    else:
+        encoded_args = None
 
     # fetch data from contract pragma:
-    compiler_version = "0.0.0"
     pattern = r"# pragma version ([\d.]+)"
     match = re.search(pattern, contract_object.compiler_data.source_code)
     if match:
@@ -158,18 +188,41 @@ def save_deployment_metadata(
     contract_relative_path = get_relative_path(contract_object.filename)
     github_url = f"https://github.com/curvefi/curve-lite/blob/{latest_git_commit_for_file}{contract_relative_path}"
 
+    if not as_blueprint:
+        version = contract_object.version().strip()
+    else:
+        pattern = 'version: public\(constant\(String\[8\]\)\) = "([\d.]+)"'
+        match = re.search(pattern, contract_object.compiler_data.source_code)
+
+        if match:
+            version = match.group(1)
+        else:
+            raise ValueError("Contract version is set incorrectly")
+
     # store contract deployment metadata:
-    deployments["contracts"][contract_designation] = {
-        "contract_version": contract_object.version().strip(),
+    deployments["contracts"][category][contract_designation] = {
+        "deployment_type": "normal" if not as_blueprint else "blueprint",
+        "contract_version": version,
         "contract_github_url": github_url,
         "address": contract_object.address.strip(),
         "deployment_timestamp": int(time.time()),
-        "constructor_args_encoded": encoded_args.hex(),
+        "constructor_args_encoded": encoded_args,
         "compiler_settings": {
             "compiler_version": compiler_version,
             "optimisation_level": contract_object.compiler_data.settings.optimize._name_,
             "evm_version": contract_object.compiler_data.settings.evm_version,
         },
+    }
+    deployments["config"] = {
+        "chain": chain_settings.chain,
+        "chain_id": chain_settings.chain_id,
+        "chain_type": {
+            "layer": chain_settings.layer,
+            "rollup_type": chain_settings.rollup_type.value,
+        },
+        "weth": chain_settings.weth,
+        "owner": chain_settings.owner,
+        "fee_receiver": chain_settings.fee_receiver,
     }
 
     with open(deployment_file, "w") as file:

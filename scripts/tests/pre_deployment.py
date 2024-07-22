@@ -3,15 +3,14 @@ import logging
 import boa
 
 from scripts.deploy.utils import CREATE2DEPLOYER_ADDRESS
-from settings.config import settings
 
 logger = logging.getLogger(__name__)
 
 
-def test_chain_id():
-    chain_id = boa.env._rpc.fetch("eth_chainId", [])
-    logger.info("Chain id: %r", int(chain_id, 0))
-    return True  # TODO: input chain ID must be checked here ...
+def test_chain_id(chain_id: int):
+    chain_id_from_rpc = int(boa.env._rpc.fetch("eth_chainId", []), 0)
+    logger.info("Chain id for RPC: %r", chain_id)
+    return chain_id_from_rpc == chain_id
 
 
 def test_evm_version():
@@ -43,10 +42,10 @@ def test_multicall3_deployed():
     return True
 
 
-def test_pre_deploy():
+def test_pre_deploy(chain_id: int):
     logger.info("Running pre deploy tests...")
 
-    test_chain_id()
+    test_chain_id(chain_id)
     test_evm_version()
     test_create2deployer_deployed()
     test_multicall3_deployed()

@@ -1,0 +1,201 @@
+[
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "get_dy",
+        "inputs": [
+            {
+                "name": "i",
+                "type": "uint256"
+            },
+            {
+                "name": "j",
+                "type": "uint256"
+            },
+            {
+                "name": "dx",
+                "type": "uint256"
+            },
+            {
+                "name": "swap",
+                "type": "address"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "get_dx",
+        "inputs": [
+            {
+                "name": "i",
+                "type": "uint256"
+            },
+            {
+                "name": "j",
+                "type": "uint256"
+            },
+            {
+                "name": "dy",
+                "type": "uint256"
+            },
+            {
+                "name": "swap",
+                "type": "address"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "calc_withdraw_one_coin",
+        "inputs": [
+            {
+                "name": "token_amount",
+                "type": "uint256"
+            },
+            {
+                "name": "i",
+                "type": "uint256"
+            },
+            {
+                "name": "swap",
+                "type": "address"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "calc_token_amount",
+        "inputs": [
+            {
+                "name": "amounts",
+                "type": "uint256[3]"
+            },
+            {
+                "name": "deposit",
+                "type": "bool"
+            },
+            {
+                "name": "swap",
+                "type": "address"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "calc_fee_get_dy",
+        "inputs": [
+            {
+                "name": "i",
+                "type": "uint256"
+            },
+            {
+                "name": "j",
+                "type": "uint256"
+            },
+            {
+                "name": "dx",
+                "type": "uint256"
+            },
+            {
+                "name": "swap",
+                "type": "address"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "calc_fee_withdraw_one_coin",
+        "inputs": [
+            {
+                "name": "token_amount",
+                "type": "uint256"
+            },
+            {
+                "name": "i",
+                "type": "uint256"
+            },
+            {
+                "name": "swap",
+                "type": "address"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "calc_fee_token_amount",
+        "inputs": [
+            {
+                "name": "amounts",
+                "type": "uint256[3]"
+            },
+            {
+                "name": "deposit",
+                "type": "bool"
+            },
+            {
+                "name": "swap",
+                "type": "address"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "version",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ]
+    }
+]
