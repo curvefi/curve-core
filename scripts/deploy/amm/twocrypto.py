@@ -17,16 +17,16 @@ def deploy_infra(chain: str, network_settings: CurveNetworkSettings):
     # --------------------- Deploy math, views, blueprints ---------------------
 
     # deploy non-blueprint contracts:
-    math_contract = deploy_contract(Path(BASE_DIR, "contracts", "amm", "twocryptoswap", "math"), chain)
-    views_contract = deploy_contract(Path(BASE_DIR, "contracts", "amm", "twocryptoswap", "views"), chain)
+    math_contract = deploy_contract(chain, "twocrypto", Path(BASE_DIR, "contracts", "amm", "twocryptoswap", "math"))
+    views_contract = deploy_contract(chain, "twocrypto", Path(BASE_DIR, "contracts", "amm", "twocryptoswap", "views"))
 
     # deploy blueprints:
     plain_blueprint = deploy_contract(
-        Path(BASE_DIR, "contracts", "amm", "twocryptoswap", "implementation"), chain, as_blueprint=True
+        chain, "twocrypto", Path(BASE_DIR, "contracts", "amm", "twocryptoswap", "implementation"), as_blueprint=True
     )
 
     # Factory:
-    factory = deploy_contract(Path(BASE_DIR, "contracts", "amm", "twocryptoswap", "factory"), chain)
+    factory = deploy_contract(chain, "twocrypto", Path(BASE_DIR, "contracts", "amm", "twocryptoswap", "factory"))
     factory.initialise_ownership(fee_receiver, boa.env.eoa)
 
     # Set up AMM implementations:÷

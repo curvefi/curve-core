@@ -19,12 +19,11 @@ settings = Settings()
 
 
 class RollupType(StrEnum):
-    mainnet = "mainnet"
-    optimism = "optimism"
-    arbitrum = "arbitrum"
+    op_stack = "optimism"
+    arb_orbit = "arbitrum"
     polygon_zk = "polygon_zk"
     zksync = "zksync"
-    other = "other"
+    unknown = "unknown"
 
 
 def get_chain_settings(chain: str):
@@ -50,6 +49,7 @@ def get_chain_settings(chain: str):
         # chain settings from config file
         chain: str
         chain_id: int
+        layer: int
         rollup_type: RollupType
 
         weth: str

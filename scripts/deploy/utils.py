@@ -21,7 +21,7 @@ from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRES
 logger = logging.getLogger(__name__)
 
 
-def deploy_contract(contract_folder: Path, chain_name: str, *args, as_blueprint: bool = False):
+def deploy_contract(chain_name: str, category: str, contract_folder: Path, *args, as_blueprint: bool = False):
     deployment_file = Path(BASE_DIR, "deployments", f"{chain_name}.yaml")
     chain_settings = get_chain_settings(chain_name)
 
@@ -64,6 +64,7 @@ def deploy_contract(contract_folder: Path, chain_name: str, *args, as_blueprint:
 
         # update deployment yaml file
         save_deployment_metadata(
+            category,
             os.path.basename(contract_folder),
             chain_settings,
             deployed_contract,
@@ -147,6 +148,7 @@ def get_deployment(contract_designation: str, deployment_file: Path):
 
 
 def save_deployment_metadata(
+    category: str,
     contract_designation: str,
     chain_settings: BaseSettings,
     contract_object: VyperContract,
@@ -155,10 +157,12 @@ def save_deployment_metadata(
     as_blueprint: bool = False,
 ):
     if not os.path.exists(deployment_file):
-        deployments = {"contracts": {}}
+        deployments = {"contracts": {category: {}}}
     else:
         with open(deployment_file, "r") as file:
             deployments = yaml.safe_load(file)
+    if category not in deployments["contracts"]:
+        deployments["contracts"][category] = {}
 
     # get abi-encoded ctor args:
     if ctor_args:
@@ -195,7 +199,7 @@ def save_deployment_metadata(
             raise ValueError("Contract version is set incorrectly")
 
     # store contract deployment metadata:
-    deployments["contracts"][contract_designation] = {
+    deployments["contracts"][category][contract_designation] = {
         "deployment_type": "normal" if not as_blueprint else "blueprint",
         "contract_version": version,
         "contract_github_url": github_url,
@@ -211,7 +215,10 @@ def save_deployment_metadata(
     deployments["config"] = {
         "chain": chain_settings.chain,
         "chain_id": chain_settings.chain_id,
-        "rollup_type": chain_settings.rollup_type.value,
+        "chain_type": {
+            "layer": chain_settings.layer,
+            "rollup_type": chain_settings.rollup_type.value,
+        },
         "weth": chain_settings.weth,
         "owner": chain_settings.owner,
         "fee_receiver": chain_settings.fee_receiver,
