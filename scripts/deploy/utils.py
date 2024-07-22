@@ -183,9 +183,21 @@ def save_deployment_metadata(
     contract_relative_path = get_relative_path(contract_object.filename)
     github_url = f"https://github.com/curvefi/curve-lite/blob/{latest_git_commit_for_file}{contract_relative_path}"
 
+    if not as_blueprint:
+        version = contract_object.version().strip()
+    else:
+        pattern = 'version: public\(constant\(String\[8\]\)\) = "([\d.]+)"'
+        match = re.search(pattern, contract_object.compiler_data.source_code)
+
+        if match:
+            version = match.group(1)
+        else:
+            raise ValueError("Contract version is set incorrectly")
+
     # store contract deployment metadata:
     deployments["contracts"][contract_designation] = {
-        "contract_version": contract_object.version().strip() if not as_blueprint else "blueprint",
+        "deployment_type": "normal" if not as_blueprint else "blueprint",
+        "contract_version": version,
         "contract_github_url": github_url,
         "address": contract_object.address.strip(),
         "deployment_timestamp": int(time.time()),
