@@ -61,6 +61,7 @@ def deploy_contract(chain_name: str, category: str, contract_folder: Path, *args
 
         with open(abi_file, "w") as abi_file:
             json.dump(deployed_contract.abi, abi_file, indent=4)
+            abi_file.write("\n")
 
         # update deployment yaml file
         save_deployment_metadata(
