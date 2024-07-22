@@ -12,8 +12,9 @@ from boa.contracts.abi.abi_contract import ABIFunction
 from boa.contracts.vyper.vyper_contract import VyperContract
 from boa.util.abi import abi_encode
 from eth_utils import keccak
+from pydantic_settings import BaseSettings
 
-from settings.config import BASE_DIR
+from settings.config import BASE_DIR, RollupType, get_chain_settings
 
 from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRESS
 
@@ -22,6 +23,10 @@ logger = logging.getLogger(__name__)
 
 def deploy_contract(contract_folder: Path, chain_name: str, *args, as_blueprint: bool = False):
     deployment_file = Path(BASE_DIR, "deployments", f"{chain_name}.yaml")
+    chain_settings = get_chain_settings(chain_name)
+
+    if chain_settings.rollup_type == RollupType.zksync and as_blueprint is True:
+        raise NotImplementedError("ZKSync blueprints deployment not implemented")
 
     # fetch latest contract
     latest_contract = fetch_latest_contract(contract_folder)
@@ -37,11 +42,14 @@ def deploy_contract(contract_folder: Path, chain_name: str, *args, as_blueprint:
     # deploy contract if nothing has been deployed, or if deployed contract is old
     if version_a_gt_version_b(version_latest_contract, deployed_contract_version):
 
-        # deploy contract
-        if as_blueprint:
-            deployed_contract = get_contract_deployer(latest_contract, chain_name).deploy_as_blueprint(*args)
+        if chain_settings.rollup_type != RollupType.zksync:
+            # deploy contract
+            if not as_blueprint:
+                deployed_contract = boa.load_partial(latest_contract).deploy(*args)
+            else:
+                deployed_contract = boa.load_partial(latest_contract).deploy_as_blueprint(*args)
         else:
-            deployed_contract = get_contract_deployer(latest_contract, chain_name).deploy(*args)
+            deployed_contract = boa.load_partial(latest_contract, chain_name).deploy_as_blueprint(*args)
 
         # store abi
         relpath = get_relative_path(contract_folder)
@@ -56,7 +64,12 @@ def deploy_contract(contract_folder: Path, chain_name: str, *args, as_blueprint:
 
         # update deployment yaml file
         save_deployment_metadata(
-            os.path.basename(contract_folder), deployed_contract, deployment_file, args, as_blueprint=as_blueprint
+            os.path.basename(contract_folder),
+            chain_settings,
+            deployed_contract,
+            deployment_file,
+            args,
+            as_blueprint=as_blueprint,
         )
 
     else:
@@ -135,6 +148,7 @@ def get_deployment(contract_designation: str, deployment_file: Path):
 
 def save_deployment_metadata(
     contract_designation: str,
+    chain_settings: BaseSettings,
     contract_object: VyperContract,
     deployment_file: Path,
     ctor_args: list,
@@ -182,6 +196,14 @@ def save_deployment_metadata(
             "evm_version": contract_object.compiler_data.settings.evm_version,
         },
     }
+    deployments["config"] = {
+        "chain": chain_settings.chain,
+        "chain_id": chain_settings.chain_id,
+        "rollup_type": chain_settings.rollup_type.value,
+        "weth": chain_settings.weth,
+        "owner": chain_settings.owner,
+        "fee_receiver": chain_settings.fee_receiver,
+    }
 
     with open(deployment_file, "w") as file:
         yaml.dump(deployments, file)
@@ -216,31 +238,3 @@ def get_relative_path(contract_file: str) -> str:
             result += "/" + el
 
     return result
-
-
-def get_contract_deployer(contract_file: Path, network) -> boa.contracts.vyper.vyper_contract.VyperDeployer:
-    with open(contract_file, "r") as f:
-        source = f.read()
-
-    # TODO: refactor for new chains
-    is_shanghai_chain = any([x in network for x in ["ethereum", "gnosis"]])
-
-    if is_shanghai_chain and "# pragma evm-version paris" in source:
-        logger.info("Replacing EVM version to Shanghai ...")
-        new_source = source.replace("# pragma evm-version paris\n", "# pragma evm-version shanghai\n")
-    elif not is_shanghai_chain and "# pragma evm-version shanghai" in source:
-        logger.info("Replacing EVM version to Paris ...")
-        new_source = source.replace("# pragma evm-version shanghai\n", "# pragma evm-version paris\n")
-    else:  # all looks good ...
-        new_source = source
-
-    is_zksync = "zksync" in network
-    if is_zksync:
-        logger.info("Cannot use compiler optimisations in zksync. Removing optimizer flags")
-        if "# pragma optimize gas" in new_source:
-            new_source = source.replace("# pragma optimize gas\n", "#\n")
-        if "# pragma optimize codesize" in new_source:
-            new_source = source.replace("# pragma optimize codesize\n", "#\n")
-
-    contract_obj = boa.loads_partial(source_code=new_source, filename=contract_file)
-    return contract_obj

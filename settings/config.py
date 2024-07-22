@@ -1,3 +1,4 @@
+from enum import StrEnum
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict, YamlConfigSettingsSource
@@ -15,6 +16,15 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+class RollupType(StrEnum):
+    mainnet = "mainnet"
+    optimism = "optimism"
+    arbitrum = "arbitrum"
+    polygon_zk = "polygon_zk"
+    zksync = "zksync"
+    other = "other"
 
 
 def get_chain_settings(chain: str):
@@ -40,6 +50,7 @@ def get_chain_settings(chain: str):
         # chain settings from config file
         chain: str
         chain_id: int
+        rollup_type: RollupType
 
         weth: str
         owner: str
