@@ -11,7 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 def deploy_infra(chain: str, network_settings: CurveNetworkSettings):
+
     # owner = network_settings.dao_ownership_contract  # TODO: add grant access
+
     fee_receiver = network_settings.fee_receiver_address
 
     # --------------------- Deploy math, views, blueprints ---------------------
@@ -19,6 +21,8 @@ def deploy_infra(chain: str, network_settings: CurveNetworkSettings):
     # deploy non-blueprint contracts:
     math_contract = deploy_contract(chain, "stableswap", Path(BASE_DIR, "contracts", "amm", "stableswap", "math"))
     views_contract = deploy_contract(chain, "stableswap", Path(BASE_DIR, "contracts", "amm", "stableswap", "views"))
+
+    breakpoint()
 
     # deploy blueprints:
     plain_blueprint = deploy_contract(

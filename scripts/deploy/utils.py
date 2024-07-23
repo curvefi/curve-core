@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 def deploy_contract(chain_name: str, category: str, contract_folder: Path, *args, as_blueprint: bool = False):
+
     deployment_file = Path(BASE_DIR, "deployments", f"{chain_name}.yaml")
     chain_settings = get_chain_settings(chain_name)
 
