@@ -2,19 +2,19 @@ import logging
 
 import click
 
-from scripts.deploy.helpers.deposit_and_stake_zap import deploy_deposit_and_stake_zap
-from scripts.deploy.helpers.rate_provider import deploy_rate_provider
-from scripts.deploy.helpers.stable_swap_meta_zap import deploy_stable_swap_meta_zap
-from scripts.deploy.registries.metaregistry import deploy_metaregistry
 from settings.config import RollupType, get_chain_settings
 
 from .amm.stableswap import deploy_infra as deploy_stableswap
 from .amm.tricrypto import deploy_infra as deploy_tricrypto
 from .amm.twocrypto import deploy_infra as deploy_twocrypto
 from .constants import ADDRESS_PROVIDER_MAPPING, ZERO_ADDRESS
+from .helpers.deposit_and_stake_zap import deploy_deposit_and_stake_zap
+from .helpers.rate_provider import deploy_rate_provider
 from .helpers.router import deploy_router
+from .helpers.stable_swap_meta_zap import deploy_stable_swap_meta_zap
 from .models import CurveDAONetworkSettings
 from .registries.address_provider import deploy_address_provider
+from .registries.metaregistry import deploy_metaregistry, update_metaregistry
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +98,8 @@ def run_deploy_all(chain: str) -> None:
         23: curve_network_settings.dao_emergency_contract,
         24: curve_network_settings.crv_token_address,
         25: curve_network_settings.crvusd_token_address,
+        26: deposit_and_stake_zap.address,
+        27: stable_swap_meta_zap.address,
     }
 
     ids_to_add = []
@@ -127,7 +129,10 @@ def run_deploy_all(chain: str) -> None:
             logger.log(f"Updating ID {id} in the Address Provider.")
             address_provider.update_address(id, address_provider_inputs[id])
 
-    # transfer ownership to dao
+    # update metaregistry
+    update_metaregistry(chain, metaregistry, address_provider)
+
+    # TODO: transfer ownership to dao
 
     # final!
     logger.log("Infra deployed!")

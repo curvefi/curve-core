@@ -15,6 +15,8 @@ ADDRESS_PROVIDER_MAPPING = {
     23: "Emergency Admin",
     24: "CurveDAO Vault",
     25: "crvUSD Token",
+    26: "Deposit and Stake Zap",
+    27: "Stableswap Meta Zap",
 }
 CREATE2_SALT = keccak(42069)
 CREATE2DEPLOYER_ADDRESS = "0x13b0D85CcB8bf860b6b79AF3029fCA081AE9beF2"
