@@ -1,0 +1,92 @@
+[
+    {
+        "stateMutability": "nonpayable",
+        "type": "constructor",
+        "inputs": [
+            {
+                "name": "address_provider",
+                "type": "address"
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "get_quotes",
+        "inputs": [
+            {
+                "name": "source_token",
+                "type": "address"
+            },
+            {
+                "name": "destination_token",
+                "type": "address"
+            },
+            {
+                "name": "amount_in",
+                "type": "uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "tuple[]",
+                "components": [
+                    {
+                        "name": "source_token_index",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "dest_token_index",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "is_underlying",
+                        "type": "bool"
+                    },
+                    {
+                        "name": "amount_out",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "pool",
+                        "type": "address"
+                    },
+                    {
+                        "name": "pool_balances",
+                        "type": "uint256[]"
+                    },
+                    {
+                        "name": "pool_type",
+                        "type": "uint8"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "version",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "ADDRESS_PROVIDER",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ]
+    }
+]

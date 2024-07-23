@@ -1,5 +1,23 @@
 from eth_utils import keccak
 
+ADDRESS_PROVIDER_MAPPING = {
+    2: "Exchange Router",
+    4: "Fee Distributor",
+    7: "Metaregistry",
+    11: "TricryptoNG Factory",
+    12: "StableswapNG Factory",
+    13: "TwocryptoNG Factory",
+    18: "Spot Rate Provider",
+    19: "CRV Token",
+    20: "Gauge Factory",
+    21: "Ownership Admin",
+    22: "Parameter Admin",
+    23: "Emergency Admin",
+    24: "CurveDAO Vault",
+    25: "crvUSD Token",
+    26: "Deposit and Stake Zap",
+    27: "Stableswap Meta Zap",
+}
 CREATE2_SALT = keccak(42069)
 CREATE2DEPLOYER_ADDRESS = "0x13b0D85CcB8bf860b6b79AF3029fCA081AE9beF2"
 CREATE2DEPLOYER_ABI = """
@@ -222,3 +240,4 @@ CREATE2DEPLOYER_ABI = """
     }
   ]
 """
+ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"

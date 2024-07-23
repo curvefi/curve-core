@@ -3,31 +3,31 @@ from pathlib import Path
 
 import boa
 
-from scripts.deploy.models import CurveNetworkSettings
+from scripts.deploy.models import CurveDAONetworkSettings
 from scripts.deploy.utils import deploy_contract
 from settings.config import BASE_DIR
 
 logger = logging.getLogger(__name__)
 
 
-def deploy_infra(chain: str, network_settings: CurveNetworkSettings):
+def deploy_infra(chain: str, network_settings: CurveDAONetworkSettings):
     # owner = network_settings.dao_ownership_contract  # TODO: add grant access
     fee_receiver = network_settings.fee_receiver_address
 
     # --------------------- Deploy math, views, blueprints ---------------------
 
     # deploy non-blueprint contracts:
-    math_contract = deploy_contract(chain, "tricrypto", Path(BASE_DIR, "contracts", "amm", "tricryptoswap", "math"))
-    views_contract = deploy_contract(chain, "tricrypto", Path(BASE_DIR, "contracts", "amm", "tricryptoswap", "views"))
+    math_contract = deploy_contract(chain, Path(BASE_DIR, "contracts", "amm", "tricryptoswap", "math"))
+    views_contract = deploy_contract(chain, Path(BASE_DIR, "contracts", "amm", "tricryptoswap", "views"))
 
     # deploy blueprints:
     plain_blueprint = deploy_contract(
-        chain, "tricrypto", Path(BASE_DIR, "contracts", "amm", "tricryptoswap", "implementation"), as_blueprint=True
+        chain, Path(BASE_DIR, "contracts", "amm", "tricryptoswap", "implementation"), as_blueprint=True
     )
 
     # Factory:
     factory = deploy_contract(
-        chain, "tricrypto", Path(BASE_DIR, "contracts", "amm", "tricryptoswap", "factory"), fee_receiver, boa.env.eoa
+        chain, Path(BASE_DIR, "contracts", "amm", "tricryptoswap", "factory"), fee_receiver, boa.env.eoa
     )
 
     # Set up AMM implementations:÷
@@ -49,4 +49,5 @@ def deploy_infra(chain: str, network_settings: CurveNetworkSettings):
         factory.set_pool_implementation(plain_blueprint.address, 0)
         logger.info(f"Set plain amm implementation at index 0 to: {plain_blueprint.address}")
 
-    logger.info("Infra deployed!")
+    logger.info("TricryptoSwap Factory deployed.")
+    return factory

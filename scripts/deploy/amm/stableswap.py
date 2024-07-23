@@ -3,44 +3,47 @@ from pathlib import Path
 
 import boa
 
-from scripts.deploy.models import CurveNetworkSettings
+from scripts.deploy.models import CurveDAONetworkSettings
 from scripts.deploy.utils import deploy_contract
 from settings.config import BASE_DIR
 
 logger = logging.getLogger(__name__)
 
 
-def deploy_infra(chain: str, network_settings: CurveNetworkSettings):
+def deploy_infra(chain: str, network_settings: CurveDAONetworkSettings):
+
     # owner = network_settings.dao_ownership_contract  # TODO: add grant access
+
     fee_receiver = network_settings.fee_receiver_address
 
     # --------------------- Deploy math, views, blueprints ---------------------
 
     # deploy non-blueprint contracts:
-    math_contract = deploy_contract(chain, "stableswap", Path(BASE_DIR, "contracts", "amm", "stableswap", "math"))
-    views_contract = deploy_contract(chain, "stableswap", Path(BASE_DIR, "contracts", "amm", "stableswap", "views"))
+    # BUG: these are being redeployed each time. and that should not happen
+    math_contract = deploy_contract(chain, Path(BASE_DIR, "contracts", "amm", "stableswap", "math"))
+    views_contract = deploy_contract(chain, Path(BASE_DIR, "contracts", "amm", "stableswap", "views"))
 
     # deploy blueprints:
     plain_blueprint = deploy_contract(
-        chain, "stableswap", Path(BASE_DIR, "contracts", "amm", "stableswap", "implementation"), as_blueprint=True
+        chain, Path(BASE_DIR, "contracts", "amm", "stableswap", "implementation"), as_blueprint=True
     )
     meta_blueprint = deploy_contract(
-        chain, "stableswap", Path(BASE_DIR, "contracts", "amm", "stableswap", "meta_implementation"), as_blueprint=True
+        chain, Path(BASE_DIR, "contracts", "amm", "stableswap", "meta_implementation"), as_blueprint=True
     )
 
     # Factory:
     factory = deploy_contract(
-        chain, "stableswap", Path(BASE_DIR, "contracts", "amm", "stableswap", "factory"), fee_receiver, boa.env.eoa
+        chain, Path(BASE_DIR, "contracts", "amm", "stableswap", "factory"), fee_receiver, boa.env.eoa
     )
 
-    # Set up AMM implementations:÷
-    current_views_impl = factory.views_implementation()
+    # Set up AMM implementations:
+    current_views_impl = factory._storage.views_implementation.get()
     if not current_views_impl == views_contract.address:
         logger.info(f"Current views implementation: {current_views_impl}")
         factory.set_views_implementation(views_contract.address)
         logger.info(f"Set views implementation to: {views_contract.address}")
 
-    current_math_impl = factory.math_implementation()
+    current_math_impl = factory._storage.math_implementation.get()
     if not current_math_impl == math_contract.address:
         logger.info(f"Current math implementation: {current_math_impl}")
         factory.set_math_implementation(math_contract.address)
@@ -58,4 +61,5 @@ def deploy_infra(chain: str, network_settings: CurveNetworkSettings):
         factory.set_metapool_implementations(0, meta_blueprint.address)
         logger.info(f"Set meta amm implementation to: {meta_blueprint.address}")
 
-    logger.info("Infra deployed!")
+    logger.info("Stableswap Factory deployed.")
+    return factory
