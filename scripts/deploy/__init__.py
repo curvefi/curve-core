@@ -110,7 +110,6 @@ def run_deploy_all(chain: str) -> None:
     for key, value in address_provider_inputs.items():
 
         # if id is empty:
-        # BUG: the following breaks!
         if not address_provider.check_id_exists(key):
             ids_to_add.append(key)
             addresses_to_add.append(value)

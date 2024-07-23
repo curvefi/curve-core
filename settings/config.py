@@ -21,9 +21,9 @@ settings = Settings()
 class RollupType(StrEnum):
     op_stack = "optimism"
     arb_orbit = "arbitrum"
-    polygon_zk = "polygon_zk"
+    polygon_cdk = "polygon_zk"
     zksync = "zksync"
-    unknown = "unknown"
+    not_rollup = "_"
 
 
 def get_chain_settings(chain: str):

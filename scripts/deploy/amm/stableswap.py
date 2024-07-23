@@ -36,14 +36,14 @@ def deploy_infra(chain: str, network_settings: CurveDAONetworkSettings):
         chain, Path(BASE_DIR, "contracts", "amm", "stableswap", "factory"), fee_receiver, boa.env.eoa
     )
 
-    # Set up AMM implementations:÷
-    current_views_impl = factory.views_implementation()
+    # Set up AMM implementations:
+    current_views_impl = factory._storage.views_implementation.get()
     if not current_views_impl == views_contract.address:
         logger.info(f"Current views implementation: {current_views_impl}")
         factory.set_views_implementation(views_contract.address)
         logger.info(f"Set views implementation to: {views_contract.address}")
 
-    current_math_impl = factory.math_implementation()
+    current_math_impl = factory._storage.math_implementation.get()
     if not current_math_impl == math_contract.address:
         logger.info(f"Current math implementation: {current_math_impl}")
         factory.set_math_implementation(math_contract.address)

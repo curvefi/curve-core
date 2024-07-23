@@ -31,10 +31,12 @@ def deploy_contract(chain_name: str, contract_folder: Path, *args, as_blueprint:
     version_latest_contract = get_version_from_filename(latest_contract)
 
     # check if it has been deployed already
-    contract_type = contract_folder.parts[-2]
-    contract_designation = contract_folder.parts[-1]
-    deployed_contract_dict = get_deployment(contract_type, contract_designation, deployment_file)
+    parts = contract_folder.parts
+    yaml_keys = contract_folder.parts[parts.index("contracts") :]
+    contract_designation = parts[-1]
+    deployed_contract_dict = get_deployment(yaml_keys, deployment_file)
 
+    # if deployed, fetch deployed version
     deployed_contract_version = "0.0.0"  # contract has never been deployed
     if deployed_contract_dict:
         deployed_contract_version = deployed_contract_dict["contract_version"]  # contract has been deployed
@@ -102,7 +104,7 @@ def get_latest_commit_hash(file_path):
 def fetch_latest_contract(contract_folder: Path) -> Path:
     # Regex pattern to match version numbers in filenames
     contract_name = os.path.basename(contract_folder)
-    pattern = re.compile(rf"{contract_name}_v_(\d+).vy")
+    pattern = re.compile(rf".*_v_(\d+).vy")
 
     # Filter and sort files by version number
     versions = []
@@ -113,7 +115,6 @@ def fetch_latest_contract(contract_folder: Path) -> Path:
             versions.append((version, file))
 
     if not versions:
-        breakpoint()
         raise FileNotFoundError(f"No versions found for contract {contract_name}")
 
     # Get the file with the highest version number
@@ -137,7 +138,7 @@ def version_a_gt_version_b(a, b):
     return list(map(int, a.split("."))) > list(map(int, b.split(".")))
 
 
-def get_deployment(contract_type: str, contract_designation: str, deployment_file: Path):
+def get_deployment(nested_keys: list, deployment_file: Path):
 
     if not deployment_file.exists():
         return ""
@@ -145,14 +146,20 @@ def get_deployment(contract_type: str, contract_designation: str, deployment_fil
     with open(deployment_file, "r") as file:
         deployments = yaml.safe_load(file)
 
-    if not contract_type in deployments["contracts"].keys():
-        return {}
+    deployment = traverse_nested_dict(deployments, nested_keys)
+    if deployment:
+        return deployment
 
-    deployed_contracts_dict = deployments["contracts"][contract_type]
-    if not contract_designation in deployed_contracts_dict.keys():
-        return {}
+    return {}
 
-    return deployments["contracts"][contract_type][contract_designation]
+    # if not contract_type in deployments["contracts"].keys():
+    #     return {}
+
+    # deployed_contracts_dict = deployments["contracts"][contract_type]
+    # if not contract_designation in deployed_contracts_dict.keys():
+    #     return {}
+
+    # return deployments["contracts"][contract_type][contract_designation]
 
 
 def ensure_nested_dict(d, keys):
@@ -171,6 +178,26 @@ def ensure_nested_dict(d, keys):
             d[key] = {}
         d = d[key]
     return d
+
+
+def traverse_nested_dict(d, keys):
+    """
+    Traverse a nested dictionary to get to the innermost dictionary or value.
+
+    Args:
+    d (dict): The dictionary to traverse.
+    keys (tuple): A tuple of keys that define the path to traverse.
+
+    Returns:
+    The value at the innermost dictionary or None if any key is not found.
+    """
+    current_level = d
+    for key in keys:
+        if key in current_level:
+            current_level = current_level[key]
+        else:
+            return None  # Key not found, return None or handle the case as needed
+    return current_level
 
 
 def save_deployment_metadata(
@@ -244,6 +271,8 @@ def save_deployment_metadata(
         }
     )
     if not "config" in deployments:
+
+        # TODO: do we need to mirror more config keys here for other teams to pick up?
         deployments["config"] = {
             "chain": chain_settings.chain,
             "chain_id": chain_settings.chain_id,
