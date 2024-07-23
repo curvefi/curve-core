@@ -3,14 +3,14 @@ from pathlib import Path
 
 import boa
 
-from scripts.deploy.models import CurveNetworkSettings
+from scripts.deploy.models import CurveDAONetworkSettings
 from scripts.deploy.utils import deploy_contract
 from settings.config import BASE_DIR
 
 logger = logging.getLogger(__name__)
 
 
-def deploy_infra(chain: str, network_settings: CurveNetworkSettings):
+def deploy_infra(chain: str, network_settings: CurveDAONetworkSettings):
 
     # owner = network_settings.dao_ownership_contract  # TODO: add grant access
 
@@ -19,20 +19,21 @@ def deploy_infra(chain: str, network_settings: CurveNetworkSettings):
     # --------------------- Deploy math, views, blueprints ---------------------
 
     # deploy non-blueprint contracts:
-    math_contract = deploy_contract(chain, "stableswap", Path(BASE_DIR, "contracts", "amm", "stableswap", "math"))
-    views_contract = deploy_contract(chain, "stableswap", Path(BASE_DIR, "contracts", "amm", "stableswap", "views"))
+    # BUG: these are being redeployed each time. and that should not happen
+    math_contract = deploy_contract(chain, Path(BASE_DIR, "contracts", "amm", "stableswap", "math"))
+    views_contract = deploy_contract(chain, Path(BASE_DIR, "contracts", "amm", "stableswap", "views"))
 
     # deploy blueprints:
     plain_blueprint = deploy_contract(
-        chain, "stableswap", Path(BASE_DIR, "contracts", "amm", "stableswap", "implementation"), as_blueprint=True
+        chain, Path(BASE_DIR, "contracts", "amm", "stableswap", "implementation"), as_blueprint=True
     )
     meta_blueprint = deploy_contract(
-        chain, "stableswap", Path(BASE_DIR, "contracts", "amm", "stableswap", "meta_implementation"), as_blueprint=True
+        chain, Path(BASE_DIR, "contracts", "amm", "stableswap", "meta_implementation"), as_blueprint=True
     )
 
     # Factory:
     factory = deploy_contract(
-        chain, "stableswap", Path(BASE_DIR, "contracts", "amm", "stableswap", "factory"), fee_receiver, boa.env.eoa
+        chain, Path(BASE_DIR, "contracts", "amm", "stableswap", "factory"), fee_receiver, boa.env.eoa
     )
 
     # Set up AMM implementations:÷

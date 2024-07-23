@@ -6,11 +6,11 @@ from eth_typing import Address
 @dataclass
 class CurveDAONetworkSettings:
     dao_ownership_contract: Address
-    dao_parameter_contract: Address
-    dao_emergency_contract: Address
-    dao_vault_contract: Address
-    crv_token_address: Address
-    crvusd_token_address: Address
     fee_receiver_address: Address
-    metaregistry_address: Address
-    address_provider: Address
+    dao_parameter_contract: Address | None = None
+    dao_emergency_contract: Address | None = None
+    dao_vault_contract: Address | None = None
+    crv_token_address: Address | None = None
+    crvusd_token_address: Address | None = None
+    metaregistry_address: Address | None = None
+    address_provider_address: Address | None = None

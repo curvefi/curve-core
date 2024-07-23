@@ -61,8 +61,8 @@ def run_deploy_all(chain: str) -> None:
         crv_token_address=crv_token,  # TODO: update with deployment
         crvusd_token_address=crvusd_token,  # TODO: update with deployment
         fee_receiver_address=settings.fee_receiver,
-        address_provider=address_provider.address,
-        metaregistry=metaregistry.address,
+        address_provider_address=address_provider.address,
+        metaregistry_address=metaregistry.address,
     )
 
     # router
@@ -80,7 +80,7 @@ def run_deploy_all(chain: str) -> None:
     stable_swap_meta_zap = deploy_stable_swap_meta_zap(chain)
 
     # rate provider
-    rate_provider = deploy_rate_provider(chain, curve_network_settings.address_provider)
+    rate_provider = deploy_rate_provider(chain, curve_network_settings.address_provider_address)
 
     # add to the address provider:
     address_provider_inputs = {
@@ -91,12 +91,12 @@ def run_deploy_all(chain: str) -> None:
         12: stableswap_factory.address,
         13: twocrypto_factory.address,
         18: rate_provider.address,
-        19: curve_network_settings.crv_token,  # TODO: update deployment
+        19: curve_network_settings.crv_token_address,  # TODO: update deployment
         20: gauge_factory,  # TODO: update deployment
         21: curve_network_settings.dao_ownership_contract,  # TODO: update deployment
-        22: curve_network_settings.dao_parameter_contract,
-        23: curve_network_settings.dao_emergency_contract,
-        24: curve_network_settings.crv_token_address,
+        22: curve_network_settings.dao_parameter_contract,  # TODO: update deployment
+        23: curve_network_settings.dao_emergency_contract,  # TODO: update deployment
+        24: curve_network_settings.dao_vault_contract,  # TODO: update deployment
         25: curve_network_settings.crvusd_token_address,
         26: deposit_and_stake_zap.address,
         27: stable_swap_meta_zap.address,
@@ -107,9 +107,10 @@ def run_deploy_all(chain: str) -> None:
     descriptions_to_add = []
 
     ids_to_update = []
-    for key, value in address_provider_inputs:
+    for key, value in address_provider_inputs.items():
 
         # if id is empty:
+        # BUG: the following breaks!
         if not address_provider.check_id_exists(key):
             ids_to_add.append(key)
             addresses_to_add.append(value)
@@ -119,14 +120,14 @@ def run_deploy_all(chain: str) -> None:
             ids_to_update.append(key)
 
     # add new ids to the address provider
-    logger.log("Updating Address Provider.")
+    logger.info("Updating Address Provider.")
     if len(ids_to_add) > 0:
         address_provider.add_new_ids(ids_to_add, addresses_to_add, descriptions_to_add)
 
     # update existing ids
     if len(ids_to_update) > 0:
         for id in ids_to_update:
-            logger.log(f"Updating ID {id} in the Address Provider.")
+            logger.info(f"Updating ID {id} in the Address Provider.")
             address_provider.update_address(id, address_provider_inputs[id])
 
     # update metaregistry
@@ -135,7 +136,7 @@ def run_deploy_all(chain: str) -> None:
     # TODO: transfer ownership to dao
 
     # final!
-    logger.log("Infra deployed!")
+    logger.info("Infra deployed!")
 
 
 @deploy_commands.command("router", short_help="deploy router")

@@ -4,7 +4,7 @@ import os
 import re
 import subprocess
 import time
-from pathlib import Path
+from pathlib import Path, PosixPath
 
 import boa
 import yaml
@@ -21,7 +21,7 @@ from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRES
 logger = logging.getLogger(__name__)
 
 
-def deploy_contract(chain_name: str, category: str, contract_folder: Path, *args, as_blueprint: bool = False):
+def deploy_contract(chain_name: str, contract_folder: Path, *args, as_blueprint: bool = False):
 
     deployment_file = Path(BASE_DIR, "deployments", f"{chain_name}.yaml")
     chain_settings = get_chain_settings(chain_name)
@@ -31,14 +31,18 @@ def deploy_contract(chain_name: str, category: str, contract_folder: Path, *args
     version_latest_contract = get_version_from_filename(latest_contract)
 
     # check if it has been deployed already
-    deployed_contract_dict = get_deployment(os.path.basename(contract_folder), deployment_file)
+    contract_type = contract_folder.parts[-2]
+    contract_designation = contract_folder.parts[-1]
+    deployed_contract_dict = get_deployment(contract_type, contract_designation, deployment_file)
 
     deployed_contract_version = "0.0.0"  # contract has never been deployed
     if deployed_contract_dict:
-        deployed_contract_version = deployed_contract_dict["version"]  # contract has been deployed
+        deployed_contract_version = deployed_contract_dict["contract_version"]  # contract has been deployed
 
     # deploy contract if nothing has been deployed, or if deployed contract is old
     if version_a_gt_version_b(version_latest_contract, deployed_contract_version):
+
+        logger.info(f"Deploying {os.path.basename(latest_contract)} version {version_latest_contract}")
 
         # deploy contract
         if not as_blueprint:
@@ -60,8 +64,7 @@ def deploy_contract(chain_name: str, category: str, contract_folder: Path, *args
 
         # update deployment yaml file
         save_deployment_metadata(
-            category,
-            os.path.basename(contract_folder),
+            contract_folder,
             chain_settings,
             deployed_contract,
             deployment_file,
@@ -71,6 +74,9 @@ def deploy_contract(chain_name: str, category: str, contract_folder: Path, *args
 
     else:
         # return contract object of existing deployment
+        logger.info(
+            f"{contract_designation} contract already deployed at {deployed_contract_dict['address']}. Fetching ..."
+        )
         deployed_contract = boa.load_partial(latest_contract).at(deployed_contract_dict["address"])
 
     return deployed_contract
@@ -107,6 +113,7 @@ def fetch_latest_contract(contract_folder: Path) -> Path:
             versions.append((version, file))
 
     if not versions:
+        breakpoint()
         raise FileNotFoundError(f"No versions found for contract {contract_name}")
 
     # Get the file with the highest version number
@@ -130,7 +137,7 @@ def version_a_gt_version_b(a, b):
     return list(map(int, a.split("."))) > list(map(int, b.split(".")))
 
 
-def get_deployment(contract_designation: str, deployment_file: Path):
+def get_deployment(contract_type: str, contract_designation: str, deployment_file: Path):
 
     if not deployment_file.exists():
         return ""
@@ -138,30 +145,53 @@ def get_deployment(contract_designation: str, deployment_file: Path):
     with open(deployment_file, "r") as file:
         deployments = yaml.safe_load(file)
 
-    if contract_designation in deployments.keys():
-        print(deployments["contracts"][contract_designation])
-        breakpoint()
-        return deployments["contracts"][contract_designation]
+    if not contract_type in deployments["contracts"].keys():
+        return {}
 
-    return {}
+    deployed_contracts_dict = deployments["contracts"][contract_type]
+    if not contract_designation in deployed_contracts_dict.keys():
+        return {}
+
+    return deployments["contracts"][contract_type][contract_designation]
+
+
+def ensure_nested_dict(d, keys):
+    """
+    Ensure that a nested dictionary contains the given keys.
+    If the keys do not exist, create them.
+
+    Args:
+    d (dict): The dictionary to update.
+    keys (list): A list of keys that define the nested structure.
+    Returns:
+    dict: The innermost dictionary that corresponds to the final key in the keys list.
+    """
+    for key in keys:
+        if key not in d:
+            d[key] = {}
+        d = d[key]
+    return d
 
 
 def save_deployment_metadata(
-    category: str,
-    contract_designation: str,
+    contract_folder: PosixPath,
     chain_settings: BaseSettings,
     contract_object: VyperContract,
     deployment_file: Path,
     ctor_args: list,
     as_blueprint: bool = False,
 ):
+
+    nested_keys = contract_folder.parts[contract_folder.parts.index("contracts") + 1 :]
+
     if not os.path.exists(deployment_file):
-        deployments = {"contracts": {category: {}}}
+        deployments = {"contracts": {}}
     else:
         with open(deployment_file, "r") as file:
             deployments = yaml.safe_load(file)
-    if category not in deployments["contracts"]:
-        deployments["contracts"][category] = {}
+
+    # fill nested keys if they dont exist and return the innermost nest based on contract_folder:
+    innermost_dict = ensure_nested_dict(deployments["contracts"], nested_keys)
 
     # get abi-encoded ctor args:
     if ctor_args:
@@ -198,31 +228,36 @@ def save_deployment_metadata(
             raise ValueError("Contract version is set incorrectly")
 
     # store contract deployment metadata:
-    deployments["contracts"][category][contract_designation] = {
-        "deployment_type": "normal" if not as_blueprint else "blueprint",
-        "contract_version": version,
-        "contract_github_url": github_url,
-        "address": contract_object.address.strip(),
-        "deployment_timestamp": int(time.time()),
-        "constructor_args_encoded": encoded_args,
-        "compiler_settings": {
-            "compiler_version": compiler_version,
-            "optimisation_level": contract_object.compiler_data.settings.optimize._name_,
-            "evm_version": contract_object.compiler_data.settings.evm_version,
-        },
-    }
-    deployments["config"] = {
-        "chain": chain_settings.chain,
-        "chain_id": chain_settings.chain_id,
-        "chain_type": {
-            "layer": chain_settings.layer,
-            "rollup_type": chain_settings.rollup_type.value,
-        },
-        "weth": chain_settings.weth,
-        "owner": chain_settings.owner,
-        "fee_receiver": chain_settings.fee_receiver,
-    }
+    innermost_dict.update(
+        {
+            "deployment_type": "normal" if not as_blueprint else "blueprint",
+            "contract_version": version,
+            "contract_github_url": github_url,
+            "address": contract_object.address.strip(),
+            "deployment_timestamp": int(time.time()),
+            "constructor_args_encoded": encoded_args,
+            "compiler_settings": {
+                "compiler_version": compiler_version,
+                "optimisation_level": contract_object.compiler_data.settings.optimize._name_,
+                "evm_version": contract_object.compiler_data.settings.evm_version,
+            },
+        }
+    )
+    if not "config" in deployments:
+        deployments["config"] = {
+            "chain": chain_settings.chain,
+            "chain_id": chain_settings.chain_id,
+            "chain_type": {
+                "layer": chain_settings.layer,
+                "rollup_type": chain_settings.rollup_type.value,
+            },
+            "weth": chain_settings.weth,
+            "owner": chain_settings.owner,
+            "fee_receiver": chain_settings.fee_receiver,
+        }
 
+    # we updated innermost_dict, but since it is a reference to deployments dict, we can
+    # just dump the original dict:
     with open(deployment_file, "w") as file:
         yaml.dump(deployments, file)
 
