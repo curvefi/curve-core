@@ -18,7 +18,7 @@ contracts:
       constructor_args_encoded: null
       contract_github_url: https://github.com/curvefi/curve-lite/blob/df153f82b7d86f67bed2adc70f0f444df0891656/contracts/registries/address_provider/address_provider_v_201.vy
       contract_version: 2.0.1
-      deployment_timestamp: 1721665655
+      deployment_timestamp: 1721724415
       deployment_type: normal
     router:
       address: '0x2cb6bCe32aeF4eD506382896e702DE7Ff109D9E9'
@@ -29,7 +29,7 @@ contracts:
       constructor_args_encoded: 000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2
       contract_github_url: https://github.com/curvefi/curve-lite/blob/0f3143402f74b3e43f8287e65130b3ce32aa89ac/contracts/helpers/router/router_v_110.vy
       contract_version: 1.1.0
-      deployment_timestamp: 1721665655
+      deployment_timestamp: 1721724417
       deployment_type: normal
   stableswap:
     factory:
@@ -41,7 +41,7 @@ contracts:
       constructor_args_encoded: 000000000000000000000000ecb456ea5365865ebab8a2661b0c503410e9b34700000000000000000000000000de89c733555886f785b0c32b498300297e481f
       contract_github_url: https://github.com/curvefi/curve-lite/blob/dd15266111683807cf1ea57f1dfc45c25e61ec3a/contracts/amm/stableswap/factory/factory_v_100.vy
       contract_version: 1.0.0
-      deployment_timestamp: 1721665659
+      deployment_timestamp: 1721724437
       deployment_type: normal
     implementation:
       address: '0x73f2D414DCE6AAbB3672bd5BF732A2C87cBff751'
@@ -52,7 +52,7 @@ contracts:
       constructor_args_encoded: null
       contract_github_url: https://github.com/curvefi/curve-lite/blob/39693133dc01e53f4c2ba5b1d58aeefb493fe7f7/contracts/amm/stableswap/implementation/implementation_v_700.vy
       contract_version: 7.0.0
-      deployment_timestamp: 1721665656
+      deployment_timestamp: 1721724427
       deployment_type: blueprint
     math:
       address: '0xB822167C7EefF0B53DcfDEE2D8fe73dEDB25505b'
@@ -63,7 +63,7 @@ contracts:
       constructor_args_encoded: null
       contract_github_url: https://github.com/curvefi/curve-lite/blob/dd15266111683807cf1ea57f1dfc45c25e61ec3a/contracts/amm/stableswap/math/math_v_100.vy
       contract_version: 1.0.0
-      deployment_timestamp: 1721665655
+      deployment_timestamp: 1721724417
       deployment_type: normal
     meta_implementation:
       address: '0x326B089670ba0E6700B1821c34d7b4Afddb11d1b'
@@ -74,7 +74,7 @@ contracts:
       constructor_args_encoded: null
       contract_github_url: https://github.com/curvefi/curve-lite/blob/dd15266111683807cf1ea57f1dfc45c25e61ec3a/contracts/amm/stableswap/meta_implementation/meta_implementation_v_700.vy
       contract_version: 7.0.0
-      deployment_timestamp: 1721665657
+      deployment_timestamp: 1721724433
       deployment_type: blueprint
     views:
       address: '0xDa5e407C7b1887E7f76c920B70614e73feA0DDA1'
@@ -85,7 +85,7 @@ contracts:
       constructor_args_encoded: null
       contract_github_url: https://github.com/curvefi/curve-lite/blob/03cd0cecb6cf78ec926310a2fe8976efa607d0e6/contracts/amm/stableswap/views/views_v_120.vy
       contract_version: 1.2.0
-      deployment_timestamp: 1721665656
+      deployment_timestamp: 1721724420
       deployment_type: normal
   tricrypto:
     factory:
@@ -97,7 +97,7 @@ contracts:
       constructor_args_encoded: 000000000000000000000000ecb456ea5365865ebab8a2661b0c503410e9b34700000000000000000000000000de89c733555886f785b0c32b498300297e481f
       contract_github_url: https://github.com/curvefi/curve-lite/blob/a4cb8201f2c584baec668707a695d35e469ff73b/contracts/amm/tricryptoswap/factory/factory_v_200.vy
       contract_version: 2.0.0
-      deployment_timestamp: 1721665662
+      deployment_timestamp: 1721724449
       deployment_type: normal
     implementation:
       address: '0x22bDac327bD8a73244769EB5CF7bf57552DDcBcB'
@@ -108,7 +108,7 @@ contracts:
       constructor_args_encoded: null
       contract_github_url: https://github.com/curvefi/curve-lite/blob/14022145c05a95650d8379b45e51e72b1860e4e3/contracts/amm/tricryptoswap/implementation/implementation_v_200.vy
       contract_version: 2.0.0
-      deployment_timestamp: 1721665661
+      deployment_timestamp: 1721724448
       deployment_type: blueprint
     math:
       address: '0x864C57A226c39F4cfC30A589B9198D583Ad6971a'
@@ -119,7 +119,7 @@ contracts:
       constructor_args_encoded: null
       contract_github_url: https://github.com/curvefi/curve-lite/blob/a4cb8201f2c584baec668707a695d35e469ff73b/contracts/amm/tricryptoswap/math/math_v_200.vy
       contract_version: 2.0.0
-      deployment_timestamp: 1721665660
+      deployment_timestamp: 1721724440
       deployment_type: normal
     views:
       address: '0x98dBBdba1A3f3e0b41dACf0B340ff5C2250A961A'
@@ -130,7 +130,7 @@ contracts:
       constructor_args_encoded: null
       contract_github_url: https://github.com/curvefi/curve-lite/blob/a4cb8201f2c584baec668707a695d35e469ff73b/contracts/amm/tricryptoswap/views/views_v_200.vy
       contract_version: 2.0.0
-      deployment_timestamp: 1721665661
+      deployment_timestamp: 1721724442
       deployment_type: normal
   twocrypto:
     factory:
@@ -142,7 +142,7 @@ contracts:
       constructor_args_encoded: null
       contract_github_url: https://github.com/curvefi/curve-lite/blob/a4cb8201f2c584baec668707a695d35e469ff73b/contracts/amm/twocryptoswap/factory/factory_v_200.vy
       contract_version: 2.0.0
-      deployment_timestamp: 1721665664
+      deployment_timestamp: 1721724460
       deployment_type: normal
     implementation:
       address: '0xB372E22cC331980f8D5dbD955789e67420E0a53f'
@@ -153,7 +153,7 @@ contracts:
       constructor_args_encoded: null
       contract_github_url: https://github.com/curvefi/curve-lite/blob/14022145c05a95650d8379b45e51e72b1860e4e3/contracts/amm/twocryptoswap/implementation/implementation_v_210.vy
       contract_version: 2.1.0
-      deployment_timestamp: 1721665664
+      deployment_timestamp: 1721724459
       deployment_type: blueprint
     math:
       address: '0xad9485a04927970E8448eB0DA2D2035FF22Ec546'
@@ -164,7 +164,7 @@ contracts:
       constructor_args_encoded: null
       contract_github_url: https://github.com/curvefi/curve-lite/blob/6a6508e2cc2d40c34187d2db23792633c119c844/contracts/amm/twocryptoswap/math/math_v_210.vy
       contract_version: 2.1.0
-      deployment_timestamp: 1721665663
+      deployment_timestamp: 1721724452
       deployment_type: normal
     views:
       address: '0x8C3472B89e6D095201334A1d4Bbb5Ea8227A833C'
@@ -175,5 +175,5 @@ contracts:
       constructor_args_encoded: null
       contract_github_url: https://github.com/curvefi/curve-lite/blob/a4cb8201f2c584baec668707a695d35e469ff73b/contracts/amm/twocryptoswap/views/views_v_200.vy
       contract_version: 2.0.0
-      deployment_timestamp: 1721665663
+      deployment_timestamp: 1721724454
       deployment_type: normal

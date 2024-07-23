@@ -14,7 +14,7 @@ from boa.util.abi import abi_encode
 from eth_utils import keccak
 from pydantic_settings import BaseSettings
 
-from settings.config import BASE_DIR, RollupType, get_chain_settings
+from settings.config import BASE_DIR, get_chain_settings
 
 from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRESS
 
@@ -24,9 +24,6 @@ logger = logging.getLogger(__name__)
 def deploy_contract(chain_name: str, category: str, contract_folder: Path, *args, as_blueprint: bool = False):
     deployment_file = Path(BASE_DIR, "deployments", f"{chain_name}.yaml")
     chain_settings = get_chain_settings(chain_name)
-
-    if chain_settings.rollup_type == RollupType.zksync and as_blueprint is True:
-        raise NotImplementedError("ZKSync blueprints deployment not implemented")
 
     # fetch latest contract
     latest_contract = fetch_latest_contract(contract_folder)
@@ -42,14 +39,11 @@ def deploy_contract(chain_name: str, category: str, contract_folder: Path, *args
     # deploy contract if nothing has been deployed, or if deployed contract is old
     if version_a_gt_version_b(version_latest_contract, deployed_contract_version):
 
-        if chain_settings.rollup_type != RollupType.zksync:
-            # deploy contract
-            if not as_blueprint:
-                deployed_contract = boa.load_partial(latest_contract).deploy(*args)
-            else:
-                deployed_contract = boa.load_partial(latest_contract).deploy_as_blueprint(*args)
+        # deploy contract
+        if not as_blueprint:
+            deployed_contract = boa.load_partial(latest_contract).deploy(*args)
         else:
-            deployed_contract = boa.load_partial(latest_contract, chain_name).deploy_as_blueprint(*args)
+            deployed_contract = boa.load_partial(latest_contract).deploy_as_blueprint(*args)
 
         # store abi
         relpath = get_relative_path(contract_folder)
@@ -136,6 +130,7 @@ def version_a_gt_version_b(a, b):
 
 
 def get_deployment(contract_designation: str, deployment_file: Path):
+
     if not deployment_file.exists():
         return ""
 
@@ -143,6 +138,8 @@ def get_deployment(contract_designation: str, deployment_file: Path):
         deployments = yaml.safe_load(file)
 
     if contract_designation in deployments.keys():
+        print(deployments["contracts"][contract_designation])
+        breakpoint()
         return deployments["contracts"][contract_designation]
 
     return {}

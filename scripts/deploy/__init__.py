@@ -2,7 +2,7 @@ import logging
 
 import click
 
-from settings.config import get_chain_settings
+from settings.config import RollupType, get_chain_settings
 
 from .amm.stableswap import deploy_infra as stableswap_deploy
 from .amm.tricrypto import deploy_infra as tricrypto_deploy
@@ -24,6 +24,9 @@ def deploy_commands():
 @click.argument("chain", type=click.STRING)
 def run_deploy_all(chain: str) -> None:
     settings = get_chain_settings(chain)
+
+    if settings.rollup_type == RollupType.zksync:
+        raise NotImplementedError("zksync currently not supported")
 
     logger.info("Deploying address provider at %r", chain)
     deploy_address_provider(chain)
