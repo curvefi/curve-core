@@ -49,4 +49,5 @@ def deploy_infra(chain: str, network_settings: CurveNetworkSettings):
         factory.set_pool_implementation(plain_blueprint.address, 0)
         logger.info(f"Set plain amm implementation at index 0 to: {plain_blueprint.address}")
 
-    logger.info("Infra deployed!")
+    logger.info("TricryptoSwap Factory deployed.")
+    return factory

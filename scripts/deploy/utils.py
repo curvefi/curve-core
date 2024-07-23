@@ -76,6 +76,11 @@ def deploy_contract(chain_name: str, category: str, contract_folder: Path, *args
     return deployed_contract
 
 
+def update_address_provider():
+
+    pass
+
+
 def get_latest_commit_hash(file_path):
     try:
         # Run the Git command to get the latest commit hash

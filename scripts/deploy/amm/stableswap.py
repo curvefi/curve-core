@@ -22,8 +22,6 @@ def deploy_infra(chain: str, network_settings: CurveNetworkSettings):
     math_contract = deploy_contract(chain, "stableswap", Path(BASE_DIR, "contracts", "amm", "stableswap", "math"))
     views_contract = deploy_contract(chain, "stableswap", Path(BASE_DIR, "contracts", "amm", "stableswap", "views"))
 
-    breakpoint()
-
     # deploy blueprints:
     plain_blueprint = deploy_contract(
         chain, "stableswap", Path(BASE_DIR, "contracts", "amm", "stableswap", "implementation"), as_blueprint=True
@@ -62,4 +60,5 @@ def deploy_infra(chain: str, network_settings: CurveNetworkSettings):
         factory.set_metapool_implementations(0, meta_blueprint.address)
         logger.info(f"Set meta amm implementation to: {meta_blueprint.address}")
 
-    logger.info("Infra deployed!")
+    logger.info("Stableswap Factory deployed.")
+    return factory
