@@ -11,9 +11,9 @@ from settings.config import RollupType, get_chain_settings
 from .amm.stableswap import deploy_infra as deploy_stableswap
 from .amm.tricrypto import deploy_infra as deploy_tricrypto
 from .amm.twocrypto import deploy_infra as deploy_twocrypto
-from .constants import ZERO_ADDRESS
+from .constants import ADDRESS_PROVIDER_MAPPING, ZERO_ADDRESS
 from .helpers.router import deploy_router
-from .models import CurveNetworkSettings
+from .models import CurveDAONetworkSettings
 from .registries.address_provider import deploy_address_provider
 
 logger = logging.getLogger(__name__)
@@ -42,7 +42,9 @@ def run_deploy_all(chain: str) -> None:
     gauge_factory = ZERO_ADDRESS
     gauge_type = -1
 
-    # NOTE: CRV token needed for gauge factory
+    # NOTE: dao assets needed
+    crv_token = ZERO_ADDRESS
+    crvusd_token = ZERO_ADDRESS
 
     # deploy address provider:
     address_provider = deploy_address_provider(chain)
@@ -51,8 +53,13 @@ def run_deploy_all(chain: str) -> None:
     metaregistry = deploy_metaregistry(chain, gauge_factory, gauge_type)
 
     # compile chain settings
-    chain_settings = CurveNetworkSettings(
+    curve_network_settings = CurveDAONetworkSettings(
         dao_ownership_contract=settings.owner,
+        dao_parameter_contract=ZERO_ADDRESS,  # TODO: update with deployment
+        dao_emergency_contract=ZERO_ADDRESS,  # TODO: update with deployment
+        dao_vault_contract=ZERO_ADDRESS,  # TODO: update with deployment
+        crv_token_address=crv_token,  # TODO: update with deployment
+        crvusd_token_address=crvusd_token,  # TODO: update with deployment
         fee_receiver_address=settings.fee_receiver,
         address_provider=address_provider.address,
         metaregistry=metaregistry.address,
@@ -62,9 +69,9 @@ def run_deploy_all(chain: str) -> None:
     router = deploy_router(chain, settings.weth)
 
     # deploy amms:
-    stableswap_factory = deploy_stableswap(chain, chain_settings)
-    tricrypto_factory = deploy_tricrypto(chain, chain_settings)
-    twocrypto_factory = deploy_twocrypto(chain, chain_settings)
+    stableswap_factory = deploy_stableswap(chain, curve_network_settings)
+    tricrypto_factory = deploy_tricrypto(chain, curve_network_settings)
+    twocrypto_factory = deploy_twocrypto(chain, curve_network_settings)
 
     # deposit and stake zap
     deposit_and_stake_zap = deploy_deposit_and_stake_zap(chain)
@@ -73,9 +80,57 @@ def run_deploy_all(chain: str) -> None:
     stable_swap_meta_zap = deploy_stable_swap_meta_zap(chain)
 
     # rate provider
-    rate_provider = deploy_rate_provider(chain, chain_settings.address_provider)
+    rate_provider = deploy_rate_provider(chain, curve_network_settings.address_provider)
 
     # add to the address provider:
+    address_provider_inputs = {
+        2: router.address,
+        4: curve_network_settings.fee_receiver_address,
+        7: metaregistry.address,
+        11: tricrypto_factory.address,
+        12: stableswap_factory.address,
+        13: twocrypto_factory.address,
+        18: rate_provider.address,
+        19: curve_network_settings.crv_token,  # TODO: update deployment
+        20: gauge_factory,  # TODO: update deployment
+        21: curve_network_settings.dao_ownership_contract,  # TODO: update deployment
+        22: curve_network_settings.dao_parameter_contract,
+        23: curve_network_settings.dao_emergency_contract,
+        24: curve_network_settings.crv_token_address,
+        25: curve_network_settings.crvusd_token_address,
+    }
+
+    ids_to_add = []
+    addresses_to_add = []
+    descriptions_to_add = []
+
+    ids_to_update = []
+    for key, value in address_provider_inputs:
+
+        # if id is empty:
+        if not address_provider.check_id_exists(key):
+            ids_to_add.append(key)
+            addresses_to_add.append(value)
+            descriptions_to_add.append(ADDRESS_PROVIDER_MAPPING[key])
+
+        elif address_provider.get_address(key).strip().lower() != address_provider_inputs[key].strip().lower():
+            ids_to_update.append(key)
+
+    # add new ids to the address provider
+    logger.log("Updating Address Provider.")
+    if len(ids_to_add) > 0:
+        address_provider.add_new_ids(ids_to_add, addresses_to_add, descriptions_to_add)
+
+    # update existing ids
+    if len(ids_to_update) > 0:
+        for id in ids_to_update:
+            logger.log(f"Updating ID {id} in the Address Provider.")
+            address_provider.update_address(id, address_provider_inputs[id])
+
+    # transfer ownership to dao
+
+    # final!
+    logger.log("Infra deployed!")
 
 
 @deploy_commands.command("router", short_help="deploy router")
@@ -95,7 +150,7 @@ def run_deploy_address_provider(chain: str) -> None:
 @click.argument("chain", type=click.STRING)
 def run_deploy_stableswap(chain: str) -> None:
     settings = get_chain_settings(chain)
-    chain_settings = CurveNetworkSettings(
+    chain_settings = CurveDAONetworkSettings(
         dao_ownership_contract=settings.owner, fee_receiver_address=settings.fee_receiver
     )
     deploy_stableswap(chain, chain_settings)
@@ -105,7 +160,7 @@ def run_deploy_stableswap(chain: str) -> None:
 @click.argument("chain", type=click.STRING)
 def run_deploy_tricrypto(chain: str) -> None:
     settings = get_chain_settings(chain)
-    chain_settings = CurveNetworkSettings(
+    chain_settings = CurveDAONetworkSettings(
         dao_ownership_contract=settings.owner, fee_receiver_address=settings.fee_receiver
     )
     deploy_tricrypto(chain, chain_settings)
@@ -115,7 +170,7 @@ def run_deploy_tricrypto(chain: str) -> None:
 @click.argument("chain", type=click.STRING)
 def run_deploy_twocrypto(chain: str) -> None:
     settings = get_chain_settings(chain)
-    chain_settings = CurveNetworkSettings(
+    chain_settings = CurveDAONetworkSettings(
         dao_ownership_contract=settings.owner, fee_receiver_address=settings.fee_receiver
     )
     deploy_twocrypto(chain, chain_settings)
