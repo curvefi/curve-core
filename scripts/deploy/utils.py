@@ -283,6 +283,11 @@ def save_deployment_metadata(
             "weth": chain_settings.weth,
             "owner": chain_settings.owner,
             "fee_receiver": chain_settings.fee_receiver,
+            "explorer_base_url": chain_settings.explorer_base_url,
+            "native_currency_symbol": chain_settings.native_currency_symbol,
+            "native_currency_coingecko_id": chain_settings.native_currency_coingecko_id,
+            "platform_coingecko_id": chain_settings.platform_coingecko_id,
+            "public_rpc_url": chain_settings.public_rpc_url,
         }
 
     # we updated innermost_dict, but since it is a reference to deployments dict, we can

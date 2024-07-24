@@ -52,9 +52,15 @@ def get_chain_settings(chain: str):
         chain_id: int
         layer: int
         rollup_type: RollupType
+        explorer_base_url: str
 
         weth: str
         owner: str
         fee_receiver: str
+
+        native_currency_symbol: str
+        native_currency_coingecko_id: str
+        platform_coingecko_id: str
+        public_rpc_url: str
 
     return ChainConfig()
