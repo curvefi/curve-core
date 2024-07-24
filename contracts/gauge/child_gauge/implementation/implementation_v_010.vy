@@ -184,7 +184,7 @@ def _get_user_integrate_frac_post_checkpoint(_user: address) -> uint256:
     integrate_inv_supply: uint256 = self.integrate_inv_supply[period]
     user_working_balance: uint256 = self.working_balances[_user]
     user_integrate_fraction: uint256 = self.integrate_fraction[_user]
-    user_integrate_inv_supply: uin256 = self.integrate_inv_supply_of[_user]
+    user_integrate_inv_supply: uint256 = self.integrate_inv_supply_of[_user]
 
     if block.timestamp > period_time:
 
@@ -210,7 +210,7 @@ def _get_user_integrate_frac_post_checkpoint(_user: address) -> uint256:
     # 1. self.working_balances[_user] (needs nothing)
     # 2. integrate_inv_supply, which we have at this point
     # 3. self.integrate_inv_supply_of[_user] which needs no changes here
-    user_integrate_fraction += working_balance * (integrate_inv_supply - user_integrate_inv_supply) / 10 ** 18
+    user_integrate_fraction += user_working_balance * (integrate_inv_supply - user_integrate_inv_supply) / 10 ** 18
     return user_integrate_fraction
 
 
