@@ -1,5 +1,6 @@
 import boa
 import click
+from eth_account import Account
 
 from scripts.deploy import deploy_commands
 from scripts.tests import test_commands
@@ -19,7 +20,7 @@ if __name__ == "__main__":
         boa.env.fork(settings.WEB3_PROVIDER_URL)
     else:
         boa.set_network_env(settings.WEB3_PROVIDER_URL)
-        # boa.env.add_account()
+        boa.env.add_account(Account.from_key(settings.DEPLOYER_EOA_PRIVATE_KEY))
 
     commands.add_command(deploy_commands)
     commands.add_command(test_commands)

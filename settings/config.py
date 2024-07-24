@@ -9,10 +9,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=Path(BASE_DIR, "settings", "env"))
 
-    DEBUG: bool = True  # TODO: set to False when ready
+    DEBUG: bool = False
     DEV: bool = False
 
     WEB3_PROVIDER_URL: str
+    DEPLOYER_EOA_PRIVATE_KEY: str
 
 
 settings = Settings()
