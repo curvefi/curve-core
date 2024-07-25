@@ -44,9 +44,15 @@ Put settings file {chain_name}.yaml into [settings/chains](/settings/chains) dir
 - **layer** - chain layer (general info)
 - **rollup_type** - can be _op_stack_, _arb_orbit_, _polygon_cdk_, _zksync_ or "_". Zksync rollups currently aren't 
 fully supported
-- **weth** - address of native wrapped token (can be non-eth token)
+- **native_wrapped_token** - address of native wrapped token (can be non-eth token)
 - **owner** - address that will be owner of contract (Curve DAO)
 - **fee_receiver** - address that will receive fees (Curve admin)
+
+Integration parameters
+- **native_currency_symbol** - symbol of native token
+- **native_currency_coingecko_id** - name of native token in coingecko (for fetching usd prices)
+- **platform_coingecko_id** - coingecko chain name
+- **public_rpc_url** - rpc used in UI (only public)
 
 #### Deployment
 Make sure you have funds at your account for gas at target chain.
