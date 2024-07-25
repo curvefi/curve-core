@@ -44,7 +44,7 @@ Put settings file {chain_name}.yaml into [settings/chains](/settings/chains) dir
 - **layer** - chain layer (general info)
 - **rollup_type** - can be _op_stack_, _arb_orbit_, _polygon_cdk_, _zksync_ or "_". Zksync rollups currently aren't 
 fully supported
-- **weth** - address of native wrapped token (can be non-eth token)
+- **native_wrapped_token** - address of native wrapped token (can be non-eth token)
 - **owner** - address that will be owner of contract (Curve DAO)
 - **fee_receiver** - address that will receive fees (Curve admin)
 

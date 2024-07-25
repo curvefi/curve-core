@@ -54,7 +54,7 @@ def get_chain_settings(chain: str):
         rollup_type: RollupType
         explorer_base_url: str
 
-        weth: str
+        native_wrapped_token: str
         owner: str
         fee_receiver: str
 

@@ -280,7 +280,7 @@ def save_deployment_metadata(
                 "layer": chain_settings.layer,
                 "rollup_type": chain_settings.rollup_type.value,
             },
-            "weth": chain_settings.weth,
+            "native_wrapped_token": chain_settings.native_wrapped_token,
             "owner": chain_settings.owner,
             "fee_receiver": chain_settings.fee_receiver,
             "explorer_base_url": chain_settings.explorer_base_url,
