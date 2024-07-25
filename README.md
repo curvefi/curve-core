@@ -48,6 +48,12 @@ fully supported
 - **owner** - address that will be owner of contract (Curve DAO)
 - **fee_receiver** - address that will receive fees (Curve admin)
 
+Integration parameters
+- **native_currency_symbol** - symbol of native token
+- **native_currency_coingecko_id** - name of native token in coingecko (for fetching usd prices)
+- **platform_coingecko_id** - coingecko chain name
+- **public_rpc_url** - rpc used in UI (only public)
+
 #### Deployment
 Make sure you have funds at your account for gas at target chain.
 
