@@ -2,6 +2,7 @@ import logging
 
 import click
 
+from scripts.tests.pre_deployment import test_pre_deploy
 from settings.config import RollupType, get_chain_settings
 
 from .amm.stableswap import deploy_infra as deploy_stableswap
@@ -33,6 +34,8 @@ def run_deploy_all(chain: str) -> None:
 
     if settings.rollup_type == RollupType.zksync:
         raise NotImplementedError("zksync currently not supported")
+
+    test_pre_deploy(settings.chain_id)
 
     # TODO: deploy dao ownership address
 
