@@ -18,5 +18,4 @@ def test_commands():
 @click.argument("chain", type=click.STRING)
 def run_test_pre_deploy(chain: str):
     settings = get_chain_settings(chain)
-    print(settings)
     test_pre_deploy(settings.chain_id)

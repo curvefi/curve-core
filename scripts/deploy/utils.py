@@ -97,7 +97,7 @@ def get_latest_commit_hash(file_path):
         # Return the commit hash
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
-        print(f"Error fetching commit hash: {e}")
+        logger.warning(f"Error fetching commit hash: {e}")
         return None
 
 
