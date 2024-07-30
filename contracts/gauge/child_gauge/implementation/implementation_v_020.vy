@@ -1,8 +1,11 @@
-# @version 0.3.10
+# pragma version 0.3.10
+# pragma evm-version paris
 """
-@title Child Liquidity Gauge
-@license MIT
-@author Curve Finance
+@title CurveXChainLiquidityGauge
+@custom:version 0.2.0
+@author Curve.Fi
+@license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
+@notice Layer2/Cross-Chain Gauge
 """
 
 version: public(constant(String[8])) = "0.2.0"
@@ -116,7 +119,7 @@ root_gauge: public(address)
 
 @external
 def __init__(_factory: Factory):
-    self.lp_token = 0x000000000000000000000000000000000000dEaD
+    self.lp_token = empty(address)
     FACTORY = _factory
 
 

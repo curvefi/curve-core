@@ -1,8 +1,11 @@
-# @version 0.3.10
+# pragma version 0.3.10
+# pragma evm-version paris
 """
-@title Child Liquidity Gauge Factory
-@license MIT
-@author Curve Finance
+@title CurveXChainLiquidityGaugeFactory
+@custom:version 1.0.0
+@author Curve.Fi
+@license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
+@notice Layer2/Cross-Chain Gauge Factory for Curve
 """
 
 version: public(constant(String[8])) = "1.0.0"
