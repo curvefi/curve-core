@@ -1,14 +1,12 @@
-# pragma version 0.3.10
-# pragma evm-version paris
+# @version 0.3.10
 """
-@title CurveXChainLiquidityGauge
-@custom:version 0.1.0
-@author Curve.Fi
-@license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
-@notice Layer2/Cross-Chain Gauge
+@title Child Liquidity Gauge
+@license MIT
+@author Curve Finance
 """
 
-version: public(constant(String[8])) = "0.1.0"
+version: public(constant(String[8])) = "0.2.0"
+
 
 from vyper.interfaces import ERC20
 
@@ -21,9 +19,8 @@ interface ERC20Extended:
 interface Factory:
     def owner() -> address: view
     def voting_escrow() -> address: view
-
-interface Minter:
     def minted(_user: address, _gauge: address) -> uint256: view
+    def CRV() -> address: view
 
 interface ERC1271:
     def isValidSignature(_hash: bytes32, _signature: Bytes[65]) -> bytes32: view
@@ -72,8 +69,7 @@ TOKENLESS_PRODUCTION: constant(uint256) = 40
 WEEK: constant(uint256) = 86400 * 7
 
 
-CRV: immutable(address)
-FACTORY: immutable(address)
+FACTORY: immutable(Factory)
 
 
 DOMAIN_SEPARATOR: public(bytes32)
@@ -115,13 +111,19 @@ claim_data: HashMap[address, HashMap[address, uint256]]
 is_killed: public(bool)
 inflation_rate: public(HashMap[uint256, uint256])
 
+root_gauge: public(address)
+
 
 @external
-def __init__(_crv_token: address, _factory: address):
+def __init__(_factory: Factory):
     self.lp_token = 0x000000000000000000000000000000000000dEaD
-
-    CRV = _crv_token
     FACTORY = _factory
+
+
+@internal
+@view
+def _crv() -> address:
+    return FACTORY.CRV()
 
 
 @internal
@@ -155,11 +157,14 @@ def _checkpoint(_user: address):
             week_time = min(week_time + WEEK, block.timestamp)
 
     # check CRV balance and increase weekly inflation rate by delta for the rest of the week
-    crv_balance: uint256 = ERC20(CRV).balanceOf(self)
+    crv_balance: uint256 = 0
+    if self._crv() != empty(address):
+        crv_balance = ERC20(self._crv()).balanceOf(self)
+
     if crv_balance != 0:
         current_week: uint256 = block.timestamp / WEEK
         self.inflation_rate[current_week] += crv_balance / ((current_week + 1) * WEEK - block.timestamp)
-        ERC20(CRV).transfer(FACTORY, crv_balance)
+        ERC20(self._crv()).transfer(FACTORY.address, crv_balance)
 
     period += 1
     self.period = period
@@ -170,48 +175,6 @@ def _checkpoint(_user: address):
     self.integrate_fraction[_user] += working_balance * (integrate_inv_supply - self.integrate_inv_supply_of[_user]) / 10 ** 18
     self.integrate_inv_supply_of[_user] = integrate_inv_supply
     self.integrate_checkpoint_of[_user] = block.timestamp
-
-
-@view
-@internal
-def _get_user_integrate_frac_post_checkpoint(_user: address) -> uint256:
-    """
-    @notice Checkpoint a user calculating their CRV entitlement
-    @param _user User address
-    """
-    period: uint256 = self.period
-    period_time: uint256 = self.period_timestamp[period]
-    integrate_inv_supply: uint256 = self.integrate_inv_supply[period]
-    user_working_balance: uint256 = self.working_balances[_user]
-    user_integrate_fraction: uint256 = self.integrate_fraction[_user]
-    user_integrate_inv_supply: uint256 = self.integrate_inv_supply_of[_user]
-
-    if block.timestamp > period_time:
-
-        working_supply: uint256 = self.working_supply
-        prev_week_time: uint256 = period_time
-        week_time: uint256 = min((period_time + WEEK) / WEEK * WEEK, block.timestamp)
-
-        for i in range(256):
-            dt: uint256 = week_time - prev_week_time
-
-            if working_supply != 0:
-                # we don't have to worry about crossing inflation epochs
-                # and if we miss any weeks, those weeks inflation rates will be 0 for sure
-                # but that means no one interacted with the gauge for that long
-                integrate_inv_supply += self.inflation_rate[prev_week_time / WEEK] * 10 ** 18 * dt / working_supply
-
-            if week_time == block.timestamp:
-                break
-            prev_week_time = week_time
-            week_time = min(week_time + WEEK, block.timestamp)
-
-    # need self.intergrate_fraction[_user] only, which needs:
-    # 1. self.working_balances[_user] (needs nothing)
-    # 2. integrate_inv_supply, which we have at this point
-    # 3. self.integrate_inv_supply_of[_user] which needs no changes here
-    user_integrate_fraction += user_working_balance * (integrate_inv_supply - user_integrate_inv_supply) / 10 ** 18
-    return user_integrate_fraction
 
 
 @internal
@@ -396,7 +359,7 @@ def transferFrom(_from: address, _to: address, _value: uint256) -> bool:
     @return bool success
     """
     allowance: uint256 = self.allowance[_from][msg.sender]
-    if allowance != MAX_UINT256:
+    if allowance != max_value(uint256):
         self.allowance[_from][msg.sender] = allowance - _value
 
     self._transfer(_from, _to, _value)
@@ -527,7 +490,7 @@ def user_checkpoint(addr: address) -> bool:
     @param addr User address
     @return bool success
     """
-    assert msg.sender in [addr, FACTORY]  # dev: unauthorized
+    assert msg.sender in [addr, FACTORY.address]  # dev: unauthorized
     self._checkpoint(addr)
     self._update_liquidity_limit(addr, self.balanceOf[addr], self.totalSupply)
     return True
@@ -541,19 +504,7 @@ def claimable_tokens(addr: address) -> uint256:
     @return uint256 number of claimable tokens per user
     """
     self._checkpoint(addr)
-    return self.integrate_fraction[addr] - Minter(FACTORY).minted(addr, self)
-
-
-@view
-@external
-def get_claimable_tokens(user: address) -> uint256:
-    """
-    @notice Get the number of claimable tokens per user
-    @dev Same method as `claimable_token` but you can view it on a block explorer
-    @return uint256 number of claimable tokens per user
-    """
-    user_integrate_fraction: uint256 = self._get_user_integrate_frac_post_checkpoint(user)
-    return user_integrate_fraction - Minter(FACTORY).minted(user, self)
+    return self.integrate_fraction[addr] - FACTORY.minted(addr, self)
 
 
 @view
@@ -620,7 +571,7 @@ def add_reward(_reward_token: address, _distributor: address):
     """
     @notice Set the active reward contract
     """
-    assert msg.sender == self.manager or msg.sender == Factory(FACTORY).owner()
+    assert msg.sender == self.manager or msg.sender == FACTORY.owner()
 
     reward_count: uint256 = self.reward_count
     assert reward_count < MAX_REWARDS
@@ -635,7 +586,7 @@ def add_reward(_reward_token: address, _distributor: address):
 def set_reward_distributor(_reward_token: address, _distributor: address):
     current_distributor: address = self.reward_data[_reward_token].distributor
 
-    assert msg.sender == current_distributor or msg.sender == self.manager or msg.sender == Factory(FACTORY).owner()
+    assert msg.sender == current_distributor or msg.sender == self.manager or msg.sender == FACTORY.owner()
     assert current_distributor != empty(address)
     assert _distributor != empty(address)
 
@@ -676,9 +627,21 @@ def deposit_reward_token(_reward_token: address, _amount: uint256):
 
 @external
 def set_manager(_manager: address):
-    assert msg.sender == Factory(FACTORY).owner()
+    assert msg.sender == FACTORY.owner()
 
     self.manager = _manager
+
+
+@external
+def set_root_gauge(_root: address):
+    """
+    @notice Set Root contract in case something went wrong (e.g. between implementation updates)
+    @param _root Root gauge to set
+    """
+    assert msg.sender == FACTORY.owner()
+    assert _root != empty(address)
+
+    self.root_gauge = _root
 
 
 @external
@@ -686,7 +649,7 @@ def update_voting_escrow():
     """
     @notice Update the voting escrow contract in storage
     """
-    self.voting_escrow = Factory(FACTORY).voting_escrow()
+    self.voting_escrow = FACTORY.voting_escrow()
 
 
 @external
@@ -695,7 +658,7 @@ def set_killed(_is_killed: bool):
     @notice Set the kill status of the gauge
     @param _is_killed Kill status to put the gauge into
     """
-    assert msg.sender == Factory(FACTORY).owner()
+    assert msg.sender == FACTORY.owner()
 
     self.is_killed = _is_killed
 
@@ -717,15 +680,22 @@ def integrate_checkpoint() -> uint256:
 
 @view
 @external
-def factory() -> address:
+def factory() -> Factory:
     return FACTORY
 
 
+@view
 @external
-def initialize(_lp_token: address, _manager: address):
+def VERSION() -> String[8]:
+    return version
+
+
+@external
+def initialize(_lp_token: address, _root: address, _manager: address):
     assert self.lp_token == empty(address)  # dev: already initialzed
 
     self.lp_token = _lp_token
+    self.root_gauge = _root
     self.manager = _manager
 
     self.voting_escrow = Factory(msg.sender).voting_escrow()
