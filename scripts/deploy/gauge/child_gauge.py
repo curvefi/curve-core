@@ -4,45 +4,41 @@ from pathlib import Path
 import boa
 
 from scripts.deploy.constants import ZERO_ADDRESS
-from scripts.deploy.models import CurveDAONetworkSettings
 from scripts.deploy.utils import deploy_contract
-from settings.config import BASE_DIR
+from settings.config import BASE_DIR, Settings
 
 logger = logging.getLogger(__name__)
 
 
-def deploy_liquidity_gauge_infra(chain: str, network_settings: CurveDAONetworkSettings):
+def deploy_liquidity_gauge_infra(chain_settings: Settings):
 
-    # owner = network_settings.dao_ownership_contract
-    owner = boa.env.eoa  # TODO: set correct owner!
-    crv_token_address = network_settings.crv_token_address
-
-    # we set the call proxy address and the root gauge implementation address to zero since these are not
-    # immediately available to new chains and are specific for transferring CRV emissions from mainnet
-    # to child chain. Since crv emissions will not be available in curve-lite from the getgo, these gauges
-    # will function as reward-only gauges until the owner of the factory sets self.crv address, self.call_proxy
-    # self.root_implementation, and gauges individually set self.root_gauge address
-    call_proxy_address = ZERO_ADDRESS
-    root_gauge_implementation_address = ZERO_ADDRESS
-    root_factory_address = ZERO_ADDRESS
+    owner = chain_settings.dao.ownership_admin
 
     # deploy gauge factory and gauge implementaiton address
     child_gauge_factory = deploy_contract(
-        chain,
+        chain_settings,
         Path(BASE_DIR, "contracts", "gauge", "child_gauge", "factory"),
-        call_proxy_address,
-        root_factory_address,
-        root_gauge_implementation_address,
-        crv_token_address,
     )
     child_gauge_implementation = deploy_contract(
-        chain, Path(BASE_DIR, "contracts", "gauge", "child_gauge", "implementation"), child_gauge_factory.address
+        chain_settings,
+        Path(BASE_DIR, "contracts", "gauge", "child_gauge", "implementation"),
+        child_gauge_factory.address,
     )
 
     # set child gauge implementation on the child gauge factory
-    child_gauge_factory.set_implementation(child_gauge_implementation.address)
+    current_implementation = child_gauge_factory._storage.get_implementation.get()
+    if not current_implementation == child_gauge_implementation.address:
+        logger.info(f"Current liquidity child gauge implementation: {current_implementation}")
+        child_gauge_factory.set_implementation(child_gauge_implementation.address)
+        logger.info(f"Set liquidity child gauge implementation to {child_gauge_implementation.address}.")
 
     # transfer ownership to the dao
-    child_gauge_factory.set_owner(owner)
+    current_owner = child_gauge_factory._storage.owner.get()
+    if not current_owner == owner:
+        logger.info(f"Current liquidity child gauge factory owner: {current_owner}")
+        child_gauge_factory.set_owner(owner)
+        logger.info(f"Set liquidity child gauge factory owner to {owner}.")
+
+    logger.info("Liquidity Gauge Factory infra deployed.")
 
     return child_gauge_factory

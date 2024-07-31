@@ -3,38 +3,35 @@ from pathlib import Path
 
 import boa
 
-from scripts.deploy.models import CurveDAONetworkSettings
 from scripts.deploy.utils import deploy_contract
-from settings.config import BASE_DIR
+from settings.config import BASE_DIR, Settings
 
 logger = logging.getLogger(__name__)
 
 
-def deploy_infra(chain: str, network_settings: CurveDAONetworkSettings):
+def deploy_infra(chain_settings: Settings):
 
-    # owner = network_settings.dao_ownership_contract  # TODO: add grant access
-
-    fee_receiver = network_settings.fee_receiver_address
+    owner = chain_settings.dao.ownership_admin
+    fee_receiver = chain_settings.dao.fee_receiver
 
     # --------------------- Deploy math, views, blueprints ---------------------
 
     # deploy non-blueprint contracts:
-    # BUG: these are being redeployed each time. and that should not happen
-    math_contract = deploy_contract(chain, Path(BASE_DIR, "contracts", "amm", "stableswap", "math"))
-    views_contract = deploy_contract(chain, Path(BASE_DIR, "contracts", "amm", "stableswap", "views"))
+    math_contract = deploy_contract(chain_settings, Path(BASE_DIR, "contracts", "amm", "stableswap", "math"))
+    views_contract = deploy_contract(chain_settings, Path(BASE_DIR, "contracts", "amm", "stableswap", "views"))
 
     # deploy blueprints:
     plain_blueprint = deploy_contract(
-        chain, Path(BASE_DIR, "contracts", "amm", "stableswap", "implementation"), as_blueprint=True
+        chain_settings, Path(BASE_DIR, "contracts", "amm", "stableswap", "implementation"), as_blueprint=True
     )
     meta_blueprint = deploy_contract(
-        chain, Path(BASE_DIR, "contracts", "amm", "stableswap", "meta_implementation"), as_blueprint=True
+        chain_settings, Path(BASE_DIR, "contracts", "amm", "stableswap", "meta_implementation"), as_blueprint=True
     )
 
     # Factory:
     factory = deploy_contract(
-        chain, Path(BASE_DIR, "contracts", "amm", "stableswap", "factory"), fee_receiver, boa.env.eoa
-    )  # TODO: change owner in the future!
+        chain_settings, Path(BASE_DIR, "contracts", "amm", "stableswap", "factory"), fee_receiver, boa.env.eoa
+    )
 
     # Set up AMM implementations:
     current_views_impl = factory._storage.views_implementation.get()
@@ -60,6 +57,8 @@ def deploy_infra(chain: str, network_settings: CurveDAONetworkSettings):
         logger.info(f"Current metapool impl at index 0: {current_metapool_impl}")
         factory.set_metapool_implementations(0, meta_blueprint.address)
         logger.info(f"Set meta amm implementation to: {meta_blueprint.address}")
+
+    # TODO: change owner in the future!
 
     logger.info("Stableswap Factory deployed.")
     return factory

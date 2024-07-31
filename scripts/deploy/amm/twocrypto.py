@@ -3,30 +3,30 @@ from pathlib import Path
 
 import boa
 
-from scripts.deploy.models import CurveDAONetworkSettings
 from scripts.deploy.utils import deploy_contract
-from settings.config import BASE_DIR
+from settings.config import BASE_DIR, Settings
 
 logger = logging.getLogger(__name__)
 
 
-def deploy_infra(chain: str, network_settings: CurveDAONetworkSettings):
-    # owner = network_settings.dao_ownership_contract  # TODO: add grant access
-    fee_receiver = network_settings.fee_receiver_address
+def deploy_infra(chain_settings: Settings):
+
+    owner = chain_settings.dao.ownership_admin
+    fee_receiver = chain_settings.dao.fee_receiver
 
     # --------------------- Deploy math, views, blueprints ---------------------
 
     # deploy non-blueprint contracts:
-    math_contract = deploy_contract(chain, Path(BASE_DIR, "contracts", "amm", "twocryptoswap", "math"))
-    views_contract = deploy_contract(chain, Path(BASE_DIR, "contracts", "amm", "twocryptoswap", "views"))
+    math_contract = deploy_contract(chain_settings, Path(BASE_DIR, "contracts", "amm", "twocryptoswap", "math"))
+    views_contract = deploy_contract(chain_settings, Path(BASE_DIR, "contracts", "amm", "twocryptoswap", "views"))
 
     # deploy blueprints:
     plain_blueprint = deploy_contract(
-        chain, Path(BASE_DIR, "contracts", "amm", "twocryptoswap", "implementation"), as_blueprint=True
+        chain_settings, Path(BASE_DIR, "contracts", "amm", "twocryptoswap", "implementation"), as_blueprint=True
     )
 
     # Factory:
-    factory = deploy_contract(chain, Path(BASE_DIR, "contracts", "amm", "twocryptoswap", "factory"))
+    factory = deploy_contract(chain_settings, Path(BASE_DIR, "contracts", "amm", "twocryptoswap", "factory"))
     factory.initialise_ownership(fee_receiver, boa.env.eoa)
 
     # Set up AMM implementations:÷

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
@@ -26,6 +27,17 @@ class RollupType(StrEnum):
     not_rollup = "_"
 
 
+@dataclass
+class CurveDAOSettings:
+    ownership_admin: str
+    parameter_admin: str
+    emergency_admin: str
+    crv: str
+    crvusd: str
+    vault: str
+    fee_receiver: str
+
+
 def get_chain_settings(chain: str):
     config_file = Path(BASE_DIR, "settings", "chains", f"{chain}.yaml")
 
@@ -47,13 +59,11 @@ def get_chain_settings(chain: str):
             return YamlConfigSettingsSource(settings_cls, yaml_file=config_file), *sources
 
         # chain settings from config file
-        chain: str
+        network_name: str
         chain_id: int
         layer: int
         rollup_type: RollupType
-
-        weth: str
-        owner: str
-        fee_receiver: str
+        wrapped_native_token: str
+        dao: CurveDAOSettings
 
     return ChainConfig()

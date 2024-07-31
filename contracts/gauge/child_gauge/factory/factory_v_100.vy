@@ -80,24 +80,17 @@ deployer: immutable(address)
 
 
 @external
-def __init__(_call_proxy: address, _root_factory: address, _root_impl: address, _crv_token: address):
-
-    self.call_proxy = _call_proxy
-    log UpdateCallProxy(empty(address), _call_proxy)
-
-    assert _root_factory != empty(address)
-    assert _root_impl != empty(address)
-    self.root_factory = _root_factory
-    self.root_implementation = convert(_root_impl, bytes20)
-    self.CRV = _crv_token
-
+def __init__():
     deployer = tx.origin
+    self.owner = deployer
 
 
 @external
 def set_owner(_owner: address):
+    
     assert msg.sender == deployer
-    assert self.owner == empty(address)
+    assert self.owner == deployer
+    assert _owner != deployer
 
     self.owner = _owner
     log TransferOwnership(empty(address), _owner)

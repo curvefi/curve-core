@@ -14,17 +14,16 @@ from boa.util.abi import abi_encode
 from eth_utils import keccak
 from pydantic_settings import BaseSettings
 
-from settings.config import BASE_DIR, get_chain_settings
+from settings.config import BASE_DIR, Settings, get_chain_settings
 
 from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRESS
 
 logger = logging.getLogger(__name__)
 
 
-def deploy_contract(chain_name: str, contract_folder: Path, *args, as_blueprint: bool = False):
+def deploy_contract(chain_settings: Settings, contract_folder: Path, *args, as_blueprint: bool = False):
 
-    deployment_file = Path(BASE_DIR, "deployments", f"{chain_name}.yaml")
-    chain_settings = get_chain_settings(chain_name)
+    deployment_file = Path(BASE_DIR, "deployments", f"{chain_settings.network_name}.yaml")
 
     # fetch latest contract
     latest_contract = fetch_latest_contract(contract_folder)
@@ -47,10 +46,14 @@ def deploy_contract(chain_name: str, contract_folder: Path, *args, as_blueprint:
         logger.info(f"Deploying {os.path.basename(latest_contract)} version {version_latest_contract}")
 
         # deploy contract
-        if not as_blueprint:
-            deployed_contract = boa.load_partial(latest_contract).deploy(*args)
-        else:
-            deployed_contract = boa.load_partial(latest_contract).deploy_as_blueprint(*args)
+        try:
+            if not as_blueprint:
+                deployed_contract = boa.load_partial(latest_contract).deploy(*args)
+            else:
+                deployed_contract = boa.load_partial(latest_contract).deploy_as_blueprint(*args)
+
+        except:
+            breakpoint()
 
         # store abi
         relpath = get_relative_path(contract_folder)
@@ -265,15 +268,22 @@ def save_deployment_metadata(
 
         # TODO: do we need to mirror more config keys here for other teams to pick up?
         deployments["config"] = {
-            "chain": chain_settings.chain,
+            "chain": chain_settings.network_name,
             "chain_id": chain_settings.chain_id,
             "chain_type": {
                 "layer": chain_settings.layer,
                 "rollup_type": chain_settings.rollup_type.value,
             },
-            "weth": chain_settings.weth,
-            "owner": chain_settings.owner,
-            "fee_receiver": chain_settings.fee_receiver,
+            "wrapped_native_token": chain_settings.wrapped_native_token,
+            "dao": {
+                "crv": chain_settings.dao.crv,
+                "crvusd": chain_settings.dao.crvusd,
+                "ownership_admin": chain_settings.dao.ownership_admin,
+                "parameter_admin": chain_settings.dao.parameter_admin,
+                "emergency_admin": chain_settings.dao.emergency_admin,
+                "fee_receiver": chain_settings.dao.fee_receiver,
+                "vault": chain_settings.dao.vault,
+            },
         }
 
     # we updated innermost_dict, but since it is a reference to deployments dict, we can
