@@ -38,3 +38,14 @@ def check_contract_version(contract: ABIContract, version: str, deployment_type:
         return True
 
     return contract.version() == version
+
+
+def check_contracts(contracts: dict[str, dict]):
+    for contract in contracts.values():
+        assert check_if_contract_deployed(contract["contract"].address) is True
+
+    for contract in contracts.values():
+        assert (
+            check_contract_version(contract["contract"], contract["contract_version"], contract["deployment_type"])
+            is True
+        )
