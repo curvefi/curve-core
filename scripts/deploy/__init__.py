@@ -75,7 +75,7 @@ def run_deploy_all(chain: str) -> None:
         13: twocrypto_factory.address,
         18: rate_provider.address,
         19: chain_settings.dao.crv,  # TODO: update deployment
-        20: gauge_factory.address,
+        20: child_gauge_factory.address,
         21: chain_settings.dao.ownership_admin,  # TODO: update deployment
         22: chain_settings.dao.parameter_admin,  # TODO: update deployment
         23: chain_settings.dao.emergency_admin,  # TODO: update deployment
