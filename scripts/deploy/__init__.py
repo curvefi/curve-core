@@ -35,8 +35,13 @@ def run_deploy_all(chain: str) -> None:
     if settings.rollup_type == RollupType.zksync:
         raise NotImplementedError("zksync currently not supported")
 
-    admins = deploy_xgov(chain, settings.rollup_type)
-    dao_vault = deploy_dao_vault(chain, admins[0])
+    if settings.rollup_type == RollupType.not_rollup:
+        logger.info("No xgov for L1, setting temporary owner")
+        admins = (settings.owner, settings.owner, settings.owner)
+        dao_vault = settings.owner
+    else:
+        admins = deploy_xgov(chain, settings.rollup_type)
+        dao_vault = deploy_dao_vault(chain, admins[0])
 
     # TODO: deploy (reward-only) gauge factory and contracts
     gauge_factory = ZERO_ADDRESS

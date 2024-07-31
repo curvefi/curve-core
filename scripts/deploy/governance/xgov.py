@@ -48,7 +48,7 @@ def deploy_xgov(chain: str, rollup_type: str):
                 "0x000000000000000000000000000000000000064",  # arbsys
             )
         case _:
-            raise "RollupTypeNotSupported"
+            raise NotImplementedError("zksync currently not supported")
 
     broadcaster = deploy_contract("ethereum", Path(BASE_DIR, "contracts", "governance", chain, "broadcaster"), ETHEREUM_ADMINS, *b_args)
     relayer = deploy_contract(chain, Path(BASE_DIR, "contracts", "governance", chain, "relayer"), broadcaster, agent_blueprint, *r_args)
