@@ -250,18 +250,9 @@ def _checkpoint_rewards(_user: address, _total_supply: uint256, _claim: bool, _r
             total_claimable: uint256 = shift(claim_data, -128) + new_claimable
             if total_claimable > 0:
                 total_claimed: uint256 = claim_data % 2**128
+                
                 if _claim:
-                    response: Bytes[32] = raw_call(
-                        token,
-                        _abi_encode(
-                            receiver,
-                            total_claimable,
-                            method_id=method_id("transfer(address,uint256)")
-                        ),
-                        max_outsize=32,
-                    )
-                    if len(response) != 0:
-                        assert convert(response, bool)
+                    assert ERC20(token).transfer(receiver, total_claimable, default_return_value=True)
                     self.claim_data[_user][token] = total_claimed + total_claimable
                 elif new_claimable > 0:
                     self.claim_data[_user][token] = total_claimed + shift(total_claimable, 128)
@@ -603,18 +594,7 @@ def deposit_reward_token(_reward_token: address, _amount: uint256):
 
     self._checkpoint_rewards(empty(address), self.totalSupply, False, empty(address))
 
-    response: Bytes[32] = raw_call(
-        _reward_token,
-        _abi_encode(
-            msg.sender,
-            self,
-            _amount,
-            method_id=method_id("transferFrom(address,address,uint256)")
-        ),
-        max_outsize=32,
-    )
-    if len(response) != 0:
-        assert convert(response, bool)
+    assert ERC20(_reward_token).transferFrom(msg.sender, self, _amount, default_return_value=True)
 
     period_finish: uint256 = self.reward_data[_reward_token].period_finish
     if block.timestamp >= period_finish:

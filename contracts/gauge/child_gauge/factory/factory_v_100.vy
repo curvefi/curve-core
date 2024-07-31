@@ -197,6 +197,8 @@ def deploy_gauge(_lp_token: address, _salt: bytes32, _manager: address = msg.sen
     digest: bytes32 = keccak256(concat(0xFF, convert(self.root_factory, bytes20), salt, gauge_codehash))
     root: address = convert(convert(digest, uint256) & convert(max_value(uint160), uint256), address)
 
+    # If root is uninitilised, self.owner can always set the root gauge manually
+    # on the gauge contract itself via set_root_gauge method
     ChildGauge(gauge).initialize(_lp_token, root, _manager)
 
     log DeployedGauge(implementation, _lp_token, msg.sender, _salt, gauge)
