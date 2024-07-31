@@ -8,6 +8,7 @@ from .amm.stableswap import deploy_infra as deploy_stableswap
 from .amm.tricrypto import deploy_infra as deploy_tricrypto
 from .amm.twocrypto import deploy_infra as deploy_twocrypto
 from .constants import ADDRESS_PROVIDER_MAPPING, ZERO_ADDRESS
+from .governance.xgov import deploy_xgov, deploy_dao_vault
 from .helpers.deposit_and_stake_zap import deploy_deposit_and_stake_zap
 from .helpers.rate_provider import deploy_rate_provider
 from .helpers.router import deploy_router
@@ -34,9 +35,8 @@ def run_deploy_all(chain: str) -> None:
     if settings.rollup_type == RollupType.zksync:
         raise NotImplementedError("zksync currently not supported")
 
-    # TODO: deploy dao ownership address
-
-    # TODO: deploy dao owned vault
+    admins = deploy_xgov(chain, settings.rollup_type)
+    dao_vault = deploy_dao_vault(chain, admins[0])
 
     # TODO: deploy (reward-only) gauge factory and contracts
     gauge_factory = ZERO_ADDRESS
@@ -54,10 +54,10 @@ def run_deploy_all(chain: str) -> None:
 
     # compile chain settings
     curve_network_settings = CurveDAONetworkSettings(
-        dao_ownership_contract=settings.owner,
-        dao_parameter_contract=ZERO_ADDRESS,  # TODO: update with deployment
-        dao_emergency_contract=ZERO_ADDRESS,  # TODO: update with deployment
-        dao_vault_contract=ZERO_ADDRESS,  # TODO: update with deployment
+        dao_ownership_contract=settings.owner,  # TODO: forward to owner later/set dao owner/add team agent
+        dao_parameter_contract=admins[1],
+        dao_emergency_contract=admins[2],
+        dao_vault_contract=dao_vault,
         crv_token_address=crv_token,  # TODO: update with deployment
         crvusd_token_address=crvusd_token,  # TODO: update with deployment
         fee_receiver_address=settings.fee_receiver,
@@ -93,10 +93,10 @@ def run_deploy_all(chain: str) -> None:
         18: rate_provider.address,
         19: curve_network_settings.crv_token_address,  # TODO: update deployment
         20: gauge_factory,  # TODO: update deployment
-        21: curve_network_settings.dao_ownership_contract,  # TODO: update deployment
-        22: curve_network_settings.dao_parameter_contract,  # TODO: update deployment
-        23: curve_network_settings.dao_emergency_contract,  # TODO: update deployment
-        24: curve_network_settings.dao_vault_contract,  # TODO: update deployment
+        21: admins[0],
+        22: admins[1],
+        23: admins[2],
+        24: dao_vault.address,
         25: curve_network_settings.crvusd_token_address,
         26: deposit_and_stake_zap.address,
         27: stable_swap_meta_zap.address,
@@ -136,6 +136,14 @@ def run_deploy_all(chain: str) -> None:
 
     # final!
     logger.info("Infra deployed!")
+
+
+@deploy_commands.command("governance", short_help="deploy governance")
+@click.argument("chain", type=click.STRING)
+def run_deploy_governance(chain: str) -> None:
+    settings = get_chain_settings(chain)
+    admins = deploy_xgov(chain, settings.rollup_type)
+    dao_vault = deploy_dao_vault(chain, admins[0])
 
 
 @deploy_commands.command("router", short_help="deploy router")
