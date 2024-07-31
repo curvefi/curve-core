@@ -2,7 +2,7 @@ import logging
 
 import boa
 
-from scripts.deploy.utils import CREATE2DEPLOYER_ADDRESS
+from scripts.deploy.constants import CREATE2DEPLOYER_ADDRESS, MULTICALL3_ADDRESS
 from settings.config import settings
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ def test_create2deployer_deployed():
 
 
 def test_multicall3_deployed():
-    code = boa.env._rpc.fetch("eth_getCode", ["0xcA11bde05977b3631167028862bE2a173976CA11", "latest"])
+    code = boa.env._rpc.fetch("eth_getCode", [MULTICALL3_ADDRESS, "latest"])
     if code is None:
         logger.info("Chain doesn't have multicall... FAILED")
     else:
