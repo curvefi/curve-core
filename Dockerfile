@@ -30,4 +30,4 @@ ENV PATH="/app/.venv/bin:$PATH" \
 
 COPY . .
 
-CMD ["sh", "-c", "python manage.py deploy all && tail -f /dev/null"]
+CMD ["sh", "-c", "python manage.py deploy all example && tail -f /dev/null"]
