@@ -97,7 +97,7 @@ def get_latest_commit_hash(file_path):
         # Return the commit hash
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
-        print(f"Error fetching commit hash: {e}")
+        logger.warning(f"Error fetching commit hash: {e}")
         return None
 
 
@@ -151,15 +151,6 @@ def get_deployment(nested_keys: list, deployment_file: Path):
         return deployment
 
     return {}
-
-    # if not contract_type in deployments["contracts"].keys():
-    #     return {}
-
-    # deployed_contracts_dict = deployments["contracts"][contract_type]
-    # if not contract_designation in deployed_contracts_dict.keys():
-    #     return {}
-
-    # return deployments["contracts"][contract_type][contract_designation]
 
 
 def ensure_nested_dict(d, keys):
@@ -270,25 +261,24 @@ def save_deployment_metadata(
             },
         }
     )
-    if not "config" in deployments:
 
-        # TODO: do we need to mirror more config keys here for other teams to pick up?
-        deployments["config"] = {
-            "chain": chain_settings.chain,
-            "chain_id": chain_settings.chain_id,
-            "chain_type": {
-                "layer": chain_settings.layer,
-                "rollup_type": chain_settings.rollup_type.value,
-            },
-            "native_wrapped_token": chain_settings.native_wrapped_token,
-            "owner": chain_settings.owner,
-            "fee_receiver": chain_settings.fee_receiver,
-            "explorer_base_url": chain_settings.explorer_base_url,
-            "native_currency_symbol": chain_settings.native_currency_symbol,
-            "native_currency_coingecko_id": chain_settings.native_currency_coingecko_id,
-            "platform_coingecko_id": chain_settings.platform_coingecko_id,
-            "public_rpc_url": chain_settings.public_rpc_url,
-        }
+    # Update config on every run
+    deployments["config"] = {
+        "chain": chain_settings.chain,
+        "chain_id": chain_settings.chain_id,
+        "chain_type": {
+            "layer": chain_settings.layer,
+            "rollup_type": chain_settings.rollup_type.value,
+        },
+        "native_wrapped_token": chain_settings.native_wrapped_token,
+        "owner": chain_settings.owner,
+        "fee_receiver": chain_settings.fee_receiver,
+        "explorer_base_url": chain_settings.explorer_base_url,
+        "native_currency_symbol": chain_settings.native_currency_symbol,
+        "native_currency_coingecko_id": chain_settings.native_currency_coingecko_id,
+        "platform_coingecko_id": chain_settings.platform_coingecko_id,
+        "public_rpc_url": chain_settings.public_rpc_url,
+    }
 
     # we updated innermost_dict, but since it is a reference to deployments dict, we can
     # just dump the original dict:

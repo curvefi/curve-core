@@ -18,8 +18,8 @@ pydantic-settings = "^2.3.4"
 click = "^8.1.7"
 
 [tool.poetry.group.dev.dependencies]
-black = "^24.4.2"
-isort = "^5.13.2"
+black = "24.4.2"
+isort = "5.13.2"
 
 [tool.black]
 exclude = '''
