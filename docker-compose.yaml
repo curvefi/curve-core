@@ -1,0 +1,7 @@
+version: '3'
+services:
+  deployer:
+    build:
+      context: .
+    container_name: deployer
+    command: "python manage.py deploy all example && tail -f /dev/null"
