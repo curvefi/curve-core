@@ -34,7 +34,7 @@ def deploy_infra(chain: str, network_settings: CurveDAONetworkSettings):
     # Factory:
     factory = deploy_contract(
         chain, Path(BASE_DIR, "contracts", "amm", "stableswap", "factory"), fee_receiver, boa.env.eoa
-    )
+    )  # TODO: change owner in the future!
 
     # Set up AMM implementations:
     current_views_impl = factory._storage.views_implementation.get()
