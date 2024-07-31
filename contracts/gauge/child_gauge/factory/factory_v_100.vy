@@ -81,13 +81,13 @@ deployer: immutable(address)
 
 @external
 def __init__():
-    deployer = tx.origin
+    deployer = msg.sender
     self.owner = deployer
 
 
 @external
 def set_owner(_owner: address):
-    
+
     assert msg.sender == deployer
     assert self.owner == deployer
     assert _owner != deployer

@@ -32,13 +32,6 @@ def deploy_liquidity_gauge_infra(chain_settings: Settings):
         child_gauge_factory.set_implementation(child_gauge_implementation.address)
         logger.info(f"Set liquidity child gauge implementation to {child_gauge_implementation.address}.")
 
-    # transfer ownership to the dao
-    current_owner = child_gauge_factory._storage.owner.get()
-    if not current_owner == owner:
-        logger.info(f"Current liquidity child gauge factory owner: {current_owner}")
-        child_gauge_factory.set_owner(owner)
-        logger.info(f"Set liquidity child gauge factory owner to {owner}.")
-
     logger.info("Liquidity Gauge Factory infra deployed.")
 
     return child_gauge_factory

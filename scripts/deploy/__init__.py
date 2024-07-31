@@ -33,24 +33,20 @@ def run_deploy_all(chain: str) -> None:
     if chain_settings.rollup_type == RollupType.zksync:
         raise NotImplementedError("zksync currently not supported")
 
-    # TODO: deploy dao ownership address
-    owner = chain_settings.dao.ownership_admin
-    # ensure owner is not zero address ...
-
     # TODO: deploy dao owned vault
     fee_receiver = chain_settings.dao.fee_receiver
     # if fee_receiver == zero then deploy:
     #    ... blabla
 
     # deploy (reward-only) gauge factory and contracts
-    gauge_factory = deploy_liquidity_gauge_infra(chain_settings)
+    child_gauge_factory = deploy_liquidity_gauge_infra(chain_settings)
     gauge_type = -1  # TODO: fetch correct gauge type
 
     # deploy address provider:
     address_provider = deploy_address_provider(chain_settings)
 
     # TODO: metaregistry needs gauge factory address
-    metaregistry = deploy_metaregistry(chain_settings, gauge_factory.address, gauge_type)
+    metaregistry = deploy_metaregistry(chain_settings, child_gauge_factory.address, gauge_type)
 
     # router
     router = deploy_router(chain_settings)
@@ -119,7 +115,50 @@ def run_deploy_all(chain: str) -> None:
     # update metaregistry
     update_metaregistry(chain_settings, metaregistry, address_provider)
 
-    # TODO: transfer ownership to dao
+    # transfer ownership to the dao
+    owner = chain_settings.dao.ownership_admin
+
+    # addressprovider
+    current_owner = address_provider._storage.admin.get()
+    if not current_owner == owner:
+        logger.info(f"Current address provider owner: {current_owner}")
+        address_provider.set_owner(owner)
+        logger.info(f"Set address provider owner to {owner}.")
+
+    # metaregistry
+    current_owner = metaregistry._storage.admin.get()
+    if not current_owner == owner:
+        logger.info(f"Current metaregistry owner: {current_owner}")
+        metaregistry.set_owner(owner)
+        logger.info(f"Set metaregistry owner to {owner}.")
+
+    # gauge factory
+    current_owner = child_gauge_factory._storage.owner.get()
+    if not current_owner == owner:
+        logger.info(f"Current liquidity child gauge factory owner: {current_owner}")
+        child_gauge_factory.set_owner(owner)
+        logger.info(f"Set liquidity child gauge factory owner to {owner}.")
+
+    # stableswap
+    current_owner = stableswap_factory._storage.admin.get()
+    if not current_owner == owner:
+        logger.info(f"Current stableswap factory owner: {current_owner}")
+        stableswap_factory.set_owner(owner)
+        logger.info(f"Set stableswap factory owner to {owner}.")
+
+    # tricryptoswap
+    current_owner = tricrypto_factory._storage.admin.get()
+    if not current_owner == owner:
+        logger.info(f"Current tricrypto factory owner: {current_owner}")
+        tricrypto_factory.set_owner(owner)
+        logger.info(f"Set tricrypto factory owner to {owner}.")
+
+    # twocryptoswap
+    current_owner = twocrypto_factory._storage.admin.get()
+    if not current_owner == owner:
+        logger.info(f"Current twocrypto factory owner: {current_owner}")
+        twocrypto_factory.set_owner(owner)
+        logger.info(f"Set twocrypto factory owner to {owner}.")
 
     # final!
     logger.info("Infra deployed!")
