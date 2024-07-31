@@ -33,7 +33,7 @@ def deploy_liquidity_gauge_infra(chain: str, network_settings: CurveDAONetworkSe
         call_proxy_address,
         root_factory_address,
         root_gauge_implementation_address,
-        owner,
+        crv_token_address,
     )
     child_gauge_implementation = deploy_contract(
         chain, Path(BASE_DIR, "contracts", "gauge", "child_gauge", "implementation"), child_gauge_factory.address
@@ -42,4 +42,7 @@ def deploy_liquidity_gauge_infra(chain: str, network_settings: CurveDAONetworkSe
     # set child gauge implementation on the child gauge factory
     child_gauge_factory.set_implementation(child_gauge_implementation.address)
 
-    # TODO: if owner is dao, then the above step is not possible. refactor init ctor for this
+    # transfer ownership to the dao
+    child_gauge_factory.set_owner(owner)
+
+    return child_gauge_factory

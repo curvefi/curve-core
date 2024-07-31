@@ -152,15 +152,6 @@ def get_deployment(nested_keys: list, deployment_file: Path):
 
     return {}
 
-    # if not contract_type in deployments["contracts"].keys():
-    #     return {}
-
-    # deployed_contracts_dict = deployments["contracts"][contract_type]
-    # if not contract_designation in deployed_contracts_dict.keys():
-    #     return {}
-
-    # return deployments["contracts"][contract_type][contract_designation]
-
 
 def ensure_nested_dict(d, keys):
     """

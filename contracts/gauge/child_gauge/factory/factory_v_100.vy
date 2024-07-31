@@ -76,9 +76,11 @@ get_gauge_from_lp_token: public(HashMap[address, address])
 get_gauge_count: public(uint256)
 get_gauge: public(address[max_value(int128)])
 
+deployer: immutable(address)
+
 
 @external
-def __init__(_call_proxy: address, _root_factory: address, _root_impl: address, _owner: address):
+def __init__(_call_proxy: address, _root_factory: address, _root_impl: address, _crv_token: address):
 
     self.call_proxy = _call_proxy
     log UpdateCallProxy(empty(address), _call_proxy)
@@ -87,6 +89,15 @@ def __init__(_call_proxy: address, _root_factory: address, _root_impl: address, 
     assert _root_impl != empty(address)
     self.root_factory = _root_factory
     self.root_implementation = convert(_root_impl, bytes20)
+    self.CRV = _crv_token
+
+    deployer = tx.origin
+
+
+@external
+def set_owner(_owner: address):
+    assert msg.sender == deployer
+    assert self.owner == empty(address)
 
     self.owner = _owner
     log TransferOwnership(empty(address), _owner)
@@ -214,6 +225,9 @@ def set_crv_address(_crv: address):
     @param _crv address of CRV token on child chain
     """
     assert msg.sender == self.owner
+    assert self.CRV == empty(address)
+    assert _crv != empty(address)
+
     self.CRV = _crv
 
 

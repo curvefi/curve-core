@@ -8,6 +8,7 @@ from .amm.stableswap import deploy_infra as deploy_stableswap
 from .amm.tricrypto import deploy_infra as deploy_tricrypto
 from .amm.twocrypto import deploy_infra as deploy_twocrypto
 from .constants import ADDRESS_PROVIDER_MAPPING, ZERO_ADDRESS
+from .gauge.child_gauge import deploy_liquidity_gauge_infra
 from .helpers.deposit_and_stake_zap import deploy_deposit_and_stake_zap
 from .helpers.rate_provider import deploy_rate_provider
 from .helpers.router import deploy_router
@@ -39,7 +40,7 @@ def run_deploy_all(chain: str) -> None:
     # TODO: deploy dao owned vault
 
     # TODO: deploy (reward-only) gauge factory and contracts
-    gauge_factory = ZERO_ADDRESS
+    gauge_factory = deploy_liquidity_gauge_infra(chain, settings)
     gauge_type = -1
 
     # NOTE: dao assets needed
@@ -50,7 +51,7 @@ def run_deploy_all(chain: str) -> None:
     address_provider = deploy_address_provider(chain)
 
     # TODO: metaregistry needs gauge factory address
-    metaregistry = deploy_metaregistry(chain, gauge_factory, gauge_type)
+    metaregistry = deploy_metaregistry(chain, gauge_factory.address, gauge_type)
 
     # compile chain settings
     curve_network_settings = CurveDAONetworkSettings(
@@ -92,7 +93,7 @@ def run_deploy_all(chain: str) -> None:
         13: twocrypto_factory.address,
         18: rate_provider.address,
         19: curve_network_settings.crv_token_address,  # TODO: update deployment
-        20: gauge_factory,  # TODO: update deployment
+        20: gauge_factory.address,
         21: curve_network_settings.dao_ownership_contract,  # TODO: update deployment
         22: curve_network_settings.dao_parameter_contract,  # TODO: update deployment
         23: curve_network_settings.dao_emergency_contract,  # TODO: update deployment
