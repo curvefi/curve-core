@@ -8,7 +8,7 @@ from .amm.stableswap import deploy_infra as deploy_stableswap
 from .amm.tricrypto import deploy_infra as deploy_tricrypto
 from .amm.twocrypto import deploy_infra as deploy_twocrypto
 from .constants import ADDRESS_PROVIDER_MAPPING, ZERO_ADDRESS
-from .governance.xgov import deploy_xgov, deploy_dao_vault
+from .governance.xgov import deploy_dao_vault, deploy_xgov
 from .helpers.deposit_and_stake_zap import deploy_deposit_and_stake_zap
 from .helpers.rate_provider import deploy_rate_provider
 from .helpers.router import deploy_router
