@@ -1,6 +1,6 @@
 # pragma version 0.3.10
 """
-@title Polygon zkEVM Relayer
+@title Arbitrum Relayer
 @author CurveFi
 @license MIT
 @custom:version 1.0.1
@@ -9,19 +9,12 @@
 version: public(constant(String[8])) = "1.0.1"
 
 
-event Relay:
-    agent: Agent
-    messages: DynArray[Message, MAX_MESSAGES]
-
-event SetMessenger:
-    messenger: address
-
-event SetOriginNetwork:
-    origin_network: uint32
-
-
 interface IAgent:
     def execute(_messages: DynArray[Message, MAX_MESSAGES]): nonpayable
+
+interface IArbSys:
+    def wasMyCallersAddressAliased() -> bool: view
+    def myCallersAddressWithoutAliasing() -> address: view
 
 
 enum Agent:
@@ -37,9 +30,12 @@ struct Message:
 
 MAX_BYTES: constant(uint256) = 1024
 MAX_MESSAGES: constant(uint256) = 8
-MAX_MESSAGE_RECEIVED: constant(uint256) = 9400
+
 CODE_OFFSET: constant(uint256) = 3
 
+
+BROADCASTER: public(immutable(address))
+ARBSYS: public(immutable(address))
 
 OWNERSHIP_AGENT: public(immutable(address))
 PARAMETER_AGENT: public(immutable(address))
@@ -48,17 +44,11 @@ EMERGENCY_AGENT: public(immutable(address))
 
 agent: HashMap[Agent, address]
 
-BROADCASTER: public(immutable(address))
-MESSENGER: public(immutable(address))
-ORIGIN_NETWORK: public(immutable(uint32))
-
 
 @external
-def __init__(_broadcaster: address, _agent_blueprint: address, _messenger: address, _origin_network: uint32):
-    BROADCASTER = _broadcaster
-    MESSENGER = _messenger
-    log SetMessenger(_messenger)
-    ORIGIN_NETWORK = _origin_network
+def __init__(broadcaster: address, _agent_blueprint: address, _arbsys: address):
+    BROADCASTER = broadcaster
+    ARBSYS = _arbsys
 
     OWNERSHIP_AGENT = create_from_blueprint(_agent_blueprint, code_offset=CODE_OFFSET)
     PARAMETER_AGENT = create_from_blueprint(_agent_blueprint, code_offset=CODE_OFFSET)
@@ -76,17 +66,7 @@ def relay(_agent: Agent, _messages: DynArray[Message, MAX_MESSAGES]):
     @param _agent The agent to relay messages to.
     @param _messages The sequence of messages to relay.
     """
-    assert msg.sender == self
+    assert IArbSys(ARBSYS).wasMyCallersAddressAliased()
+    assert IArbSys(ARBSYS).myCallersAddressWithoutAliasing() == BROADCASTER
 
     IAgent(self.agent[_agent]).execute(_messages)
-
-    log Relay(_agent, _messages)
-
-
-@external
-def onMessageReceived(_origin_address: address, _origin_network: uint32, _data: Bytes[MAX_MESSAGE_RECEIVED]):
-    assert msg.sender == MESSENGER
-    assert _origin_address == BROADCASTER
-    assert _origin_network == ORIGIN_NETWORK
-
-    raw_call(self, _data)  # .relay()
