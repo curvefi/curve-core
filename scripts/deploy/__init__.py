@@ -2,6 +2,8 @@ import logging
 
 import click
 
+from scripts.tests.post_deploy import test_post_deploy
+from scripts.tests.pre_deployment import test_pre_deploy
 from settings.config import RollupType, get_chain_settings
 
 from .amm.stableswap import deploy_stableswap
@@ -32,6 +34,9 @@ def run_deploy_all(chain: str) -> None:
     chain_settings = get_chain_settings(chain)
     if chain_settings.rollup_type == RollupType.zksync:
         raise NotImplementedError("zksync currently not supported")
+
+    # pre-deployment tests:
+    test_pre_deploy(chain_settings.chain_id)
 
     # TODO: DEPLOY DAO CONTRACTS HERE:
     # ... <--------------------------|
@@ -162,6 +167,8 @@ def run_deploy_all(chain: str) -> None:
 
     # final!
     logger.info("Infra deployed!")
+
+    test_post_deploy(chain)
 
 
 @deploy_commands.command("router", short_help="deploy router")

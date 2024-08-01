@@ -96,7 +96,7 @@ def get_latest_commit_hash(file_path):
         # Return the commit hash
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
-        print(f"Error fetching commit hash: {e}")
+        logger.warning(f"Error fetching commit hash: {e}")
         return None
 
 
@@ -260,6 +260,7 @@ def save_deployment_metadata(
             },
         }
     )
+
     if not "config" in deployments:
 
         # Add config items to deployment yaml file which can be used by other services to
