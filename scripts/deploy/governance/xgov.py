@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 BROADCASTERS = {
     RollupType.op_stack: "0xE0fE4416214e95F0C67Dc044AAf1E63d6972e0b9",
     RollupType.polygon_cdk: "0xB5e7fE8eA8ECbd33504485756fCabB5f5D29C051",
-    RollupType.arb_orbit: "",
+    RollupType.arb_orbit: "",  # "0x94630a56519c00Be339BBd8BD26f342Bf4bd7eE0", TODO: check why test tx failed
 }
 
 
@@ -31,7 +31,7 @@ def deploy_xgov(chain: str, rollup_type: RollupType):
         case RollupType.arb_orbit:
             r_args = ("0x000000000000000000000000000000000000064",)  # arbsys
         case _:
-            raise NotImplementedError("zksync currently not supported")
+            raise NotImplementedError(f"{rollup_type} currently not supported")
 
     relayer = deploy_contract(
         chain, Path(BASE_DIR, "contracts", "governance", chain, "relayer"), BROADCASTERS[rollup_type], agent_blueprint, *r_args
