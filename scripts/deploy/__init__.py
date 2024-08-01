@@ -165,10 +165,11 @@ def run_deploy_all(chain: str) -> None:
         twocrypto_factory.set_owner(owner)
         logger.info(f"Set twocrypto factory owner to {owner}.")
 
-    # final!
-    logger.info("Infra deployed!")
-
+    # test post deployment
     test_post_deploy(chain)
+
+    # final!
+    logger.info("Infra deployed and tested!")
 
 
 @deploy_commands.command("router", short_help="deploy router")
