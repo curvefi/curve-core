@@ -46,14 +46,10 @@ def deploy_contract(chain_settings: Settings, contract_folder: Path, *args, as_b
         logger.info(f"Deploying {os.path.basename(latest_contract)} version {version_latest_contract}")
 
         # deploy contract
-        try:
-            if not as_blueprint:
-                deployed_contract = boa.load_partial(latest_contract).deploy(*args)
-            else:
-                deployed_contract = boa.load_partial(latest_contract).deploy_as_blueprint(*args)
-
-        except:
-            breakpoint()
+        if not as_blueprint:
+            deployed_contract = boa.load_partial(latest_contract).deploy(*args)
+        else:
+            deployed_contract = boa.load_partial(latest_contract).deploy_as_blueprint(*args)
 
         # store abi
         relpath = get_relative_path(contract_folder)
@@ -281,7 +277,6 @@ def save_deployment_metadata(
                 "ownership_admin": chain_settings.dao.ownership_admin,
                 "parameter_admin": chain_settings.dao.parameter_admin,
                 "emergency_admin": chain_settings.dao.emergency_admin,
-                "fee_receiver": chain_settings.dao.fee_receiver,
                 "vault": chain_settings.dao.vault,
             },
         }

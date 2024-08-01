@@ -35,7 +35,6 @@ class CurveDAOSettings:
     crv: str
     crvusd: str
     vault: str
-    fee_receiver: str
 
 
 def get_chain_settings(chain: str):

@@ -9,10 +9,7 @@ from settings.config import BASE_DIR, Settings
 logger = logging.getLogger(__name__)
 
 
-def deploy_infra(chain_settings: Settings):
-
-    # owner = network_settings.dao_ownership_contract  # TODO: add grant access
-    fee_receiver = chain_settings.dao.fee_receiver
+def deploy_tricrypto(chain_settings: Settings, fee_receiver):
 
     # --------------------- Deploy math, views, blueprints ---------------------
 

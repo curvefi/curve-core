@@ -4,9 +4,9 @@ import click
 
 from settings.config import RollupType, get_chain_settings
 
-from .amm.stableswap import deploy_infra as deploy_stableswap
-from .amm.tricrypto import deploy_infra as deploy_tricrypto
-from .amm.twocrypto import deploy_infra as deploy_twocrypto
+from .amm.stableswap import deploy_stableswap
+from .amm.tricrypto import deploy_tricrypto
+from .amm.twocrypto import deploy_twocrypto
 from .constants import ADDRESS_PROVIDER_MAPPING
 from .gauge.child_gauge import deploy_liquidity_gauge_infra
 from .helpers.deposit_and_stake_zap import deploy_deposit_and_stake_zap
@@ -33,10 +33,9 @@ def run_deploy_all(chain: str) -> None:
     if chain_settings.rollup_type == RollupType.zksync:
         raise NotImplementedError("zksync currently not supported")
 
-    # TODO: deploy dao owned vault
-    fee_receiver = chain_settings.dao.fee_receiver
-    # if fee_receiver == zero then deploy:
-    #    ... blabla
+    # TODO: DEPLOY DAO CONTRACTS HERE:
+    # ... <--------------------------|
+    fee_receiver = chain_settings.dao.vault
 
     # deploy (reward-only) gauge factory and contracts
     child_gauge_factory = deploy_liquidity_gauge_infra(chain_settings)
@@ -49,12 +48,12 @@ def run_deploy_all(chain: str) -> None:
     metaregistry = deploy_metaregistry(chain_settings, child_gauge_factory.address, gauge_type)
 
     # router
-    router = deploy_router(chain_settings)
+    router = deploy_router(chain_settings, chain_settings.wrapped_native_token)
 
     # deploy amms:
-    stableswap_factory = deploy_stableswap(chain_settings)
-    tricrypto_factory = deploy_tricrypto(chain_settings)
-    twocrypto_factory = deploy_twocrypto(chain_settings)
+    stableswap_factory = deploy_stableswap(chain_settings, fee_receiver)
+    tricrypto_factory = deploy_tricrypto(chain_settings, fee_receiver)
+    twocrypto_factory = deploy_twocrypto(chain_settings, fee_receiver)
 
     # deposit and stake zap
     deposit_and_stake_zap = deploy_deposit_and_stake_zap(chain_settings)
@@ -68,18 +67,18 @@ def run_deploy_all(chain: str) -> None:
     # add to the address provider:
     address_provider_inputs = {
         2: router.address,
-        4: fee_receiver,  # TODO: replace with dao vault
+        4: fee_receiver,
         7: metaregistry.address,
         11: tricrypto_factory.address,
         12: stableswap_factory.address,
         13: twocrypto_factory.address,
         18: rate_provider.address,
-        19: chain_settings.dao.crv,  # TODO: update deployment
+        19: chain_settings.dao.crv,
         20: child_gauge_factory.address,
-        21: chain_settings.dao.ownership_admin,  # TODO: update deployment
-        22: chain_settings.dao.parameter_admin,  # TODO: update deployment
-        23: chain_settings.dao.emergency_admin,  # TODO: update deployment
-        24: chain_settings.dao.vault,  # TODO: update deployment
+        21: chain_settings.dao.ownership_admin,
+        22: chain_settings.dao.parameter_admin,
+        23: chain_settings.dao.emergency_admin,
+        24: chain_settings.dao.vault,
         25: chain_settings.dao.crvusd,
         26: deposit_and_stake_zap.address,
         27: stable_swap_meta_zap.address,

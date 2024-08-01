@@ -9,10 +9,7 @@ from settings.config import BASE_DIR, Settings
 logger = logging.getLogger(__name__)
 
 
-def deploy_infra(chain_settings: Settings):
-
-    owner = chain_settings.dao.ownership_admin
-    fee_receiver = chain_settings.dao.fee_receiver
+def deploy_twocrypto(chain_settings: Settings, fee_receiver):
 
     # --------------------- Deploy math, views, blueprints ---------------------
 

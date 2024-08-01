@@ -12,8 +12,6 @@ logger = logging.getLogger(__name__)
 
 def deploy_liquidity_gauge_infra(chain_settings: Settings):
 
-    owner = chain_settings.dao.ownership_admin
-
     # deploy gauge factory and gauge implementaiton address
     child_gauge_factory = deploy_contract(
         chain_settings,
