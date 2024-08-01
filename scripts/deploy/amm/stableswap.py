@@ -55,7 +55,5 @@ def deploy_stableswap(chain_settings: Settings, fee_receiver):
         factory.set_metapool_implementations(0, meta_blueprint.address)
         logger.info(f"Set meta amm implementation to: {meta_blueprint.address}")
 
-    # TODO: change owner in the future!
-
     logger.info("Stableswap Factory deployed.")
     return factory

@@ -262,7 +262,8 @@ def save_deployment_metadata(
     )
     if not "config" in deployments:
 
-        # TODO: do we need to mirror more config keys here for other teams to pick up?
+        # Add config items to deployment yaml file which can be used by other services to
+        # finalise deployment (backed, api, frontend)
         deployments["config"] = {
             "chain": chain_settings.network_name,
             "chain_id": chain_settings.chain_id,

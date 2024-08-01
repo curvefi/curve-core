@@ -41,10 +41,10 @@ def run_deploy_all(chain: str) -> None:
     child_gauge_factory = deploy_liquidity_gauge_infra(chain_settings)
     gauge_type = -1  # TODO: fetch correct gauge type
 
-    # deploy address provider:
+    # address provider:
     address_provider = deploy_address_provider(chain_settings)
 
-    # TODO: metaregistry needs gauge factory address
+    # metaregistry:
     metaregistry = deploy_metaregistry(chain_settings, child_gauge_factory.address, gauge_type)
 
     # router
