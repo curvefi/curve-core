@@ -41,7 +41,7 @@ def run_deploy_all(chain: str) -> None:
         dao_vault = settings.owner
     else:
         admins = deploy_xgov(chain, settings.rollup_type)
-        dao_vault = deploy_dao_vault(chain, admins[0])
+        dao_vault = deploy_dao_vault(chain, admins[0]).address
 
     # TODO: deploy (reward-only) gauge factory and contracts
     gauge_factory = ZERO_ADDRESS
@@ -101,7 +101,7 @@ def run_deploy_all(chain: str) -> None:
         21: admins[0],
         22: admins[1],
         23: admins[2],
-        24: dao_vault.address,
+        24: dao_vault,
         25: curve_network_settings.crvusd_token_address,
         26: deposit_and_stake_zap.address,
         27: stable_swap_meta_zap.address,
