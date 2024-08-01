@@ -23,8 +23,9 @@ def deploy_twocrypto(chain_settings: Settings, fee_receiver):
     )
 
     # Factory:
-    factory = deploy_contract(chain_settings, Path(BASE_DIR, "contracts", "amm", "twocryptoswap", "factory"))
-    factory.initialise_ownership(fee_receiver, boa.env.eoa)
+    factory = deploy_contract(
+        chain_settings, Path(BASE_DIR, "contracts", "amm", "twocryptoswap", "factory"), fee_receiver
+    )
 
     # Set up AMM implementations:÷
     current_views_impl = factory.views_implementation()

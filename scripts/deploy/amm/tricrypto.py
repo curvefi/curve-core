@@ -24,7 +24,7 @@ def deploy_tricrypto(chain_settings: Settings, fee_receiver):
 
     # Factory:
     factory = deploy_contract(
-        chain_settings, Path(BASE_DIR, "contracts", "amm", "tricryptoswap", "factory"), fee_receiver, boa.env.eoa
+        chain_settings, Path(BASE_DIR, "contracts", "amm", "tricryptoswap", "factory"), fee_receiver
     )
 
     # Set up AMM implementations:÷

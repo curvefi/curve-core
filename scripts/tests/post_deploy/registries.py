@@ -12,7 +12,7 @@ def test_registries_deployment(whole_deployment: dict, chain_settings):
     address_provider = contracts["address_provider"]["contract"]
 
     assert address_provider.get_address(2) == whole_deployment["helpers"]["router"]["address"]
-    assert address_provider.get_address(4) == chain_settings.fee_receiver
+    assert address_provider.get_address(4) == chain_settings.dao.vault  # fee receiver is the vault for now ...
     assert address_provider.get_address(7) == whole_deployment["registries"]["metaregistry"]["address"]
     assert address_provider.get_address(11) == whole_deployment["amm"]["tricryptoswap"]["factory"]["address"]
     assert address_provider.get_address(12) == whole_deployment["amm"]["stableswap"]["factory"]["address"]

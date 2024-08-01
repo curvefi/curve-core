@@ -168,9 +168,17 @@
             {
                 "name": "_fee_receiver",
                 "type": "address"
-            },
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "stateMutability": "nonpayable",
+        "type": "function",
+        "name": "set_owner",
+        "inputs": [
             {
-                "name": "_admin",
+                "name": "_owner",
                 "type": "address"
             }
         ],
