@@ -13,6 +13,11 @@ config:
     parameter_admin: '0x0000000000000000000000000000000000000000'
     vault: '0x0000000000000000000000000000000000000000'
   wrapped_native_token: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
+  explorer_base_url: https://etherscan.io
+  native_currency_coingecko_id: ethereum
+  native_currency_symbol: ETH
+  platform_coingecko_id: ethereum
+  public_rpc_url: https://eth.llamarpc.com
 contracts:
   amm:
     stableswap:
@@ -82,6 +87,7 @@ contracts:
         contract_github_url: https://github.com/curvefi/curve-lite/blob/a4cb8201f2c584baec668707a695d35e469ff73b/contracts/amm/tricryptoswap/factory/factory_v_200.vy
         contract_version: 2.0.0
         deployment_timestamp: 1722432774
+        deployment_timestamp: 1721934844
         deployment_type: normal
       implementation:
         address: '0x8C3472B89e6D095201334A1d4Bbb5Ea8227A833C'

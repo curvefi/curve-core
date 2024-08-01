@@ -168,7 +168,7 @@ def run_deploy_all(chain: str) -> None:
 @click.argument("chain", type=click.STRING)
 def run_deploy_router(chain: str) -> None:
     settings = get_chain_settings(chain)
-    deploy_router(chain, settings.weth)
+    deploy_router(chain, settings.native_wrapped_token)
 
 
 @deploy_commands.command("address_provider", short_help="deploy address provider")

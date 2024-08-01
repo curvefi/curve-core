@@ -272,6 +272,11 @@ def save_deployment_metadata(
                 "rollup_type": chain_settings.rollup_type.value,
             },
             "wrapped_native_token": chain_settings.wrapped_native_token,
+            "explorer_base_url": chain_settings.explorer_base_url,
+            "native_currency_symbol": chain_settings.native_currency_symbol,
+            "native_currency_coingecko_id": chain_settings.native_currency_coingecko_id,
+            "platform_coingecko_id": chain_settings.platform_coingecko_id,
+            "public_rpc_url": chain_settings.public_rpc_url,
             "dao": {
                 "crv": chain_settings.dao.crv,
                 "crvusd": chain_settings.dao.crvusd,

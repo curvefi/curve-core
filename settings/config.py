@@ -10,10 +10,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=Path(BASE_DIR, "settings", "env"))
 
-    DEBUG: bool = True  # if DEBUG, use forkmode
+    DEBUG: bool = False
     DEV: bool = False
 
     WEB3_PROVIDER_URL: str
+    DEPLOYER_EOA_PRIVATE_KEY: str
 
 
 settings = Settings()
@@ -64,5 +65,10 @@ def get_chain_settings(chain: str):
         rollup_type: RollupType
         wrapped_native_token: str
         dao: CurveDAOSettings
+        explorer_base_url: str
+        native_currency_symbol: str
+        native_currency_coingecko_id: str
+        platform_coingecko_id: str
+        public_rpc_url: str
 
     return ChainConfig()
