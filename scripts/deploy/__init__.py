@@ -44,7 +44,7 @@ def run_deploy_all(chain: str) -> None:
 
     # deploy (reward-only) gauge factory and contracts
     child_gauge_factory = deploy_liquidity_gauge_infra(chain_settings)
-    gauge_type = -1  # TODO: fetch correct gauge type
+    gauge_type = -1  # we set gauge type to -1 until there's an actual gauge type later
     # TODO: add post_deploy tests for gauge infra
 
     # address provider:
