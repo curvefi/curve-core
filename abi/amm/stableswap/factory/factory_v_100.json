@@ -15,6 +15,11 @@
         "name": "PlainPoolDeployed",
         "inputs": [
             {
+                "name": "pool",
+                "type": "address",
+                "indexed": false
+            },
+            {
                 "name": "coins",
                 "type": "address[]",
                 "indexed": false
@@ -41,6 +46,11 @@
     {
         "name": "MetaPoolDeployed",
         "inputs": [
+            {
+                "name": "pool",
+                "type": "address",
+                "indexed": false
+            },
             {
                 "name": "coin",
                 "type": "address",
@@ -95,6 +105,18 @@
                 "name": "_fee_receiver",
                 "type": "address"
             },
+            {
+                "name": "_owner",
+                "type": "address"
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "stateMutability": "nonpayable",
+        "type": "function",
+        "name": "set_owner",
+        "inputs": [
             {
                 "name": "_owner",
                 "type": "address"

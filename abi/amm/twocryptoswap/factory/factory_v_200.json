@@ -193,20 +193,21 @@
     {
         "stateMutability": "nonpayable",
         "type": "constructor",
-        "inputs": [],
+        "inputs": [
+            {
+                "name": "_fee_receiver",
+                "type": "address"
+            }
+        ],
         "outputs": []
     },
     {
         "stateMutability": "nonpayable",
         "type": "function",
-        "name": "initialise_ownership",
+        "name": "set_owner",
         "inputs": [
             {
-                "name": "_fee_receiver",
-                "type": "address"
-            },
-            {
-                "name": "_admin",
+                "name": "_owner",
                 "type": "address"
             }
         ],

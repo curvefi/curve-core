@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
@@ -9,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=Path(BASE_DIR, "settings", "env"))
 
-    DEBUG: bool = False
+    DEBUG: bool = True
     DEV: bool = False
 
     WEB3_PROVIDER_URL: str
@@ -25,6 +26,16 @@ class RollupType(StrEnum):
     polygon_cdk = "polygon_zk"
     zksync = "zksync"
     not_rollup = "_"
+
+
+@dataclass
+class CurveDAOSettings:
+    ownership_admin: str
+    parameter_admin: str
+    emergency_admin: str
+    crv: str
+    crvusd: str
+    vault: str
 
 
 def get_chain_settings(chain: str):
@@ -48,16 +59,13 @@ def get_chain_settings(chain: str):
             return YamlConfigSettingsSource(settings_cls, yaml_file=config_file), *sources
 
         # chain settings from config file
-        chain: str
+        network_name: str
         chain_id: int
         layer: int
         rollup_type: RollupType
+        wrapped_native_token: str
+        dao: CurveDAOSettings
         explorer_base_url: str
-
-        native_wrapped_token: str
-        owner: str
-        fee_receiver: str
-
         native_currency_symbol: str
         native_currency_coingecko_id: str
         platform_coingecko_id: str

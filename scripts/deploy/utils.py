@@ -14,17 +14,16 @@ from boa.util.abi import abi_encode
 from eth_utils import keccak
 from pydantic_settings import BaseSettings
 
-from settings.config import BASE_DIR, get_chain_settings
+from settings.config import BASE_DIR, Settings, get_chain_settings
 
 from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRESS
 
 logger = logging.getLogger(__name__)
 
 
-def deploy_contract(chain_name: str, contract_folder: Path, *args, as_blueprint: bool = False):
+def deploy_contract(chain_settings: Settings, contract_folder: Path, *args, as_blueprint: bool = False):
 
-    deployment_file = Path(BASE_DIR, "deployments", f"{chain_name}.yaml")
-    chain_settings = get_chain_settings(chain_name)
+    deployment_file = Path(BASE_DIR, "deployments", f"{chain_settings.network_name}.yaml")
 
     # fetch latest contract
     latest_contract = fetch_latest_contract(contract_folder)
@@ -262,23 +261,32 @@ def save_deployment_metadata(
         }
     )
 
-    # Update config on every run
-    deployments["config"] = {
-        "chain": chain_settings.chain,
-        "chain_id": chain_settings.chain_id,
-        "chain_type": {
-            "layer": chain_settings.layer,
-            "rollup_type": chain_settings.rollup_type.value,
-        },
-        "native_wrapped_token": chain_settings.native_wrapped_token,
-        "owner": chain_settings.owner,
-        "fee_receiver": chain_settings.fee_receiver,
-        "explorer_base_url": chain_settings.explorer_base_url,
-        "native_currency_symbol": chain_settings.native_currency_symbol,
-        "native_currency_coingecko_id": chain_settings.native_currency_coingecko_id,
-        "platform_coingecko_id": chain_settings.platform_coingecko_id,
-        "public_rpc_url": chain_settings.public_rpc_url,
-    }
+    if not "config" in deployments:
+
+        # Add config items to deployment yaml file which can be used by other services to
+        # finalise deployment (backed, api, frontend)
+        deployments["config"] = {
+            "chain": chain_settings.network_name,
+            "chain_id": chain_settings.chain_id,
+            "chain_type": {
+                "layer": chain_settings.layer,
+                "rollup_type": chain_settings.rollup_type.value,
+            },
+            "wrapped_native_token": chain_settings.wrapped_native_token,
+            "explorer_base_url": chain_settings.explorer_base_url,
+            "native_currency_symbol": chain_settings.native_currency_symbol,
+            "native_currency_coingecko_id": chain_settings.native_currency_coingecko_id,
+            "platform_coingecko_id": chain_settings.platform_coingecko_id,
+            "public_rpc_url": chain_settings.public_rpc_url,
+            "dao": {
+                "crv": chain_settings.dao.crv,
+                "crvusd": chain_settings.dao.crvusd,
+                "ownership_admin": chain_settings.dao.ownership_admin,
+                "parameter_admin": chain_settings.dao.parameter_admin,
+                "emergency_admin": chain_settings.dao.emergency_admin,
+                "vault": chain_settings.dao.vault,
+            },
+        }
 
     # we updated innermost_dict, but since it is a reference to deployments dict, we can
     # just dump the original dict:

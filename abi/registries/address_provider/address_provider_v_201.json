@@ -81,6 +81,18 @@
         "outputs": []
     },
     {
+        "stateMutability": "nonpayable",
+        "type": "function",
+        "name": "set_owner",
+        "inputs": [
+            {
+                "name": "_owner",
+                "type": "address"
+            }
+        ],
+        "outputs": []
+    },
+    {
         "stateMutability": "view",
         "type": "function",
         "name": "ids",

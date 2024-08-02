@@ -101,15 +101,29 @@ pool_count: public(uint256)              # actual length of pool_list
 pool_data: HashMap[address, PoolArray]
 pool_list: public(address[4294967296])   # master list of pools
 
+deployer: immutable(address)
+
 
 @external
-def __init__(_fee_receiver: address, _admin: address):
+def __init__(_fee_receiver: address):
 
     self.fee_receiver = _fee_receiver
-    self.admin = _admin
+    self.admin = msg.sender
+    deployer = msg.sender
 
     log UpdateFeeReceiver(empty(address), _fee_receiver)
-    log TransferOwnership(empty(address), _admin)
+    log TransferOwnership(empty(address), msg.sender)
+
+
+@external
+def set_owner(_owner: address):
+    
+    assert msg.sender == deployer
+    assert self.admin == deployer
+    assert _owner != deployer
+
+    self.admin = _owner
+    log TransferOwnership(deployer, _owner)
 
 
 @internal

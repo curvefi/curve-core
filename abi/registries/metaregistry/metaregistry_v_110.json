@@ -46,6 +46,18 @@
     {
         "stateMutability": "nonpayable",
         "type": "function",
+        "name": "set_owner",
+        "inputs": [
+            {
+                "name": "_owner",
+                "type": "address"
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "stateMutability": "nonpayable",
+        "type": "function",
         "name": "add_registry_handler",
         "inputs": [
             {
