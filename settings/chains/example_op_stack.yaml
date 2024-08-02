@@ -1,0 +1,14 @@
+chain: example-op-stack
+chain_id: 10
+rollup_type: op_stack
+explorer_base_url: https://optimistic.etherscan.io
+native_wrapped_token: "0x4200000000000000000000000000000000000006"
+owner: "0x28c4A1Fa47EEE9226F8dE7D6AF0a41C62Ca98267"
+fee_receiver: "0xbF7E49483881C76487b0989CD7d9A8239B20CA41"
+
+# Not related to development, for further integrations
+layer: 2
+native_currency_symbol: ETH
+native_currency_coingecko_id: ethereum
+platform_coingecko_id: ethereum
+public_rpc_url: https://optimism.llamarpc.com

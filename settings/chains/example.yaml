@@ -6,7 +6,7 @@ native_wrapped_token: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 owner: "0x40907540d8a6C65c637785e8f8B742ae6b0b9968"
 fee_receiver: "0xeCb456EA5365865EbAb8a2661B0c503410e9B347"
 
-# Not related to development, for futher integrations
+# Not related to development, for further integrations
 layer: 1
 native_currency_symbol: ETH
 native_currency_coingecko_id: ethereum
