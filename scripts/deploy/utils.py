@@ -12,19 +12,17 @@ from boa.contracts.abi.abi_contract import ABIFunction
 from boa.contracts.vyper.vyper_contract import VyperContract
 from boa.util.abi import abi_encode
 from eth_utils import keccak
-from pydantic_settings import BaseSettings
 
-from settings.config import BASE_DIR, get_chain_settings
+from settings.config import BASE_DIR, ChainConfig
 
 from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRESS
 
 logger = logging.getLogger(__name__)
 
 
-def deploy_contract(chain_name: str, contract_folder: Path, *args, as_blueprint: bool = False):
+def deploy_contract(chain_settings: ChainConfig, contract_folder: Path, *args, as_blueprint: bool = False):
 
-    deployment_file = Path(BASE_DIR, "deployments", f"{chain_name}.yaml")
-    chain_settings = get_chain_settings(chain_name)
+    deployment_file = Path(BASE_DIR, "deployments", f"{chain_settings.network_name}.yaml")
 
     # fetch latest contract
     latest_contract = fetch_latest_contract(contract_folder)
@@ -97,7 +95,7 @@ def get_latest_commit_hash(file_path):
         # Return the commit hash
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
-        print(f"Error fetching commit hash: {e}")
+        logger.warning(f"Error fetching commit hash: {e}")
         return None
 
 
@@ -152,15 +150,6 @@ def get_deployment(nested_keys: list, deployment_file: Path):
 
     return {}
 
-    # if not contract_type in deployments["contracts"].keys():
-    #     return {}
-
-    # deployed_contracts_dict = deployments["contracts"][contract_type]
-    # if not contract_designation in deployed_contracts_dict.keys():
-    #     return {}
-
-    # return deployments["contracts"][contract_type][contract_designation]
-
 
 def ensure_nested_dict(d, keys):
     """
@@ -202,7 +191,7 @@ def traverse_nested_dict(d, keys):
 
 def save_deployment_metadata(
     contract_folder: PosixPath,
-    chain_settings: BaseSettings,
+    chain_settings: ChainConfig,
     contract_object: VyperContract,
     deployment_file: Path,
     ctor_args: list,
@@ -270,24 +259,32 @@ def save_deployment_metadata(
             },
         }
     )
+
     if not "config" in deployments:
 
-        # TODO: do we need to mirror more config keys here for other teams to pick up?
+        # Add config items to deployment yaml file which can be used by other services to
+        # finalise deployment (backed, api, frontend)
         deployments["config"] = {
-            "chain": chain_settings.chain,
+            "chain": chain_settings.network_name,
             "chain_id": chain_settings.chain_id,
             "chain_type": {
                 "layer": chain_settings.layer,
                 "rollup_type": chain_settings.rollup_type.value,
             },
-            "native_wrapped_token": chain_settings.native_wrapped_token,
-            "owner": chain_settings.owner,
-            "fee_receiver": chain_settings.fee_receiver,
+            "wrapped_native_token": chain_settings.wrapped_native_token,
             "explorer_base_url": chain_settings.explorer_base_url,
             "native_currency_symbol": chain_settings.native_currency_symbol,
             "native_currency_coingecko_id": chain_settings.native_currency_coingecko_id,
             "platform_coingecko_id": chain_settings.platform_coingecko_id,
             "public_rpc_url": chain_settings.public_rpc_url,
+            "dao": {
+                "crv": chain_settings.dao.crv,
+                "crvusd": chain_settings.dao.crvusd,
+                "ownership_admin": chain_settings.dao.ownership_admin,
+                "parameter_admin": chain_settings.dao.parameter_admin,
+                "emergency_admin": chain_settings.dao.emergency_admin,
+                "vault": chain_settings.dao.vault,
+            },
         }
 
     # we updated innermost_dict, but since it is a reference to deployments dict, we can

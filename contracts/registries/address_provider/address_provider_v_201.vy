@@ -76,10 +76,24 @@ check_id_exists: public(HashMap[uint256, bool])
 _ids: DynArray[uint256, 1000]
 get_id_info: public(HashMap[uint256, AddressInfo])
 
+deployer: immutable(address)
+
 
 @external
 def __init__():
-    self.admin  = tx.origin
+    self.admin  = msg.sender
+    deployer = msg.sender
+
+
+@external
+def set_owner(_owner: address):
+    
+    assert msg.sender == deployer
+    assert self.admin == deployer
+    assert _owner != deployer
+
+    self.admin = _owner
+    log NewAdmin(_owner)
 
 
 # ------------------------------ View Methods --------------------------------

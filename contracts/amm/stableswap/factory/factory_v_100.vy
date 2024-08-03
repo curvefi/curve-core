@@ -57,12 +57,14 @@ event BasePoolAdded:
     base_pool: address
 
 event PlainPoolDeployed:
+    pool: address
     coins: DynArray[address, MAX_COINS]
     A: uint256
     fee: uint256
     deployer: address
 
 event MetaPoolDeployed:
+    pool: address
     coin: address
     base_pool: address
     A: uint256
@@ -110,17 +112,29 @@ fee_receiver: public(address)
 markets: HashMap[uint256, address[4294967296]]
 market_counts: HashMap[uint256, uint256]
 
+deployer: immutable(address)
 
 @external
 def __init__(_fee_receiver: address, _owner: address):
 
     self.fee_receiver = _fee_receiver
-    self.admin = _owner
+    self.admin = msg.sender
+    deployer = msg.sender
 
     self.asset_types[0] = "Standard"
     self.asset_types[1] = "Oracle"
     self.asset_types[2] = "Rebasing"
     self.asset_types[3] = "ERC4626"
+
+
+@external
+def set_owner(_owner: address):
+    
+    assert msg.sender == deployer
+    assert self.admin == deployer
+    assert _owner != deployer
+
+    self.admin = _owner
 
 
 # <--- Factory Getters --->
@@ -570,7 +584,7 @@ def deploy_plain_pool(
             self.markets[key][length] = pool
             self.market_counts[key] = length + 1
 
-    log PlainPoolDeployed(_coins, _A, _fee, msg.sender)
+    log PlainPoolDeployed(pool, _coins, _A, _fee, msg.sender)
     return pool
 
 
@@ -693,7 +707,7 @@ def deploy_metapool(
         if is_finished:
             break
 
-    log MetaPoolDeployed(_coin, _base_pool, _A, _fee, msg.sender)
+    log MetaPoolDeployed(pool, _coin, _base_pool, _A, _fee, msg.sender)
     return pool
 
 

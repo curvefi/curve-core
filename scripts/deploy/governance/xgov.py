@@ -1,11 +1,8 @@
 import logging
 from pathlib import Path
 
-import boa
-
-from scripts.deploy.constants import ETHEREUM_ADMINS
 from scripts.deploy.utils import deploy_contract
-from settings.config import BASE_DIR, RollupType
+from settings.config import BASE_DIR, ChainConfig, RollupType
 
 logger = logging.getLogger(__name__)
 
@@ -17,8 +14,10 @@ BROADCASTERS = {
 }
 
 
-def deploy_xgov(chain: str, rollup_type: RollupType):
-    agent_blueprint = deploy_contract(chain, Path(BASE_DIR, "contracts", "governance", "agent"), as_blueprint=True)
+def deploy_xgov(chain_settings: ChainConfig, rollup_type: RollupType):
+    agent_blueprint = deploy_contract(
+        chain_settings, Path(BASE_DIR, "contracts", "governance", "agent"), as_blueprint=True
+    )
 
     match rollup_type:
         case RollupType.op_stack:
@@ -34,11 +33,15 @@ def deploy_xgov(chain: str, rollup_type: RollupType):
             raise NotImplementedError(f"{rollup_type} currently not supported")
 
     relayer = deploy_contract(
-        chain, Path(BASE_DIR, "contracts", "governance", chain, "relayer"), BROADCASTERS[rollup_type], agent_blueprint, *r_args
+        chain_settings,
+        Path(BASE_DIR, "contracts", "governance", chain_settings.rollup_type.value, "relayer"),
+        BROADCASTERS[rollup_type],
+        agent_blueprint,
+        *r_args,
     )
 
     return relayer.OWNERSHIP_AGENT(), relayer.PARAMETER_AGENT(), relayer.EMERGENCY_AGENT()
 
 
-def deploy_dao_vault(chain: str, owner: str):
-    return deploy_contract(chain, Path(BASE_DIR, "contracts", "governance", "vault"), owner)
+def deploy_dao_vault(chain_settings: ChainConfig, owner: str):
+    return deploy_contract(chain_settings, Path(BASE_DIR, "contracts", "governance", "vault"), owner)

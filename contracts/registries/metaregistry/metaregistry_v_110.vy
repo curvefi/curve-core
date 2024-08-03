@@ -74,6 +74,7 @@ registry_length: public(uint256)
 gauge_factory: public(GaugeFactory)
 gauge_type: public(int128)
 
+deployer: immutable(address)
 
 # ---- constructor ---- #
 @external
@@ -81,6 +82,19 @@ def __init__(_gauge_factory: address, _gauge_type: int128):
     self.admin = msg.sender
     self.gauge_factory = GaugeFactory(_gauge_factory)
     self.gauge_type = _gauge_type
+
+    deployer = msg.sender
+
+
+@external
+def set_owner(_owner: address):
+    
+    assert msg.sender == deployer
+    assert self.admin == deployer
+    assert _owner != deployer
+
+    self.admin = _owner
+    log NewAdmin(_owner)
 
 
 # ---- internal methods ---- #

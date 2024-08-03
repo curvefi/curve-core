@@ -81,7 +81,6 @@ A_MULTIPLIER: constant(uint256) = 10000
 # Limits
 MAX_FEE: constant(uint256) = 10 * 10 ** 9
 
-deployer: address
 admin: public(address)
 future_admin: public(address)
 
@@ -100,23 +99,24 @@ markets: HashMap[uint256, DynArray[address, 4294967296]]
 pool_data: HashMap[address, PoolArray]
 pool_list: public(DynArray[address, 4294967296])   # master list of pools
 
-
-@external
-def __init__():
-    self.deployer = tx.origin
+deployer: immutable(address)
 
 
 @external
-def initialise_ownership(_fee_receiver: address, _admin: address):
-
-    assert msg.sender == self.deployer
-    assert self.admin == empty(address)
-
+def __init__(_fee_receiver: address):
+    deployer = msg.sender
+    self.admin = msg.sender
     self.fee_receiver = _fee_receiver
-    self.admin = _admin
 
-    log UpdateFeeReceiver(empty(address), _fee_receiver)
-    log TransferOwnership(empty(address), _admin)
+
+@external
+def set_owner(_owner: address):
+    
+    assert msg.sender == deployer
+    assert self.admin == deployer
+    assert _owner != deployer
+
+    self.admin = _owner
 
 
 @internal
