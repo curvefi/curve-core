@@ -21,20 +21,20 @@ settings = Settings()
 
 
 class RollupType(StrEnum):
-    op_stack = "optimism"
-    arb_orbit = "arbitrum"
-    polygon_cdk = "polygon_zk"
+    op_stack = "op_stack"
+    arb_orbit = "arb_orbit"
+    polygon_cdk = "polygon_cdk"
     zksync = "zksync"
     not_rollup = "_"
 
 
 class CurveDAOSettings(BaseModel):
-    ownership_admin: str
-    parameter_admin: str
-    emergency_admin: str
     crv: str
     crvusd: str
-    vault: str
+    ownership_admin: str | None = None
+    parameter_admin: str | None = None
+    emergency_admin: str | None = None
+    vault: str | None = None
 
 
 class ChainConfig(BaseSettings):

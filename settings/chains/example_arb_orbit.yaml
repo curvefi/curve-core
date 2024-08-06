@@ -1,10 +1,10 @@
-chain: example-arb-orbit
+network_name: example_arb_orbit
 chain_id: 42161
 rollup_type: arb_orbit
+dao:
+  crv: "0x11cDb42B0EB46D95f990BeDD4695A6e3fA034978"
+  crvusd: "0x498Bf2B1e120FeD3ad3D42EA2165E9b73f99C1e5"
 explorer_base_url: https://arbiscan.io
-native_wrapped_token: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"
-owner: "0x452030a5D962d37D97A9D65487663cD5fd9C2B32"
-fee_receiver: "0xd4F94D0aaa640BBb72b5EEc2D85F6D114D81a88E"
 
 # Not related to development, for further integrations
 layer: 2
@@ -12,3 +12,4 @@ native_currency_symbol: ETH
 native_currency_coingecko_id: ethereum
 platform_coingecko_id: ethereum
 public_rpc_url: https://arbitrum.llamarpc.com
+wrapped_native_token: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"

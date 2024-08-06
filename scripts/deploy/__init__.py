@@ -48,7 +48,7 @@ def run_deploy_all(chain: str) -> None:
         )
         dao_vault = chain_settings.dao.vault
     else:
-        admins = deploy_xgov(chain_settings, chain_settings.rollup_type)
+        admins = deploy_xgov(chain_settings)
         dao_vault = deploy_dao_vault(chain_settings, admins[0]).address
 
     # Old compatibility
@@ -133,7 +133,7 @@ def run_deploy_all(chain: str) -> None:
     update_metaregistry(chain_settings, metaregistry, address_provider)
 
     # transfer ownership to the dao
-    owner = chain_settings.dao.ownership_admin
+    owner = admins[0]
 
     # addressprovider
     current_owner = address_provider._storage.admin.get()
@@ -188,7 +188,7 @@ def run_deploy_all(chain: str) -> None:
 @click.argument("chain", type=click.STRING)
 def run_deploy_governance(chain: str) -> None:
     chain_settings = get_chain_settings(chain)
-    admins = deploy_xgov(chain_settings, chain_settings.rollup_type)
+    admins = deploy_xgov(chain_settings)
     deploy_dao_vault(chain_settings, admins[0])
 
 
