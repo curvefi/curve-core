@@ -197,7 +197,6 @@ def save_deployment_metadata(
     ctor_args: list,
     as_blueprint: bool = False,
 ):
-
     nested_keys = contract_folder.parts[contract_folder.parts.index("contracts") + 1 :]
 
     if not os.path.exists(deployment_file):
@@ -260,7 +259,18 @@ def save_deployment_metadata(
         }
     )
 
-    if not "config" in deployments:
+    admins = None
+    dao_vault = None
+    if re.match(r"relayer.+\.vy", os.path.basename(contract_object.filename)):
+        admins = (
+            str(contract_object.OWNERSHIP_AGENT()),
+            str(contract_object.PARAMETER_AGENT()),
+            str(contract_object.EMERGENCY_AGENT()),
+        )
+    if re.match(r"vault.+\.vy", os.path.basename(contract_object.filename)):
+        dao_vault = str(contract_object.address)
+
+    if not "config" in deployments or admins is not None or dao_vault is not None:
 
         # Add config items to deployment yaml file which can be used by other services to
         # finalise deployment (backed, api, frontend)
@@ -280,10 +290,10 @@ def save_deployment_metadata(
             "dao": {
                 "crv": chain_settings.dao.crv,
                 "crvusd": chain_settings.dao.crvusd,
-                "ownership_admin": chain_settings.dao.ownership_admin,
-                "parameter_admin": chain_settings.dao.parameter_admin,
-                "emergency_admin": chain_settings.dao.emergency_admin,
-                "vault": chain_settings.dao.vault,
+                "ownership_admin": admins[0] if admins else chain_settings.dao.ownership_admin,
+                "parameter_admin": admins[1] if admins else chain_settings.dao.parameter_admin,
+                "emergency_admin": admins[2] if admins else chain_settings.dao.emergency_admin,
+                "vault": dao_vault if dao_vault else chain_settings.dao.vault,
             },
         }
 

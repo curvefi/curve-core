@@ -35,7 +35,7 @@ def deploy_xgov(chain_settings: ChainConfig):
 
     relayer = deploy_contract(
         chain_settings,
-        Path(BASE_DIR, "contracts", "governance", chain_settings.rollup_type.value, "relayer"),
+        Path(BASE_DIR, "contracts", "governance", "relayer", chain_settings.rollup_type.value),
         BROADCASTERS[rollup_type],
         agent_blueprint.address,
         *r_args,
