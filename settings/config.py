@@ -1,7 +1,7 @@
-from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
+from pydantic import BaseModel
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict, YamlConfigSettingsSource
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,27 +21,41 @@ settings = Settings()
 
 
 class RollupType(StrEnum):
-    op_stack = "optimism"
-    arb_orbit = "arbitrum"
-    polygon_cdk = "polygon_zk"
+    op_stack = "op_stack"
+    arb_orbit = "arb_orbit"
+    polygon_cdk = "polygon_cdk"
     zksync = "zksync"
     not_rollup = "_"
 
 
-@dataclass
-class CurveDAOSettings:
-    ownership_admin: str
-    parameter_admin: str
-    emergency_admin: str
+class CurveDAOSettings(BaseModel):
     crv: str
     crvusd: str
-    vault: str
+    ownership_admin: str | None = None
+    parameter_admin: str | None = None
+    emergency_admin: str | None = None
+    vault: str | None = None
+
+
+class ChainConfig(BaseSettings):
+
+    network_name: str
+    chain_id: int
+    layer: int
+    rollup_type: RollupType
+    wrapped_native_token: str
+    dao: CurveDAOSettings
+    explorer_base_url: str
+    native_currency_symbol: str
+    native_currency_coingecko_id: str
+    platform_coingecko_id: str
+    public_rpc_url: str
 
 
 def get_chain_settings(chain: str):
     config_file = Path(BASE_DIR, "settings", "chains", f"{chain}.yaml")
 
-    class ChainConfig(BaseSettings):
+    class YamlChainConfig(ChainConfig):
         model_config = SettingsConfigDict(yaml_file=config_file)
 
         @classmethod
@@ -58,17 +72,4 @@ def get_chain_settings(chain: str):
             )
             return YamlConfigSettingsSource(settings_cls, yaml_file=config_file), *sources
 
-        # chain settings from config file
-        network_name: str
-        chain_id: int
-        layer: int
-        rollup_type: RollupType
-        wrapped_native_token: str
-        dao: CurveDAOSettings
-        explorer_base_url: str
-        native_currency_symbol: str
-        native_currency_coingecko_id: str
-        platform_coingecko_id: str
-        public_rpc_url: str
-
-    return ChainConfig()
+    return YamlChainConfig()

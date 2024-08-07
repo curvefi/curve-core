@@ -4,13 +4,14 @@ import click
 
 from scripts.tests.post_deploy import test_post_deploy
 from scripts.tests.pre_deployment import test_pre_deploy
-from settings.config import RollupType, get_chain_settings
+from settings.config import CurveDAOSettings, RollupType, get_chain_settings
 
 from .amm.stableswap import deploy_stableswap
 from .amm.tricrypto import deploy_tricrypto
 from .amm.twocrypto import deploy_twocrypto
-from .constants import ADDRESS_PROVIDER_MAPPING
+from .constants import ADDRESS_PROVIDER_MAPPING, ZERO_ADDRESS
 from .gauge.child_gauge import deploy_liquidity_gauge_infra
+from .governance.xgov import deploy_dao_vault, deploy_xgov
 from .helpers.deposit_and_stake_zap import deploy_deposit_and_stake_zap
 from .helpers.rate_provider import deploy_rate_provider
 from .helpers.router import deploy_router
@@ -38,9 +39,20 @@ def run_deploy_all(chain: str) -> None:
     # pre-deployment tests:
     test_pre_deploy(chain_settings.chain_id)
 
-    # TODO: DEPLOY DAO CONTRACTS HERE:
-    # ... <--------------------------|
-    fee_receiver = chain_settings.dao.vault
+    if chain_settings.rollup_type == RollupType.not_rollup:
+        logger.info("No xgov for L1, setting temporary owner")
+        admins = (
+            chain_settings.dao.ownership_admin,
+            chain_settings.dao.parameter_admin,
+            chain_settings.dao.emergency_admin,
+        )
+        dao_vault = chain_settings.dao.vault
+    else:
+        admins = deploy_xgov(chain_settings)
+        dao_vault = deploy_dao_vault(chain_settings, admins[0]).address
+
+    # Old compatibility
+    fee_receiver = dao_vault
 
     # deploy (reward-only) gauge factory and contracts
     child_gauge_factory = deploy_liquidity_gauge_infra(chain_settings)
@@ -54,7 +66,7 @@ def run_deploy_all(chain: str) -> None:
     metaregistry = deploy_metaregistry(chain_settings, child_gauge_factory.address, gauge_type)
 
     # router
-    router = deploy_router(chain_settings, chain_settings.wrapped_native_token)
+    router = deploy_router(chain_settings)
 
     # deploy amms:
     stableswap_factory = deploy_stableswap(chain_settings, fee_receiver)
@@ -79,13 +91,13 @@ def run_deploy_all(chain: str) -> None:
         12: stableswap_factory.address,
         13: twocrypto_factory.address,
         18: rate_provider.address,
-        19: chain_settings.dao.crv,
+        19: chain_settings.dao.crv,  # TODO: update deployment
         20: child_gauge_factory.address,
-        21: chain_settings.dao.ownership_admin,
-        22: chain_settings.dao.parameter_admin,
-        23: chain_settings.dao.emergency_admin,
-        24: chain_settings.dao.vault,
-        25: chain_settings.dao.crvusd,
+        21: admins[0],
+        22: admins[1],
+        23: admins[2],
+        24: dao_vault,
+        25: chain_settings.dao.crvusd,  # TODO: update deployment
         26: deposit_and_stake_zap.address,
         27: stable_swap_meta_zap.address,
     }
@@ -121,7 +133,7 @@ def run_deploy_all(chain: str) -> None:
     update_metaregistry(chain_settings, metaregistry, address_provider)
 
     # transfer ownership to the dao
-    owner = chain_settings.dao.ownership_admin
+    owner = admins[0]
 
     # addressprovider
     current_owner = address_provider._storage.admin.get()
@@ -172,35 +184,47 @@ def run_deploy_all(chain: str) -> None:
     logger.info("Infra deployed and tested!")
 
 
+@deploy_commands.command("governance", short_help="deploy governance")
+@click.argument("chain", type=click.STRING)
+def run_deploy_governance(chain: str) -> None:
+    chain_settings = get_chain_settings(chain)
+    admins = deploy_xgov(chain_settings)
+    deploy_dao_vault(chain_settings, admins[0])
+
+
 @deploy_commands.command("router", short_help="deploy router")
 @click.argument("chain", type=click.STRING)
 def run_deploy_router(chain: str) -> None:
-    settings = get_chain_settings(chain)
-    deploy_router(chain, settings.native_wrapped_token)
+    chain_settings = get_chain_settings(chain)
+    deploy_router(chain_settings)
 
 
 @deploy_commands.command("address_provider", short_help="deploy address provider")
 @click.argument("chain", type=click.STRING)
 def run_deploy_address_provider(chain: str) -> None:
-    deploy_address_provider(chain)
+    chain_settings = get_chain_settings(chain)
+    deploy_address_provider(chain_settings)
 
 
 @deploy_commands.command("stableswap", short_help="deploy stableswap infra")
 @click.argument("chain", type=click.STRING)
-def run_deploy_stableswap(chain: str) -> None:
+@click.argument("fee_receiver", type=click.STRING)
+def run_deploy_stableswap(chain: str, fee_receiver: str) -> None:
     chain_settings = get_chain_settings(chain)
-    deploy_stableswap(chain_settings)
+    deploy_stableswap(chain_settings, fee_receiver)
 
 
 @deploy_commands.command("tricrypto", short_help="deploy tricrypto infra")
 @click.argument("chain", type=click.STRING)
-def run_deploy_tricrypto(chain: str) -> None:
+@click.argument("fee_receiver", type=click.STRING)
+def run_deploy_tricrypto(chain: str, fee_receiver: str) -> None:
     chain_settings = get_chain_settings(chain)
-    deploy_tricrypto(chain, chain_settings)
+    deploy_tricrypto(chain_settings, fee_receiver)
 
 
 @deploy_commands.command("twocrypto", short_help="deploy twocrypto infra")
 @click.argument("chain", type=click.STRING)
-def run_deploy_twocrypto(chain: str) -> None:
+@click.argument("fee_receiver", type=click.STRING)
+def run_deploy_twocrypto(chain: str, fee_receiver: str) -> None:
     chain_settings = get_chain_settings(chain)
-    deploy_twocrypto(chain_settings)
+    deploy_twocrypto(chain_settings, fee_receiver)

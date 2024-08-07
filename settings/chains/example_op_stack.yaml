@@ -1,0 +1,15 @@
+network_name: example_op_stack
+chain_id: 10
+rollup_type: op_stack
+dao:
+  crv: "0x0994206dfE8De6Ec6920FF4D779B0d950605Fb53"
+  crvusd: "0xC52D7F23a2e460248Db6eE192Cb23dD12bDDCbf6"
+explorer_base_url: https://optimistic.etherscan.io
+
+# Not related to development, for further integrations
+layer: 2
+native_currency_symbol: ETH
+native_currency_coingecko_id: ethereum
+platform_coingecko_id: ethereum
+public_rpc_url: https://optimism.llamarpc.com
+wrapped_native_token: "0x4200000000000000000000000000000000000006"

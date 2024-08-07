@@ -12,16 +12,15 @@ from boa.contracts.abi.abi_contract import ABIFunction
 from boa.contracts.vyper.vyper_contract import VyperContract
 from boa.util.abi import abi_encode
 from eth_utils import keccak
-from pydantic_settings import BaseSettings
 
-from settings.config import BASE_DIR, Settings, get_chain_settings
+from settings.config import BASE_DIR, ChainConfig
 
 from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRESS
 
 logger = logging.getLogger(__name__)
 
 
-def deploy_contract(chain_settings: Settings, contract_folder: Path, *args, as_blueprint: bool = False):
+def deploy_contract(chain_settings: ChainConfig, contract_folder: Path, *args, as_blueprint: bool = False):
 
     deployment_file = Path(BASE_DIR, "deployments", f"{chain_settings.network_name}.yaml")
 
@@ -192,13 +191,12 @@ def traverse_nested_dict(d, keys):
 
 def save_deployment_metadata(
     contract_folder: PosixPath,
-    chain_settings: BaseSettings,
+    chain_settings: ChainConfig,
     contract_object: VyperContract,
     deployment_file: Path,
     ctor_args: list,
     as_blueprint: bool = False,
 ):
-
     nested_keys = contract_folder.parts[contract_folder.parts.index("contracts") + 1 :]
 
     if not os.path.exists(deployment_file):
@@ -249,6 +247,7 @@ def save_deployment_metadata(
         {
             "deployment_type": "normal" if not as_blueprint else "blueprint",
             "contract_version": version,
+            "contract_path": contract_relative_path,
             "contract_github_url": github_url,
             "address": contract_object.address.strip(),
             "deployment_timestamp": int(time.time()),
@@ -261,6 +260,7 @@ def save_deployment_metadata(
         }
     )
 
+    # update config
     if not "config" in deployments:
 
         # Add config items to deployment yaml file which can be used by other services to
@@ -287,6 +287,32 @@ def save_deployment_metadata(
                 "vault": chain_settings.dao.vault,
             },
         }
+
+    elif "governance" in deployments["contracts"]:
+
+        governance = deployments["contracts"]["governance"]
+
+        # update relayer:
+        if "relayer" in governance:
+
+            dao = deployments["config"]["dao"]
+            relayer_dict = deployments["contracts"]["governance"]["relayer"][chain_settings.rollup_type]
+            relayer = boa.load_partial(f'{BASE_DIR}{relayer_dict["contract_path"]}').at(relayer_dict["address"])
+
+            dao.update(
+                {
+                    "ownership_admin": relayer._immutables.OWNERSHIP_AGENT,
+                    "parameter_admin": relayer._immutables.PARAMETER_AGENT,
+                    "emergency_admin": relayer._immutables.EMERGENCY_AGENT,
+                }
+            )
+
+        # update vault:
+        if "vault" in governance:
+
+            dao = deployments["config"]["dao"]
+            vault_address = deployments["contracts"]["governance"]["vault"]["address"]
+            dao.update({"vault": vault_address})
 
     # we updated innermost_dict, but since it is a reference to deployments dict, we can
     # just dump the original dict:

@@ -1,5 +1,7 @@
 from eth_utils import keccak
 
+from settings.config import RollupType
+
 ADDRESS_PROVIDER_MAPPING = {
     2: "Exchange Router",
     4: "Fee Distributor",
@@ -242,3 +244,16 @@ CREATE2DEPLOYER_ABI = """
   ]
 """
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+
+
+ETHEREUM_ADMINS = (
+    "0x40907540d8a6C65c637785e8f8B742ae6b0b9968",  # Ownership
+    "0x4EEb3bA4f221cA16ed4A0cC7254E2E32DF948c5f",  # Parameter
+    "0x467947EE34aF926cF1DCac093870f613C96B1E0c",  # Emergency
+)
+
+BROADCASTERS = {
+    RollupType.op_stack: "0xE0fE4416214e95F0C67Dc044AAf1E63d6972e0b9",
+    RollupType.polygon_cdk: "0xB5e7fE8eA8ECbd33504485756fCabB5f5D29C051",
+    RollupType.arb_orbit: "0x94630a56519c00Be339BBd8BD26f342Bf4bd7eE0",
+}

@@ -2,14 +2,14 @@ import logging
 from pathlib import Path
 
 from scripts.deploy.utils import deploy_contract
-from settings.config import BASE_DIR
+from settings.config import BASE_DIR, ChainConfig
 
 logger = logging.getLogger(__name__)
 
 
-def deploy_metaregistry(chain_name: str, gauge_factory_address: str, gauge_type: int):
+def deploy_metaregistry(chain_settings: ChainConfig, gauge_factory_address: str, gauge_type: int):
     return deploy_contract(
-        chain_name,
+        chain_settings,
         Path(BASE_DIR, "contracts", "registries", "metaregistry"),
         gauge_factory_address,
         gauge_type,
@@ -32,7 +32,7 @@ def update_metaregistry(chain_settings, metaregistry, address_provider):
     twocrypto_handler = deploy_contract(
         chain_settings,
         Path(BASE_DIR, "contracts", "registries", "metaregistry", "registry_handlers", "twocryptoswap"),
-        address_provider.get_address(11),
+        address_provider.get_address(13),
     )
 
     logger.info("Adding registry handlers to the Metaregistry.")

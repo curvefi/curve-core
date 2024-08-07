@@ -1,16 +1,13 @@
 import logging
 from pathlib import Path
 
-import boa
-
-from scripts.deploy.constants import ZERO_ADDRESS
 from scripts.deploy.utils import deploy_contract
-from settings.config import BASE_DIR, Settings
+from settings.config import BASE_DIR, ChainConfig
 
 logger = logging.getLogger(__name__)
 
 
-def deploy_liquidity_gauge_infra(chain_settings: Settings):
+def deploy_liquidity_gauge_infra(chain_settings: ChainConfig):
 
     # deploy gauge factory and gauge implementaiton address
     child_gauge_factory = deploy_contract(

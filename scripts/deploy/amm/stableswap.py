@@ -4,12 +4,12 @@ from pathlib import Path
 import boa
 
 from scripts.deploy.utils import deploy_contract
-from settings.config import BASE_DIR, Settings
+from settings.config import BASE_DIR, ChainConfig
 
 logger = logging.getLogger(__name__)
 
 
-def deploy_stableswap(chain_settings: Settings, fee_receiver):
+def deploy_stableswap(chain_settings: ChainConfig, fee_receiver):
 
     # --------------------- Deploy math, views, blueprints ---------------------
 

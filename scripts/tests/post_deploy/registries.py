@@ -1,4 +1,5 @@
 from scripts.tests.post_deploy.utils import check_contracts, get_contract
+from settings.config import RollupType
 
 
 def test_registries_deployment(whole_deployment: dict, chain_settings):
@@ -10,9 +11,15 @@ def test_registries_deployment(whole_deployment: dict, chain_settings):
 
     # <-------------------------- Address Provider -------------------------->
     address_provider = contracts["address_provider"]["contract"]
+    fee_receiver = chain_settings.dao.vault
+    if chain_settings.rollup_type != RollupType.not_rollup:
+        gov_contracts = whole_deployment.get("governance")
+        assert gov_contracts
+        assert gov_contracts.get("vault")
+        fee_receiver = gov_contracts["vault"]["address"]
 
     assert address_provider.get_address(2) == whole_deployment["helpers"]["router"]["address"]
-    assert address_provider.get_address(4) == chain_settings.dao.vault  # fee receiver is the vault for now ...
+    assert address_provider.get_address(4) == fee_receiver
     assert address_provider.get_address(7) == whole_deployment["registries"]["metaregistry"]["address"]
     assert address_provider.get_address(11) == whole_deployment["amm"]["tricryptoswap"]["factory"]["address"]
     assert address_provider.get_address(12) == whole_deployment["amm"]["stableswap"]["factory"]["address"]

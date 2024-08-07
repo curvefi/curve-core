@@ -2,13 +2,15 @@ network_name: example
 chain_id: 1
 rollup_type: _
 dao:
-  crv: "0x0000000000000000000000000000000000000000"
-  crvusd: "0x0000000000000000000000000000000000000000"
-  emergency_admin: "0x0000000000000000000000000000000000000000"
+  crv: "0xD533a949740bb3306d119CC777fa900bA034cd52"
+  crvusd: "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E"
+  emergency_admin: "0x467947EE34aF926cF1DCac093870f613C96B1E0c"
   ownership_admin: "0x40907540d8a6C65c637785e8f8B742ae6b0b9968"
-  parameter_admin: "0x0000000000000000000000000000000000000000"
-  vault: "0x0000000000000000000000000000000000000000"
+  parameter_admin: "0x4EEb3bA4f221cA16ed4A0cC7254E2E32DF948c5f"
+  vault: "0xD16d5eC345Dd86Fb63C6a9C43c517210F1027914"
 explorer_base_url: https://etherscan.io
+
+# Not related to development, for further integrations
 layer: 1
 native_currency_symbol: ETH
 native_currency_coingecko_id: ethereum

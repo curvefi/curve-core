@@ -1,0 +1,206 @@
+[
+    {
+        "name": "Relay",
+        "inputs": [
+            {
+                "name": "agent",
+                "type": "uint256",
+                "indexed": false
+            },
+            {
+                "name": "messages",
+                "type": "tuple[]",
+                "components": [
+                    {
+                        "name": "target",
+                        "type": "address"
+                    },
+                    {
+                        "name": "data",
+                        "type": "bytes"
+                    }
+                ],
+                "indexed": false
+            }
+        ],
+        "anonymous": false,
+        "type": "event"
+    },
+    {
+        "name": "SetMessenger",
+        "inputs": [
+            {
+                "name": "messenger",
+                "type": "address",
+                "indexed": false
+            }
+        ],
+        "anonymous": false,
+        "type": "event"
+    },
+    {
+        "name": "SetOriginNetwork",
+        "inputs": [
+            {
+                "name": "origin_network",
+                "type": "uint32",
+                "indexed": false
+            }
+        ],
+        "anonymous": false,
+        "type": "event"
+    },
+    {
+        "stateMutability": "nonpayable",
+        "type": "constructor",
+        "inputs": [
+            {
+                "name": "_broadcaster",
+                "type": "address"
+            },
+            {
+                "name": "_agent_blueprint",
+                "type": "address"
+            },
+            {
+                "name": "_messenger",
+                "type": "address"
+            },
+            {
+                "name": "_origin_network",
+                "type": "uint32"
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "stateMutability": "nonpayable",
+        "type": "function",
+        "name": "relay",
+        "inputs": [
+            {
+                "name": "_agent",
+                "type": "uint256"
+            },
+            {
+                "name": "_messages",
+                "type": "tuple[]",
+                "components": [
+                    {
+                        "name": "target",
+                        "type": "address"
+                    },
+                    {
+                        "name": "data",
+                        "type": "bytes"
+                    }
+                ]
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "stateMutability": "nonpayable",
+        "type": "function",
+        "name": "onMessageReceived",
+        "inputs": [
+            {
+                "name": "_origin_address",
+                "type": "address"
+            },
+            {
+                "name": "_origin_network",
+                "type": "uint32"
+            },
+            {
+                "name": "_data",
+                "type": "bytes"
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "version",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "OWNERSHIP_AGENT",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "PARAMETER_AGENT",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "EMERGENCY_AGENT",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "BROADCASTER",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "MESSENGER",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "ORIGIN_NETWORK",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint32"
+            }
+        ]
+    }
+]

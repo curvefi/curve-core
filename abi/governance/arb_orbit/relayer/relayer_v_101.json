@@ -1,0 +1,119 @@
+[
+    {
+        "stateMutability": "nonpayable",
+        "type": "constructor",
+        "inputs": [
+            {
+                "name": "broadcaster",
+                "type": "address"
+            },
+            {
+                "name": "_agent_blueprint",
+                "type": "address"
+            },
+            {
+                "name": "_arbsys",
+                "type": "address"
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "stateMutability": "nonpayable",
+        "type": "function",
+        "name": "relay",
+        "inputs": [
+            {
+                "name": "_agent",
+                "type": "uint256"
+            },
+            {
+                "name": "_messages",
+                "type": "tuple[]",
+                "components": [
+                    {
+                        "name": "target",
+                        "type": "address"
+                    },
+                    {
+                        "name": "data",
+                        "type": "bytes"
+                    }
+                ]
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "version",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "BROADCASTER",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "ARBSYS",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "OWNERSHIP_AGENT",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "PARAMETER_AGENT",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "EMERGENCY_AGENT",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ]
+    }
+]

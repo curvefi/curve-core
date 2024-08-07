@@ -1,12 +1,12 @@
 from pathlib import Path
 
 from scripts.deploy.utils import deploy_contract
-from settings.config import BASE_DIR, Settings
+from settings.config import BASE_DIR, ChainConfig
 
 
-def deploy_router(chain_settings: Settings, wrapped_native_token):
+def deploy_router(chain_settings: ChainConfig):
     return deploy_contract(
         chain_settings,
         Path(BASE_DIR, "contracts", "helpers", "router"),
-        wrapped_native_token,
+        chain_settings.wrapped_native_token,
     )
