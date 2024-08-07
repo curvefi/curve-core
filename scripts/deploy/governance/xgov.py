@@ -1,17 +1,11 @@
 import logging
 from pathlib import Path
 
+from scripts.deploy.constants import BROADCASTERS
 from scripts.deploy.utils import deploy_contract
 from settings.config import BASE_DIR, ChainConfig, RollupType
 
 logger = logging.getLogger(__name__)
-
-
-BROADCASTERS = {
-    RollupType.op_stack: "0xE0fE4416214e95F0C67Dc044AAf1E63d6972e0b9",
-    RollupType.polygon_cdk: "0xB5e7fE8eA8ECbd33504485756fCabB5f5D29C051",
-    RollupType.arb_orbit: "0x94630a56519c00Be339BBd8BD26f342Bf4bd7eE0",
-}
 
 
 def deploy_xgov(chain_settings: ChainConfig):

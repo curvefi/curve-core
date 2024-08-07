@@ -247,6 +247,7 @@ def save_deployment_metadata(
         {
             "deployment_type": "normal" if not as_blueprint else "blueprint",
             "contract_version": version,
+            "contract_path": contract_relative_path,
             "contract_github_url": github_url,
             "address": contract_object.address.strip(),
             "deployment_timestamp": int(time.time()),
@@ -259,18 +260,8 @@ def save_deployment_metadata(
         }
     )
 
-    admins = None
-    dao_vault = None
-    if re.match(r"relayer.+\.vy", os.path.basename(contract_object.filename)):
-        admins = (
-            str(contract_object.OWNERSHIP_AGENT()),
-            str(contract_object.PARAMETER_AGENT()),
-            str(contract_object.EMERGENCY_AGENT()),
-        )
-    if re.match(r"vault.+\.vy", os.path.basename(contract_object.filename)):
-        dao_vault = str(contract_object.address)
-
-    if not "config" in deployments or admins is not None or dao_vault is not None:
+    # update config
+    if not "config" in deployments.keys():
 
         # Add config items to deployment yaml file which can be used by other services to
         # finalise deployment (backed, api, frontend)
@@ -290,12 +281,28 @@ def save_deployment_metadata(
             "dao": {
                 "crv": chain_settings.dao.crv,
                 "crvusd": chain_settings.dao.crvusd,
-                "ownership_admin": admins[0] if admins else chain_settings.dao.ownership_admin,
-                "parameter_admin": admins[1] if admins else chain_settings.dao.parameter_admin,
-                "emergency_admin": admins[2] if admins else chain_settings.dao.emergency_admin,
-                "vault": dao_vault if dao_vault else chain_settings.dao.vault,
             },
         }
+
+    elif "relayer" in deployments["contracts"]["governance"]:
+
+        dao = deployments["config"]["dao"]
+        relayer_dict = deployments["contracts"]["governance"]["relayer"][chain_settings.rollup_type]
+        relayer = boa.load_partial(f'{BASE_DIR}{relayer_dict["contract_path"]}').at(relayer_dict["address"])
+
+        dao.update(
+            {
+                "ownership_admin": relayer._immutables.OWNERSHIP_AGENT,
+                "parameter_admin": relayer._immutables.PARAMETER_AGENT,
+                "emergency_admin": relayer._immutables.EMERGENCY_AGENT,
+            }
+        )
+
+    elif "vault" in deployments["contracts"]["governance"]:
+
+        dao = deployments["config"]["dao"]
+        vault_address = deployments["contracts"]["governance"]["vault"]["address"]
+        dao.update({"vault": vault_address})
 
     # we updated innermost_dict, but since it is a reference to deployments dict, we can
     # just dump the original dict:
