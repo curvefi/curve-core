@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 
 from scripts.deploy.constants import BROADCASTERS
-from scripts.deploy.utils import deploy_contract
+from scripts.deploy.deployment_utils import deploy_contract, update_deployment_chain_config
 from settings.config import BASE_DIR, ChainConfig, RollupType
 
 logger = logging.getLogger(__name__)
@@ -29,14 +29,26 @@ def deploy_xgov(chain_settings: ChainConfig):
 
     relayer = deploy_contract(
         chain_settings,
-        Path(BASE_DIR, "contracts", "governance", "relayer", chain_settings.rollup_type.value),
+        Path(BASE_DIR, "contracts", "governance", "relayer", chain_settings.rollup_type),
         BROADCASTERS[rollup_type],
         agent_blueprint.address,
         *r_args,
+    )
+    update_deployment_chain_config(
+        chain_settings,
+        {
+            "dao": {
+                "emergency_admin": relayer._immutables.EMERGENCY_AGENT,
+                "ownership_admin": relayer._immutables.OWNERSHIP_AGENT,
+                "parameter_admin": relayer._immutables.PARAMETER_AGENT,
+            }
+        },
     )
 
     return relayer.OWNERSHIP_AGENT(), relayer.PARAMETER_AGENT(), relayer.EMERGENCY_AGENT()
 
 
 def deploy_dao_vault(chain_settings: ChainConfig, owner: str):
-    return deploy_contract(chain_settings, Path(BASE_DIR, "contracts", "governance", "vault"), owner)
+    vault = deploy_contract(chain_settings, Path(BASE_DIR, "contracts", "governance", "vault"), owner)
+    update_deployment_chain_config(chain_settings, {"dao": {"vault": str(vault.address)}})
+    return vault

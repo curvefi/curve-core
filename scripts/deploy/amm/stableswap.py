@@ -3,7 +3,7 @@ from pathlib import Path
 
 import boa
 
-from scripts.deploy.utils import deploy_contract
+from scripts.deploy.deployment_utils import deploy_contract
 from settings.config import BASE_DIR, ChainConfig
 
 logger = logging.getLogger(__name__)
