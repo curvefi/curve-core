@@ -186,7 +186,10 @@ class YamlDeploymentFile:
 
         for key in config_keys:
             if isinstance(current_level, dict):  # workaround for dict pydantic field
-                current_level = current_level[key]
+                if key in current_level:
+                    current_level = current_level[key]
+                else:
+                    return None
                 continue
 
             if getattr(current_level, key) is not None:
@@ -211,6 +214,9 @@ class YamlDeploymentFile:
             updated_deployment_config = deep_update(deployment_config.model_dump(), data)
         else:
             updated_deployment_config = data
+
+        # Validate data
+        DeploymentConfig.model_validate(updated_deployment_config)
 
         with open(self.file_name, "w") as file:
             yaml.safe_dump(updated_deployment_config, file)
