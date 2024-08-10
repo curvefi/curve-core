@@ -171,14 +171,14 @@ class YamlDeploymentFile:
 
         return DeploymentConfig.model_validate(deployments)
 
-    def get_contract_deployment(self, config_keys: tuple) -> Contract | MetaregistyContract | None:
+    def get_contract_deployment(self, config_keys: tuple) -> Contract | None:
         """
         Get contract deployment from deployment file if exits
 
         Args:
         config_keys (list): A list of keys that define contract path
         Returns:
-        Contract | MetaregistyContract | None: Contract if exits
+        Contract | None: Contract if exits
         """
         current_level = self.get_deployment_config()
         if current_level is None:
@@ -300,7 +300,7 @@ class YamlDeploymentFile:
 
         self.save_deployment_config(DeploymentConfig.model_validate(deployment_config_dict))
 
-    def update_chain_settings(self, chain_settings: ChainConfig):
+    def dump_initial_chain_settings(self, chain_settings: ChainConfig):
         update_parameters = {
             "config": {
                 **chain_settings.model_dump(exclude_none=True),

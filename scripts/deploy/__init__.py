@@ -10,7 +10,7 @@ from .amm.stableswap import deploy_stableswap
 from .amm.tricrypto import deploy_tricrypto
 from .amm.twocrypto import deploy_twocrypto
 from .constants import ADDRESS_PROVIDER_MAPPING, ZERO_ADDRESS
-from .deployment_utils import update_chain_settings
+from .deployment_utils import dump_initial_chain_settings
 from .gauge.child_gauge import deploy_liquidity_gauge_infra
 from .governance.xgov import deploy_dao_vault, deploy_xgov
 from .helpers.deposit_and_stake_zap import deploy_deposit_and_stake_zap
@@ -41,7 +41,7 @@ def run_deploy_all(chain: str) -> None:
     test_pre_deploy(chain_settings.chain_id)
 
     # Save chain settings
-    update_chain_settings(chain_settings)
+    dump_initial_chain_settings(chain_settings)
 
     if chain_settings.rollup_type == RollupType.not_rollup:
         logger.info("No xgov for L1, setting temporary owner")

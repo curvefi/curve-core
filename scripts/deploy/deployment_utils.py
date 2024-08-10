@@ -15,11 +15,11 @@ from .utils import fetch_latest_contract, get_relative_path, get_version_from_fi
 logger = logging.getLogger(__name__)
 
 
-def update_chain_settings(chain_settings: ChainConfig):
+def dump_initial_chain_settings(chain_settings: ChainConfig):
     deployment_file_path = Path(BASE_DIR, "deployments", f"{chain_settings.network_name}.yaml")
     deployment_file = YamlDeploymentFile(deployment_file_path)
 
-    deployment_file.update_chain_settings(chain_settings)
+    deployment_file.dump_initial_chain_settings(chain_settings)
 
 
 def update_deployment_chain_config(chain_settings: ChainConfig, data: dict):
