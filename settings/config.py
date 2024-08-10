@@ -38,6 +38,7 @@ class CurveDAOSettings(BaseModel):
 
 
 class ChainConfig(BaseSettings):
+    model_config = SettingsConfigDict(use_enum_values=True)
 
     network_name: str
     chain_id: int
