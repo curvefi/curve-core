@@ -1,9 +1,13 @@
+from scripts.deploy.deployment_file import DeploymentConfig
 from scripts.tests.post_deploy.utils import check_contracts, get_contract
 
 
-def test_stableswap_deployment(deployment: dict):
+def test_stableswap_deployment(deployment: DeploymentConfig):
+    current_deployment = deployment.contracts.amm.stableswap
+
     contracts = {
-        k: {**v, "contract": get_contract(v["contract_github_url"], v["address"])} for k, v in deployment.items()
+        k: {**v, "contract": get_contract(v["contract_github_url"], v["address"])}
+        for k, v in current_deployment.model_dump().items()
     }
     check_contracts(contracts)
 
