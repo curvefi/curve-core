@@ -53,6 +53,18 @@ class ChainConfig(BaseSettings):
     public_rpc_url: str
 
 
+class CryptoPoolPresets(BaseModel):
+    A: int = 400000
+    gamma: int = 145 * 10**12
+    mid_fee: int = 26 * 10**8
+    out_fee: int = 45 * 10**8
+    fee_gamma: int = 230 * 10**12
+    allowed_extra_profit: int = 2 * 10**12
+    adjustment_step: int = 146 * 10**12
+    ma_exp_time: int = 600
+    initial_price: int = 10**18
+
+
 def get_chain_settings(chain: str):
     config_file = Path(BASE_DIR, "settings", "chains", f"{chain}.yaml")
 

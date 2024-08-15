@@ -10,7 +10,7 @@ from .amm.stableswap import deploy_stableswap
 from .amm.tricrypto import deploy_tricrypto
 from .amm.twocrypto import deploy_twocrypto
 from .constants import ADDRESS_PROVIDER_MAPPING, ZERO_ADDRESS
-from .deployment_utils import dump_initial_chain_settings
+from .deployment_utils import deploy_pool, dump_initial_chain_settings
 from .gauge.child_gauge import deploy_liquidity_gauge_infra
 from .governance.xgov import deploy_dao_vault, deploy_xgov
 from .helpers.deposit_and_stake_zap import deploy_deposit_and_stake_zap
@@ -232,3 +232,12 @@ def run_deploy_tricrypto(chain: str, fee_receiver: str) -> None:
 def run_deploy_twocrypto(chain: str, fee_receiver: str) -> None:
     chain_settings = get_chain_settings(chain)
     deploy_twocrypto(chain_settings, fee_receiver)
+
+
+@deploy_commands.command("crypto_pool", short_help="deploy twocrypto pool")
+@click.argument("chain", type=click.STRING)
+@click.argument("name", type=click.STRING)
+@click.argument("symbol", type=click.STRING)
+@click.argument("coins", type=click.STRING)
+def run_deploy_twocrypto(chain: str, name: str, symbol: str, coins: str) -> None:
+    deploy_pool(chain, name, symbol, coins.split(","))
