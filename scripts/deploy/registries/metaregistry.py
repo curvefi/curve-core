@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 
+from scripts.deploy.constants import ZERO_ADDRESS
 from scripts.deploy.deployment_utils import deploy_contract
 from settings.config import BASE_DIR, ChainConfig
 
@@ -37,9 +38,12 @@ def update_metaregistry(chain_settings, metaregistry, address_provider):
 
     logger.info("Adding registry handlers to the Metaregistry.")
 
-    metaregistry.add_registry_handler(stableswap_handler)
-    metaregistry.add_registry_handler(tricrypto_handler)
-    metaregistry.add_registry_handler(twocrypto_handler)
+    if metaregistry.get_registry(0) == ZERO_ADDRESS:
+        metaregistry.add_registry_handler(stableswap_handler)
+    if metaregistry.get_registry(1) == ZERO_ADDRESS:
+        metaregistry.add_registry_handler(tricrypto_handler)
+    if metaregistry.get_registry(2) == ZERO_ADDRESS:
+        metaregistry.add_registry_handler(twocrypto_handler)
 
     logger.info("Updated Metaregistry.")
 
