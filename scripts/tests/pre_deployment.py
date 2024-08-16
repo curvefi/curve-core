@@ -1,6 +1,7 @@
 import logging
 
 import boa
+from requests.exceptions import HTTPError
 
 from scripts.deploy.constants import CREATE2DEPLOYER_ADDRESS, MULTICALL3_ADDRESS
 from settings.config import settings
@@ -15,13 +16,16 @@ def test_chain_id(chain_id: int):
 
 
 def test_evm_version():
-    capabilities = boa.env.capabilities.describe_capabilities()
-    result = "PASSED"
-    if capabilities != "cancun":
-        result = "FAILED"
+    try:
+        capabilities = boa.env.capabilities.describe_capabilities()
+        result = "PASSED"
+        if capabilities != "cancun":
+            result = "FAILED"
 
-    logger.info("Chain version is %r... %s", capabilities, result)
-    assert result == "PASSED"  # TODO: check if chain has a certain minimum evm version: PARIS
+        logger.info("Chain version is %r... %s", capabilities, result)
+        assert result == "PASSED"  # TODO: check if chain has a certain minimum evm version: PARIS
+    except HTTPError:  # Some chains throw bad request for capabilities check
+        pass
 
 
 def test_create2deployer_deployed():

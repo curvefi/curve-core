@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=Path(BASE_DIR, "settings", "env"))
 
-    DEBUG: bool = True
+    DEBUG: bool = False
     DEV: bool = False
 
     WEB3_PROVIDER_URL: str
@@ -51,6 +51,18 @@ class ChainConfig(BaseSettings):
     native_currency_coingecko_id: str
     platform_coingecko_id: str
     public_rpc_url: str
+
+
+class CryptoPoolPresets(BaseModel):
+    A: int = 20000000
+    gamma: int = 1000000000000000
+    mid_fee: int = 5000000
+    out_fee: int = 45000000
+    fee_gamma: int = 5000000000000000
+    allowed_extra_profit: int = 10000000000
+    adjustment_step: int = 5500000000000
+    ma_exp_time: int = 866
+    initial_price: int = 10**18
 
 
 def get_chain_settings(chain: str):

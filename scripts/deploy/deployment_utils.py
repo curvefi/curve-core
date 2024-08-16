@@ -1,12 +1,14 @@
 import json
 import logging
 import os
+from enum import StrEnum
 from pathlib import Path
 
 import boa
+from boa.contracts.abi.abi_contract import ABIContract
 from eth_utils import keccak
 
-from settings.config import BASE_DIR, ChainConfig
+from settings.config import BASE_DIR, ChainConfig, CryptoPoolPresets
 
 from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRESS
 from .deployment_file import YamlDeploymentFile
@@ -104,3 +106,25 @@ def deploy_via_create2(contract_file, abi_encoded_ctor="", is_blueprint=False):
     precomputed_address = create2deployer.computeAddress(CREATE2_SALT, keccak(deployment_bytecode))
     create2deployer.deploy(0, CREATE2_SALT, deployment_bytecode)
     return contract_obj.at(precomputed_address)
+
+
+def get_contract(github_url: str, address: str) -> ABIContract:
+    relative_path = get_relative_path(github_url)
+    abi_path = relative_path.replace("/contracts/", "/abi/").replace(".vy", ".json")
+
+    return boa.load_abi(str(BASE_DIR) + abi_path).at(address)
+
+
+class PoolType(StrEnum):
+    twocryptoswap = "twocryptoswap"
+
+
+def deploy_pool(
+    chain: str, name: str, symbol: str, coins: list[str], pool_type: PoolType = PoolType.twocryptoswap
+) -> None:
+    deployment_file_path = Path(BASE_DIR, "deployments", f"{chain}.yaml")
+    deployment_file = YamlDeploymentFile(deployment_file_path)
+    factory_params = deployment_file.get_contract_deployment(("contracts", "amm", pool_type.value, "factory"))
+
+    factory = get_contract(factory_params.contract_github_url, factory_params.address)
+    factory.deploy_pool(name, symbol, coins, 0, *CryptoPoolPresets().model_dump().values())
