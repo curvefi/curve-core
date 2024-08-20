@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 
 
 class DaoSettings(BaseModel):
-    crv: str
-    crvusd: str
+    crv: str | None = None
+    crvusd: str | None = None
     emergency_admin: str | None = None
     ownership_admin: str | None = None
     parameter_admin: str | None = None
@@ -38,7 +38,7 @@ class ChainParameters(BaseModel):
     chain_id: int
     layer: int
     rollup_type: RollupType
-    dao: DaoSettings
+    dao: DaoSettings | None = None
     explorer_base_url: str
     native_currency_coingecko_id: str
     native_currency_symbol: str

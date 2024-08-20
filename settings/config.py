@@ -29,8 +29,8 @@ class RollupType(StrEnum):
 
 
 class CurveDAOSettings(BaseModel):
-    crv: str
-    crvusd: str
+    crv: str | None = None
+    crvusd: str | None = None
     ownership_admin: str | None = None
     parameter_admin: str | None = None
     emergency_admin: str | None = None
@@ -45,7 +45,7 @@ class ChainConfig(BaseSettings):
     layer: int
     rollup_type: RollupType
     wrapped_native_token: str
-    dao: CurveDAOSettings
+    dao: CurveDAOSettings | None = None
     explorer_base_url: str
     native_currency_symbol: str
     native_currency_coingecko_id: str
