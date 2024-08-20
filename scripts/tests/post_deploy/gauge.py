@@ -13,3 +13,6 @@ def test_gauge_deployment(deployment: DeploymentConfig):
     factory = contracts["factory"]["contract"]
 
     assert factory.get_implementation() == contracts["implementation"]["address"]
+
+    if deployment.config.dao and deployment.config.dao.crv:
+        assert factory.CRV() == deployment.config.dao.crv

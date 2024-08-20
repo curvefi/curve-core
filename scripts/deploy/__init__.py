@@ -95,16 +95,18 @@ def run_deploy_all(chain: str) -> None:
         12: stableswap_factory.address,
         13: twocrypto_factory.address,
         18: rate_provider.address,
-        19: chain_settings.dao.crv,  # TODO: update deployment
         20: child_gauge_factory.address,
         21: admins[0],
         22: admins[1],
         23: admins[2],
         24: dao_vault,
-        25: chain_settings.dao.crvusd,  # TODO: update deployment
         26: deposit_and_stake_zap.address,
         27: stable_swap_meta_zap.address,
     }
+    if chain_settings.dao and chain_settings.dao.crv:
+        address_provider_inputs[19] = chain_settings.dao.crv
+    if chain_settings.dao and chain_settings.dao.crvusd:
+        address_provider_inputs[25] = chain_settings.dao.crvusd
 
     ids_to_add = []
     addresses_to_add = []
