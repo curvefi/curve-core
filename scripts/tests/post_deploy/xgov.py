@@ -8,8 +8,7 @@ def test_xgov_deployment(deployment: DeploymentConfig):
     current_deployment["relayer"] = current_deployment["relayer"][deployment.config.rollup_type]
 
     contracts = {
-        k: {**v, "contract": get_contract(v["contract_github_url"], v["address"])}
-        for k, v in current_deployment.items()
+        k: {**v, "contract": get_contract(v["contract_path"], v["address"])} for k, v in current_deployment.items()
     }
     check_contracts(contracts)
 

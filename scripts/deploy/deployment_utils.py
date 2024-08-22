@@ -63,14 +63,14 @@ def deploy_contract(chain_settings: ChainConfig, contract_folder: Path, *args, a
             deployed_contract = boa.load_partial(latest_contract).deploy_as_blueprint(*args)
 
         # store abi
-        relpath = get_relative_path(contract_folder)
-        abi_path = relpath.replace("contracts", "abi")
-        abi_file = f".{abi_path}/{os.path.basename(latest_contract).replace('.vy', '.json')}"
+        relpath = get_relative_path(contract_folder / os.path.basename(latest_contract))
+        abi_path = str(relpath).replace("contracts", "abi").replace(".vy", ".json")
+        abi_path = BASE_DIR / Path(*Path(abi_path).parts[1:])
 
-        if not os.path.exists(f".{abi_path}"):
-            os.makedirs(f".{abi_path}")
+        if not os.path.exists(abi_path):
+            os.makedirs(abi_path)
 
-        with open(abi_file, "w") as abi_file:
+        with open(abi_path, "w") as abi_file:
             json.dump(deployed_contract.abi, abi_file, indent=4)
             abi_file.write("\n")
 
@@ -108,11 +108,9 @@ def deploy_via_create2(contract_file, abi_encoded_ctor="", is_blueprint=False):
     return contract_obj.at(precomputed_address)
 
 
-def get_contract(github_url: str, address: str) -> ABIContract:
-    relative_path = get_relative_path(github_url)
-    abi_path = relative_path.replace("/contracts/", "/abi/").replace(".vy", ".json")
-
-    return boa.load_abi(str(BASE_DIR) + abi_path).at(address)
+def get_contract(contract_path: Path, address: str) -> ABIContract:
+    abi_path = str(contract_path).replace("contracts", "abi").replace(".vy", ".json")
+    return boa.load_abi(BASE_DIR / Path(abi_path)).at(address)
 
 
 class PoolType(StrEnum):
@@ -126,5 +124,5 @@ def deploy_pool(
     deployment_file = YamlDeploymentFile(deployment_file_path)
     factory_params = deployment_file.get_contract_deployment(("contracts", "amm", pool_type.value, "factory"))
 
-    factory = get_contract(factory_params.contract_github_url, factory_params.address)
+    factory = get_contract(Path(factory_params.contract_path), factory_params.address)
     factory.deploy_pool(name, symbol, coins, 0, *CryptoPoolPresets().model_dump().values())

@@ -8,7 +8,7 @@ def test_registries_deployment(deployment: DeploymentConfig, chain_settings):
     contracts_deployment = contracts_deployment.model_dump()
 
     contracts = {
-        k: {**v, "contract": get_contract(v["contract_github_url"], v["address"])}
+        k: {**v, "contract": get_contract(v["contract_path"], v["address"])}
         for k, v in contracts_deployment["registries"].items()
     }
     check_contracts(contracts)
