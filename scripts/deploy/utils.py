@@ -61,14 +61,6 @@ def version_a_gt_version_b(a, b):
     return list(map(int, a.split("."))) > list(map(int, b.split(".")))
 
 
-def get_relative_path(contract_file: str) -> str:
-    result = ""
-    rel_path = False
-    for el in str(contract_file).split("/"):
-        if el == "contracts":
-            rel_path = True
-
-        if rel_path:
-            result += "/" + el
-
-    return result
+def get_relative_path(contract_file: Path) -> Path:
+    contracts_index = contract_file.parts.index("contracts")
+    return Path("/").joinpath(*contract_file.parts[contracts_index:])
