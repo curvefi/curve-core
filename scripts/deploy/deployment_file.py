@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 
 
 class DaoSettings(BaseModel):
-    crv: str
-    crvusd: str
+    crv: str | None = None
+    crvusd: str | None = None
     emergency_admin: str | None = None
     ownership_admin: str | None = None
     parameter_admin: str | None = None
@@ -38,7 +38,7 @@ class ChainParameters(BaseModel):
     chain_id: int
     layer: int
     rollup_type: RollupType
-    dao: DaoSettings
+    dao: DaoSettings | None = None
     explorer_base_url: str
     native_currency_coingecko_id: str
     native_currency_symbol: str
@@ -273,7 +273,10 @@ class YamlDeploymentFile:
         # latest git commit hash:
         latest_git_commit_for_file = get_latest_commit_hash(contract_object.filename)
         contract_relative_path = get_relative_path(contract_object.filename)
-        github_url = f"https://github.com/curvefi/curve-lite/blob/{latest_git_commit_for_file}{contract_relative_path}"
+        github_url = (
+            f"https://github.com/curvefi/curve-lite/blob/{latest_git_commit_for_file}/"
+            f"{'/'.join(contract_relative_path.parts[1:])}"
+        )
 
         if not as_blueprint:
             version = contract_object.version().strip()
@@ -291,7 +294,7 @@ class YamlDeploymentFile:
             {
                 "deployment_type": "normal" if not as_blueprint else "blueprint",
                 "contract_version": version,
-                "contract_path": contract_relative_path,
+                "contract_path": str(contract_relative_path),
                 "contract_github_url": github_url,
                 "address": contract_object.address.strip(),
                 "deployment_timestamp": int(time.time()),

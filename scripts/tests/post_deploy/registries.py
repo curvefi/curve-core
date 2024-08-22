@@ -8,14 +8,14 @@ def test_registries_deployment(deployment: DeploymentConfig, chain_settings):
     contracts_deployment = contracts_deployment.model_dump()
 
     contracts = {
-        k: {**v, "contract": get_contract(v["contract_github_url"], v["address"])}
+        k: {**v, "contract": get_contract(v["contract_path"], v["address"])}
         for k, v in contracts_deployment["registries"].items()
     }
     check_contracts(contracts)
 
     # <-------------------------- Address Provider -------------------------->
     address_provider = contracts["address_provider"]["contract"]
-    fee_receiver = chain_settings.dao.vault
+    fee_receiver = deployment.config.dao.vault
     if chain_settings.rollup_type != RollupType.not_rollup:
         gov_contracts = contracts_deployment.get("governance")
         assert gov_contracts
@@ -31,6 +31,11 @@ def test_registries_deployment(deployment: DeploymentConfig, chain_settings):
     assert address_provider.get_address(18) == contracts_deployment["helpers"]["rate_provider"]["address"]
     assert address_provider.get_address(26) == contracts_deployment["helpers"]["deposit_and_stake_zap"]["address"]
     assert address_provider.get_address(27) == contracts_deployment["helpers"]["stable_swap_meta_zap"]["address"]
+
+    if chain_settings.dao and chain_settings.dao.crv:
+        assert address_provider.get_address(19) == chain_settings.dao.crv
+    if chain_settings.dao and chain_settings.dao.crvusd:
+        assert address_provider.get_address(25) == chain_settings.dao.crvusd
 
     # <-------------------------- Metaregistry -------------------------->
     meta_registry = contracts["metaregistry"]["contract"]

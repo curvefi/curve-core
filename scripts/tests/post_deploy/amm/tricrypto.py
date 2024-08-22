@@ -6,7 +6,7 @@ def test_tricrypto_deployment(deployment: DeploymentConfig):
     current_deployment = deployment.contracts.amm.tricryptoswap
 
     contracts = {
-        k: {**v, "contract": get_contract(v["contract_github_url"], v["address"])}
+        k: {**v, "contract": get_contract(v["contract_path"], v["address"])}
         for k, v in current_deployment.model_dump().items()
     }
     check_contracts(contracts)
