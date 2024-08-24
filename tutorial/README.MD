@@ -7,7 +7,7 @@ In this tutorial we deployed curve-lite to Arbitrum Sepolia (https://sepolia.arb
 - Add config file to settings/chains using addresses of bridged tokens
 - Run deploy all command
 
-Deployed exmaple pool (cryptoswap) using command
+Deployed example pool (cryptoswap) using command
 ```
 python manage.py deploy crypto_pool {chain} {pool name} {pool symbol} {coins separated by comma}
 ```
@@ -15,3 +15,14 @@ python manage.py deploy crypto_pool {chain} {pool name} {pool symbol} {coins sep
 ```
 python manage.py deploy crypto_pool tutorial_arb_sepolia Test TST 0x50FB01Ee521b9D22cdcb713a505019f41b8BBFf4,0x92fc3EfE9129675A6d1405519C38b3aDdE4E0ADe
 ```
+
+### Add liquidity
+After pool creation, one can add liquidity in desired amounts to pool. Example is provided in this
+directory.
+
+### Swap
+Exchange example shown in [swap example](./swap.py).
+
+### Gauge
+After adding liquidity one can create gauge and deposit any tokens as reward for LP providers. Example for creating 
+and depositing rewards and LP tokens shown in [file](./deploy_gauge_and_add_rewards.py).
