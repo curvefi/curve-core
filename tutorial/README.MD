@@ -19,3 +19,10 @@ python manage.py deploy crypto_pool tutorial_arb_sepolia Test TST 0x50FB01Ee521b
 ### Add liquidity
 After pool creation, one can add liquidity in desired amounts to pool. Example is provided in this
 directory.
+
+### Swap
+Exchange example shown in [swap example](./swap.py).
+
+### Gauge
+After adding liquidity one can create gauge and deposit any tokens as reward for LP providers. Example for creating 
+and depositing rewards and LP tokens shown in [file](./deploy_gauge_and_add_rewards.py).
