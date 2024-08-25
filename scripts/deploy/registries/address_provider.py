@@ -1,8 +1,73 @@
 from pathlib import Path
 
+import boa
+
+from scripts.deploy.constants import AddressProviderID
+from scripts.deploy.deployment_file import YamlDeploymentFile
 from scripts.deploy.deployment_utils import deploy_contract
+from scripts.logging_config import get_logger
 from settings.config import BASE_DIR, ChainConfig
+
+logger = get_logger(__name__)
 
 
 def deploy_address_provider(chain_settings: ChainConfig):
     return deploy_contract(chain_settings, Path(BASE_DIR, "contracts", "registries", "address_provider"))
+
+
+def update_address_provider(chain_settings: ChainConfig):
+
+    deployment_file = YamlDeploymentFile(Path(BASE_DIR, "deployments", f"{chain_settings.network_name}.yaml"))
+    deployment_config = deployment_file.get_deployment_config()
+    if deployment_config is None:
+        raise ValueError(f"Deployment config not found for {chain_settings.network_name}")
+
+    address_provider = deployment_config.contracts.registries.address_provider
+    address_provider_contract_path = BASE_DIR / Path(address_provider.contract_path.lstrip("/"))
+    address_provider = boa.load_partial(address_provider_contract_path).at(address_provider.address)
+
+    address_provider_inputs = {
+        AddressProviderID.EXCHANGE_ROUTER.id: deployment_config.contracts.helpers.router.address,
+        AddressProviderID.CURVEDAO_VAULT.id: chain_settings.dao.vault,
+        AddressProviderID.METAREGISTRY.id: deployment_config.contracts.registries.metaregistry.address,
+        AddressProviderID.TRICRYPTONG_FACTORY.id: deployment_config.contracts.amm.tricryptoswap.factory.address,
+        AddressProviderID.STABLESWAPNG_FACTORY.id: deployment_config.contracts.amm.stableswap.factory.address,
+        AddressProviderID.TWOCRYPTONG_FACTORY.id: deployment_config.contracts.amm.twocryptoswap.factory.address,
+        AddressProviderID.SPOT_RATE_PROVIDER.id: deployment_config.contracts.helpers.rate_provider.address,
+        AddressProviderID.GAUGE_FACTORY.id: deployment_config.contracts.gauge.child_gauge.factory.address,
+        AddressProviderID.OWNERSHIP_ADMIN.id: chain_settings.dao.ownership_admin,
+        AddressProviderID.PARAMETER_ADMIN.id: chain_settings.dao.parameter_admin,
+        AddressProviderID.EMERGENCY_ADMIN.id: chain_settings.dao.emergency_admin,
+        AddressProviderID.CURVEDAO_VAULT.id: chain_settings.dao.vault,
+        AddressProviderID.DEPOSIT_AND_STAKE_ZAP.id: deployment_config.contracts.helpers.deposit_and_stake_zap.address,
+        AddressProviderID.STABLESWAP_META_ZAP.id: deployment_config.contracts.helpers.stable_swap_meta_zap.address,
+    }
+    if chain_settings.dao and chain_settings.dao.crv:
+        address_provider_inputs[AddressProviderID.CRV_TOKEN.id] = chain_settings.dao.crv
+    if chain_settings.dao and chain_settings.dao.crvusd:
+        address_provider_inputs[AddressProviderID.CRVUSD_TOKEN.id] = chain_settings.dao.crvusd
+
+    ids_to_add = []
+    addresses_to_add = []
+    descriptions_to_add = []
+    ids_to_update = []
+
+    for key in AddressProviderID:
+        if key.id in address_provider_inputs:
+            if not address_provider.check_id_exists(key.id):
+                ids_to_add.append(key.id)
+                addresses_to_add.append(address_provider_inputs[key.id])
+                descriptions_to_add.append(key.description)
+            elif (
+                address_provider.get_address(key.id).strip().lower() != address_provider_inputs[key.id].strip().lower()
+            ):
+                ids_to_update.append(key.id)
+
+    logger.info("Updating Address Provider.")
+    breakpoint()
+    if ids_to_add:
+        address_provider.add_new_ids(ids_to_add, addresses_to_add, descriptions_to_add)
+
+    for id in ids_to_update:
+        logger.info(f"Updating ID {id} in the Address Provider.")
+        address_provider.update_address(id, address_provider_inputs[id])

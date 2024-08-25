@@ -1,11 +1,11 @@
-import logging
 from pathlib import Path
 
 from scripts.deploy.constants import BROADCASTERS
 from scripts.deploy.deployment_utils import deploy_contract, update_deployment_chain_config
+from scripts.logging_config import get_logger
 from settings.config import BASE_DIR, ChainConfig, RollupType
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def deploy_xgov(chain_settings: ChainConfig):
@@ -52,3 +52,22 @@ def deploy_dao_vault(chain_settings: ChainConfig, owner: str):
     vault = deploy_contract(chain_settings, Path(BASE_DIR, "contracts", "governance", "vault"), owner)
     update_deployment_chain_config(chain_settings, {"dao": {"vault": str(vault.address)}})
     return vault
+
+
+def transfer_ownership(chain_settings):
+    owner = chain_settings.dao.ownership_admin
+
+    for deployment_name, deployment in chain_settings.deployments.items():
+        if hasattr(deployment, "_storage"):
+            if hasattr(deployment._storage, "admin"):
+                current_owner = deployment._storage.admin.get()
+                if current_owner != owner:
+                    logger.info(f"Current {deployment_name} owner: {current_owner}")
+                    deployment.set_owner(owner)
+                    logger.info(f"Set {deployment_name} owner to {owner}.")
+            elif hasattr(deployment._storage, "owner"):
+                current_owner = deployment._storage.owner.get()
+                if current_owner != owner:
+                    logger.info(f"Current {deployment_name} owner: {current_owner}")
+                    deployment.set_owner(owner)
+                    logger.info(f"Set {deployment_name} owner to {owner}.")

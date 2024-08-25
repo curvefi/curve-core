@@ -1,4 +1,3 @@
-import logging
 import re
 import time
 from enum import StrEnum, auto
@@ -12,11 +11,12 @@ from pydantic import BaseModel
 from pydantic import ConfigDict as BaseModelConfigDict
 from pydantic.v1.utils import deep_update
 
+from scripts.logging_config import get_logger
 from settings.config import ChainConfig, RollupType
 
 from .utils import get_latest_commit_hash, get_relative_path
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 #  <-------------------------- Chain Config -------------------------->

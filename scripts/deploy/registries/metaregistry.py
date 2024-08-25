@@ -1,11 +1,13 @@
-import logging
 from pathlib import Path
+
+import boa
 
 from scripts.deploy.constants import ZERO_ADDRESS
 from scripts.deploy.deployment_utils import deploy_contract
+from scripts.logging_config import get_logger
 from settings.config import BASE_DIR, ChainConfig
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def deploy_metaregistry(chain_settings: ChainConfig, gauge_factory_address: str, gauge_type: int):
@@ -17,7 +19,14 @@ def deploy_metaregistry(chain_settings: ChainConfig, gauge_factory_address: str,
     )
 
 
-def update_metaregistry(chain_settings, metaregistry, address_provider):
+def update_metaregistry(chain_settings: ChainConfig):
+    address_provider = boa.load_partial(Path(BASE_DIR, "contracts", "registries", "address_provider")).at(
+        chain_settings.deployments.registries.address_provider.address
+    )
+
+    metaregistry = boa.load_partial(Path(BASE_DIR, "contracts", "registries", "metaregistry")).at(
+        chain_settings.deployments.registries.metaregistry.address
+    )
 
     # deploy registry handlers
     stableswap_handler = deploy_contract(

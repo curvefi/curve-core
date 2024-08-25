@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 from enum import StrEnum
 from pathlib import Path
@@ -8,13 +7,14 @@ import boa
 from boa.contracts.abi.abi_contract import ABIContract
 from eth_utils import keccak
 
+from scripts.logging_config import get_logger
 from settings.config import BASE_DIR, ChainConfig, CryptoPoolPresets
 
 from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRESS
 from .deployment_file import YamlDeploymentFile
 from .utils import fetch_latest_contract, get_relative_path, get_version_from_filename, version_a_gt_version_b
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def dump_initial_chain_settings(chain_settings: ChainConfig):
