@@ -1,25 +1,9 @@
+from enum import Enum
+
 from eth_utils import keccak
 
 from settings.config import RollupType
 
-ADDRESS_PROVIDER_MAPPING = {
-    2: "Exchange Router",
-    4: "Fee Distributor",
-    7: "Metaregistry",
-    11: "TricryptoNG Factory",
-    12: "StableswapNG Factory",
-    13: "TwocryptoNG Factory",
-    18: "Spot Rate Provider",
-    19: "CRV Token",
-    20: "Gauge Factory",
-    21: "Ownership Admin",
-    22: "Parameter Admin",
-    23: "Emergency Admin",
-    24: "CurveDAO Vault",
-    25: "crvUSD Token",
-    26: "Deposit and Stake Zap",
-    27: "Stableswap Meta Zap",
-}
 MULTICALL3_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
 CREATE2_SALT = keccak(42069)
 CREATE2DEPLOYER_ADDRESS = "0x13b0D85CcB8bf860b6b79AF3029fCA081AE9beF2"
@@ -257,3 +241,26 @@ BROADCASTERS = {
     RollupType.polygon_cdk: "0xB5e7fE8eA8ECbd33504485756fCabB5f5D29C051",
     RollupType.arb_orbit: "0x94630a56519c00Be339BBd8BD26f342Bf4bd7eE0",
 }
+
+
+class AddressProviderID(Enum):
+    EXCHANGE_ROUTER = (2, "Exchange Router")
+    FEE_DISTRIBUTOR = (4, "Fee Distributor")
+    METAREGISTRY = (7, "Metaregistry")
+    TRICRYPTONG_FACTORY = (11, "TricryptoNG Factory")
+    STABLESWAPNG_FACTORY = (12, "StableswapNG Factory")
+    TWOCRYPTONG_FACTORY = (13, "TwocryptoNG Factory")
+    SPOT_RATE_PROVIDER = (18, "Spot Rate Provider")
+    GAUGE_FACTORY = (20, "Gauge Factory")
+    OWNERSHIP_ADMIN = (21, "Ownership Admin")
+    PARAMETER_ADMIN = (22, "Parameter Admin")
+    EMERGENCY_ADMIN = (23, "Emergency Admin")
+    CURVEDAO_VAULT = (24, "CurveDAO Vault")
+    DEPOSIT_AND_STAKE_ZAP = (26, "Deposit and Stake Zap")
+    STABLESWAP_META_ZAP = (27, "Stableswap Meta Zap")
+    CRV_TOKEN = (19, "CRV Token")
+    CRVUSD_TOKEN = (25, "crvUSD Token")
+
+    def __init__(self, id, description):
+        self.id = id
+        self.description = description
