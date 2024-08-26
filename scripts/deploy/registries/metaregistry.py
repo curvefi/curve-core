@@ -3,7 +3,7 @@ from pathlib import Path
 import boa
 
 from scripts.deploy.constants import ZERO_ADDRESS
-from scripts.deploy.deployment_file import YamlDeploymentFile
+from scripts.deploy.deployment_file import YamlDeploymentFile, get_deployment_obj
 from scripts.deploy.deployment_utils import deploy_contract
 from scripts.logging_config import get_logger
 from settings.config import BASE_DIR, ChainConfig
@@ -22,8 +22,7 @@ def deploy_metaregistry(chain_settings: ChainConfig, gauge_factory_address: str,
 
 def update_metaregistry(chain_settings: ChainConfig):
 
-    deployment_file = YamlDeploymentFile(Path(BASE_DIR, "deployments", f"{chain_settings.network_name}.yaml"))
-    deployment_config = deployment_file.get_deployment_config()
+    deployment_config = get_deployment_obj(chain_settings).get_deployment_config()
     if deployment_config is None:
         raise ValueError(f"Deployment config not found for {chain_settings.network_name}")
 

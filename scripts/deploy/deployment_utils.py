@@ -7,6 +7,7 @@ import boa
 from boa.contracts.abi.abi_contract import ABIContract
 from eth_utils import keccak
 
+from scripts.deploy.deployment_file import get_deployment_obj
 from scripts.logging_config import get_logger
 from settings.config import BASE_DIR, ChainConfig, CryptoPoolPresets
 
@@ -18,29 +19,19 @@ logger = get_logger(__name__)
 
 
 def dump_initial_chain_settings(chain_settings: ChainConfig):
-    deployment_file_path = Path(BASE_DIR, "deployments", f"{chain_settings.network_name}.yaml")
-    deployment_file = YamlDeploymentFile(deployment_file_path)
-
-    deployment_file.dump_initial_chain_settings(chain_settings)
+    get_deployment_obj(chain_settings).dump_initial_chain_settings(chain_settings)
 
 
 def update_deployment_chain_config(chain_settings: ChainConfig, data: dict):
-    deployment_file_path = Path(BASE_DIR, "deployments", f"{chain_settings.network_name}.yaml")
-    deployment_file = YamlDeploymentFile(deployment_file_path)
-
-    deployment_file.update_deployment_config({"config": data})
+    get_deployment_obj(chain_settings).update_deployment_config({"config": data})
 
 
 def get_deployment_config(chain_settings: ChainConfig):
-    deployment_file_path = Path(BASE_DIR, "deployments", f"{chain_settings.network_name}.yaml")
-    deployment_file = YamlDeploymentFile(deployment_file_path)
-
-    return deployment_file.get_deployment_config()
+    return get_deployment_obj(chain_settings).get_deployment_config()
 
 
 def deploy_contract(chain_settings: ChainConfig, contract_folder: Path, *args, as_blueprint: bool = False):
-    deployment_file_path = Path(BASE_DIR, "deployments", f"{chain_settings.network_name}.yaml")
-    deployment_file = YamlDeploymentFile(deployment_file_path)
+    deployment_file = get_deployment_obj(chain_settings)
 
     # fetch latest contract
     latest_contract = fetch_latest_contract(contract_folder)

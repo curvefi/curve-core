@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from scripts.deploy.constants import BROADCASTERS
-from scripts.deploy.deployment_file import YamlDeploymentFile
+from scripts.deploy.deployment_file import YamlDeploymentFile, get_deployment_obj
 from scripts.deploy.deployment_utils import deploy_contract, update_deployment_chain_config
 from scripts.deploy.utils import get_relative_path
 from scripts.logging_config import get_logger
@@ -58,7 +58,7 @@ def deploy_dao_vault(chain_settings: ChainConfig, owner: str):
 
 def transfer_ownership(chain_settings):
 
-    deployment_file = YamlDeploymentFile(Path(BASE_DIR, "deployments", f"{chain_settings.network_name}.yaml"))
+    deployment_file = get_deployment_obj(chain_settings)
     deployment_config = deployment_file.get_deployment_config()
     if deployment_config is None:
         raise ValueError(f"Deployment config not found for {chain_settings.network_name}")

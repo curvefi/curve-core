@@ -11,10 +11,9 @@ from boa.util.abi import abi_encode
 from pydantic import BaseModel
 from pydantic import ConfigDict as BaseModelConfigDict
 from pydantic.v1.utils import deep_update
-from pydantic_settings import SettingsConfigDict
 
 from scripts.logging_config import get_logger
-from settings.config import BASE_DIR, ChainConfig, RollupType
+from settings.config import BASE_DIR, ChainConfig, RollupType, settings
 
 from .utils import get_latest_commit_hash, get_relative_path
 
@@ -336,3 +335,10 @@ class YamlDeploymentFile:
 
         process_contracts(contracts, "")
         return contract_info
+
+
+def get_deployment_obj(chain_settings: ChainConfig) -> Path:
+    deployment_file_name = f"{chain_settings.network_name}.yaml"
+    if settings.DEBUG:
+        deployment_file_name = f"{chain_settings.network_name}_DEBUG.yaml"
+    return YamlDeploymentFile(Path(BASE_DIR, "deployments", deployment_file_name))

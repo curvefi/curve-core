@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-from scripts.deploy.deployment_file import YamlDeploymentFile
+from scripts.deploy.deployment_file import YamlDeploymentFile, get_deployment_obj
 from settings.config import BASE_DIR, get_chain_settings
 
 from .amm.stableswap import test_stableswap_deployment
@@ -21,9 +21,7 @@ def test_post_deploy(chain: str):
     logger.info("Starting post-deployment tests...")
 
     chain_settings = get_chain_settings(chain)
-    deployment_file_path = Path(BASE_DIR, "deployments", f"{chain_settings.network_name}.yaml")
-    deployment_file = YamlDeploymentFile(deployment_file_path)
-    deployment = deployment_file.get_deployment_config()
+    deployment = get_deployment_obj(chain_settings).get_deployment_config()
 
     test_stableswap_deployment(deployment)
     logger.info("Stableswap tests ... PASSED")
