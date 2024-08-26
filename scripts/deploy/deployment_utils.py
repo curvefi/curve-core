@@ -110,7 +110,7 @@ def deploy_via_create2(contract_file, abi_encoded_ctor="", is_blueprint=False):
 
 def get_contract(contract_path: Path, address: str) -> ABIContract:
     abi_path = str(contract_path).replace("contracts", "abi").replace(".vy", ".json")
-    return boa.load_abi(BASE_DIR / Path(abi_path)).at(address)
+    return boa.load_abi(BASE_DIR / Path(*Path(abi_path).parts[1:])).at(address)
 
 
 class PoolType(StrEnum):
