@@ -22,13 +22,11 @@ def update_address_provider(chain_settings: ChainConfig):
     if deployment_config is None:
         raise ValueError(f"Deployment config not found for {chain_settings.network_name}")
 
-    address_provider = deployment_config.contracts.registries.address_provider
-    address_provider_contract_path = BASE_DIR / Path(address_provider.contract_path.lstrip("/"))
-    address_provider = boa.load_partial(address_provider_contract_path).at(address_provider.address)
+    address_provider = deployment_config.contracts.registries.address_provider.get_contract()
 
     address_provider_inputs = {
         AddressProviderID.EXCHANGE_ROUTER.id: deployment_config.contracts.helpers.router.address,
-        AddressProviderID.CURVEDAO_VAULT.id: chain_settings.dao.vault,
+        AddressProviderID.FEE_DISTRIBUTOR.id: chain_settings.dao.vault,  # Set fee receiver to dao vault
         AddressProviderID.METAREGISTRY.id: deployment_config.contracts.registries.metaregistry.address,
         AddressProviderID.TRICRYPTONG_FACTORY.id: deployment_config.contracts.amm.tricryptoswap.factory.address,
         AddressProviderID.STABLESWAPNG_FACTORY.id: deployment_config.contracts.amm.stableswap.factory.address,
@@ -64,7 +62,6 @@ def update_address_provider(chain_settings: ChainConfig):
                 ids_to_update.append(key.id)
 
     logger.info("Updating Address Provider.")
-    breakpoint()
     if ids_to_add:
         address_provider.add_new_ids(ids_to_add, addresses_to_add, descriptions_to_add)
 

@@ -3,6 +3,7 @@ import time
 from enum import StrEnum, auto
 from pathlib import Path
 
+import boa
 import yaml
 from boa.contracts.abi.abi_contract import ABIFunction
 from boa.contracts.vyper.vyper_contract import VyperContract
@@ -10,9 +11,10 @@ from boa.util.abi import abi_encode
 from pydantic import BaseModel
 from pydantic import ConfigDict as BaseModelConfigDict
 from pydantic.v1.utils import deep_update
+from pydantic_settings import SettingsConfigDict
 
 from scripts.logging_config import get_logger
-from settings.config import ChainConfig, RollupType
+from settings.config import BASE_DIR, ChainConfig, RollupType
 
 from .utils import get_latest_commit_hash, get_relative_path
 
@@ -72,6 +74,10 @@ class Contract(BaseModel):
     contract_version: str
     deployment_timestamp: int
     deployment_type: DeploymentType
+
+    def get_contract(self):
+        contract_path = BASE_DIR / Path(self.contract_path.lstrip("/"))
+        return boa.load_partial(contract_path).at(self.address)
 
 
 #  <-------------------------- Deployments -------------------------->
@@ -316,3 +322,17 @@ class YamlDeploymentFile:
             }
         }
         self.update_deployment_config(update_parameters)
+
+    def get_deployed_contracts(self):
+        contracts = self.get_deployment_config().contracts
+        contract_info = []
+
+        def process_contracts(obj, path):
+            if isinstance(obj, Contract):
+                contract_info.append(obj.get_contract())
+            elif isinstance(obj, BaseModel):
+                for field_name, _ in obj.__fields__.items():
+                    process_contracts(getattr(obj, field_name), f"{path}.{field_name}" if path else field_name)
+
+        process_contracts(contracts, "")
+        return contract_info

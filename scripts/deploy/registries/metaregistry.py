@@ -3,6 +3,7 @@ from pathlib import Path
 import boa
 
 from scripts.deploy.constants import ZERO_ADDRESS
+from scripts.deploy.deployment_file import YamlDeploymentFile
 from scripts.deploy.deployment_utils import deploy_contract
 from scripts.logging_config import get_logger
 from settings.config import BASE_DIR, ChainConfig
@@ -20,29 +21,29 @@ def deploy_metaregistry(chain_settings: ChainConfig, gauge_factory_address: str,
 
 
 def update_metaregistry(chain_settings: ChainConfig):
-    address_provider = boa.load_partial(Path(BASE_DIR, "contracts", "registries", "address_provider")).at(
-        chain_settings.deployments.registries.address_provider.address
-    )
 
-    metaregistry = boa.load_partial(Path(BASE_DIR, "contracts", "registries", "metaregistry")).at(
-        chain_settings.deployments.registries.metaregistry.address
-    )
+    deployment_file = YamlDeploymentFile(Path(BASE_DIR, "deployments", f"{chain_settings.network_name}.yaml"))
+    deployment_config = deployment_file.get_deployment_config()
+    if deployment_config is None:
+        raise ValueError(f"Deployment config not found for {chain_settings.network_name}")
+
+    metaregistry = deployment_config.contracts.registries.metaregistry.get_contract()
 
     # deploy registry handlers
     stableswap_handler = deploy_contract(
         chain_settings,
         Path(BASE_DIR, "contracts", "registries", "metaregistry", "registry_handlers", "stableswap"),
-        address_provider.get_address(12),  # stableswap factory is stored always on ID 12
+        deployment_config.contracts.amm.stableswap.factory.address,
     )
     tricrypto_handler = deploy_contract(
         chain_settings,
         Path(BASE_DIR, "contracts", "registries", "metaregistry", "registry_handlers", "tricryptoswap"),
-        address_provider.get_address(11),
+        deployment_config.contracts.amm.tricryptoswap.factory.address,
     )
     twocrypto_handler = deploy_contract(
         chain_settings,
         Path(BASE_DIR, "contracts", "registries", "metaregistry", "registry_handlers", "twocryptoswap"),
-        address_provider.get_address(13),
+        deployment_config.contracts.amm.twocryptoswap.factory.address,
     )
 
     logger.info("Adding registry handlers to the Metaregistry.")

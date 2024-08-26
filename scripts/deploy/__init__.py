@@ -10,7 +10,7 @@ from settings.config import BASE_DIR, RollupType, get_chain_settings, settings
 from .amm.stableswap import deploy_stableswap
 from .amm.tricrypto import deploy_tricrypto
 from .amm.twocrypto import deploy_twocrypto
-from .deployment_utils import deploy_pool, dump_initial_chain_settings
+from .deployment_utils import deploy_pool, dump_initial_chain_settings, get_deployment_config
 from .gauge.child_gauge import deploy_liquidity_gauge_infra
 from .governance.xgov import deploy_dao_vault, deploy_xgov, transfer_ownership
 from .helpers.deposit_and_stake_zap import deploy_deposit_and_stake_zap
@@ -60,8 +60,12 @@ def run_deploy_all(chain: str) -> None:
         )
         dao_vault = chain_settings.dao.vault
     else:
+        # deploy xgov and dao vault
         admins = deploy_xgov(chain_settings)
         dao_vault = deploy_dao_vault(chain_settings, admins[0]).address
+
+        # get updated chain settings from deployment file
+        chain_settings = get_deployment_config(chain_settings).config
 
     # Old compatibility
     fee_receiver = dao_vault
@@ -93,11 +97,11 @@ def run_deploy_all(chain: str) -> None:
     # rate provider
     deploy_rate_provider(chain_settings, address_provider.address)
 
-    # update address provider
-    update_address_provider(chain_settings)
-
     # update metaregistry
     update_metaregistry(chain_settings)
+
+    # update address provider
+    update_address_provider(chain_settings)
 
     # transfer ownership to the dao
     transfer_ownership(chain_settings)

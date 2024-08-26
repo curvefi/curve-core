@@ -31,6 +31,13 @@ def update_deployment_chain_config(chain_settings: ChainConfig, data: dict):
     deployment_file.update_deployment_config({"config": data})
 
 
+def get_deployment_config(chain_settings: ChainConfig):
+    deployment_file_path = Path(BASE_DIR, "deployments", f"{chain_settings.network_name}.yaml")
+    deployment_file = YamlDeploymentFile(deployment_file_path)
+
+    return deployment_file.get_deployment_config()
+
+
 def deploy_contract(chain_settings: ChainConfig, contract_folder: Path, *args, as_blueprint: bool = False):
     deployment_file_path = Path(BASE_DIR, "deployments", f"{chain_settings.network_name}.yaml")
     deployment_file = YamlDeploymentFile(deployment_file_path)
