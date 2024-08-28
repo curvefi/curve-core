@@ -1,11 +1,13 @@
-import logging
 from pathlib import Path
 
 from scripts.deploy.constants import BROADCASTERS
+from scripts.deploy.deployment_file import YamlDeploymentFile, get_deployment_obj
 from scripts.deploy.deployment_utils import deploy_contract, update_deployment_chain_config
+from scripts.deploy.utils import get_relative_path
+from scripts.logging_config import get_logger
 from settings.config import BASE_DIR, ChainConfig, RollupType
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def deploy_xgov(chain_settings: ChainConfig):
@@ -52,3 +54,28 @@ def deploy_dao_vault(chain_settings: ChainConfig, owner: str):
     vault = deploy_contract(chain_settings, Path(BASE_DIR, "contracts", "governance", "vault"), owner)
     update_deployment_chain_config(chain_settings, {"dao": {"vault": str(vault.address)}})
     return vault
+
+
+def transfer_ownership(chain_settings):
+
+    deployment_file = get_deployment_obj(chain_settings)
+    deployment_config = deployment_file.get_deployment_config()
+    if deployment_config is None:
+        raise ValueError(f"Deployment config not found for {chain_settings.network_name}")
+
+    deployments = deployment_file.get_deployed_contracts()
+    owner = chain_settings.dao.ownership_admin
+
+    for deployment in deployments:
+
+        deployment_name = get_relative_path(deployment.compiler_data.contract_name)
+        deployment_address = deployment.address
+
+        for attr in ("admin", "owner"):
+            if hasattr(deployment._storage, attr):
+                current_owner = getattr(deployment._storage, attr).get()
+                if current_owner != owner:
+                    logger.info(f"Current {deployment_name} ({deployment_address}) owner: {current_owner}")
+                    deployment.set_owner(owner)
+                    logger.info(f"Set {deployment_name} owner to {owner}.")
+                break

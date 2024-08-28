@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 from enum import StrEnum
 from pathlib import Path
@@ -8,32 +7,31 @@ import boa
 from boa.contracts.abi.abi_contract import ABIContract
 from eth_utils import keccak
 
+from scripts.deploy.deployment_file import get_deployment_obj
+from scripts.logging_config import get_logger
 from settings.config import BASE_DIR, ChainConfig, CryptoPoolPresets
 
 from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRESS
 from .deployment_file import YamlDeploymentFile
 from .utils import fetch_latest_contract, get_relative_path, get_version_from_filename, version_a_gt_version_b
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def dump_initial_chain_settings(chain_settings: ChainConfig):
-    deployment_file_path = Path(BASE_DIR, "deployments", f"{chain_settings.network_name}.yaml")
-    deployment_file = YamlDeploymentFile(deployment_file_path)
-
-    deployment_file.dump_initial_chain_settings(chain_settings)
+    get_deployment_obj(chain_settings).dump_initial_chain_settings(chain_settings)
 
 
 def update_deployment_chain_config(chain_settings: ChainConfig, data: dict):
-    deployment_file_path = Path(BASE_DIR, "deployments", f"{chain_settings.network_name}.yaml")
-    deployment_file = YamlDeploymentFile(deployment_file_path)
+    get_deployment_obj(chain_settings).update_deployment_config({"config": data})
 
-    deployment_file.update_deployment_config({"config": data})
+
+def get_deployment_config(chain_settings: ChainConfig):
+    return get_deployment_obj(chain_settings).get_deployment_config()
 
 
 def deploy_contract(chain_settings: ChainConfig, contract_folder: Path, *args, as_blueprint: bool = False):
-    deployment_file_path = Path(BASE_DIR, "deployments", f"{chain_settings.network_name}.yaml")
-    deployment_file = YamlDeploymentFile(deployment_file_path)
+    deployment_file = get_deployment_obj(chain_settings)
 
     # fetch latest contract
     latest_contract = fetch_latest_contract(contract_folder)
@@ -110,7 +108,7 @@ def deploy_via_create2(contract_file, abi_encoded_ctor="", is_blueprint=False):
 
 def get_contract(contract_path: Path, address: str) -> ABIContract:
     abi_path = str(contract_path).replace("contracts", "abi").replace(".vy", ".json")
-    return boa.load_abi(BASE_DIR / Path(abi_path)).at(address)
+    return boa.load_abi(BASE_DIR / Path(*Path(abi_path).parts[1:])).at(address)
 
 
 class PoolType(StrEnum):

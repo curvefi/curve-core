@@ -1,10 +1,10 @@
-import logging
 from pathlib import Path
 
 from scripts.deploy.deployment_utils import deploy_contract
+from scripts.logging_config import get_logger
 from settings.config import BASE_DIR, ChainConfig
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def deploy_liquidity_gauge_infra(chain_settings: ChainConfig):
