@@ -106,11 +106,6 @@ def deploy_via_create2(contract_file, abi_encoded_ctor="", is_blueprint=False):
     return contract_obj.at(precomputed_address)
 
 
-def get_contract(contract_path: Path, address: str) -> ABIContract:
-    abi_path = str(contract_path).replace("contracts", "abi").replace(".vy", ".json")
-    return boa.load_abi(BASE_DIR / Path(*Path(abi_path).parts[1:])).at(address)
-
-
 class PoolType(StrEnum):
     twocryptoswap = "twocryptoswap"
 
@@ -120,7 +115,5 @@ def deploy_pool(
 ) -> None:
     deployment_file_path = Path(BASE_DIR, "deployments", f"{chain}.yaml")
     deployment_file = YamlDeploymentFile(deployment_file_path)
-    factory_params = deployment_file.get_contract_deployment(("contracts", "amm", pool_type.value, "factory"))
-
-    factory = get_contract(Path(factory_params.contract_path), factory_params.address)
+    factory = deployment_file.get_contract_deployment(("contracts", "amm", pool_type.value, "factory")).get_contract()
     factory.deploy_pool(name, symbol, coins, 0, *CryptoPoolPresets().model_dump().values())

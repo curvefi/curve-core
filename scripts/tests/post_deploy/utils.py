@@ -14,17 +14,17 @@ def check_if_contract_deployed(address: str) -> bool:
     return code is not None
 
 
-def get_contract(contract_path: str, address: str) -> ABIContract:
-    abi_path = contract_path.replace("contracts", "abi").replace(".vy", ".json")
-    return boa.load_abi(BASE_DIR / Path(*Path(abi_path).parts[1:])).at(address)
-
-
 def check_contract_version(contract: ABIContract, version: str, deployment_type: str) -> bool:
     if deployment_type == "blueprint":
         # Can't check for blueprint unless deploy from blueprint
         return True
 
     return contract.version() == version
+
+
+def get_contract(contract_path: str, address: str) -> ABIContract:
+    contract_path = BASE_DIR / Path(contract_path.lstrip("/"))
+    return boa.load_partial(contract_path).at(address)
 
 
 def check_contracts(contracts: dict[str, dict]):
