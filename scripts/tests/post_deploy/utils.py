@@ -1,9 +1,7 @@
-from pathlib import Path
-
 import boa
 from boa.contracts.abi.abi_contract import ABIContract
 
-from settings.config import BASE_DIR, settings
+from settings.config import settings
 
 
 def check_if_contract_deployed(address: str) -> bool:
@@ -12,11 +10,6 @@ def check_if_contract_deployed(address: str) -> bool:
 
     code = boa.env._rpc.fetch("eth_getCode", [address, "latest"])
     return code is not None
-
-
-def get_contract(contract_path: str, address: str) -> ABIContract:
-    abi_path = contract_path.replace("contracts", "abi").replace(".vy", ".json")
-    return boa.load_abi(BASE_DIR / Path(*Path(abi_path).parts[1:])).at(address)
 
 
 def check_contract_version(contract: ABIContract, version: str, deployment_type: str) -> bool:
