@@ -1,7 +1,9 @@
+from pathlib import Path
+
 import boa
 from boa.contracts.abi.abi_contract import ABIContract
 
-from settings.config import settings
+from settings.config import BASE_DIR, settings
 
 
 def check_if_contract_deployed(address: str) -> bool:
@@ -18,6 +20,11 @@ def check_contract_version(contract: ABIContract, version: str, deployment_type:
         return True
 
     return contract.version() == version
+
+
+def get_contract(contract_path: str, address: str) -> ABIContract:
+    contract_path = BASE_DIR / Path(contract_path.lstrip("/"))
+    return boa.load_partial(contract_path).at(address)
 
 
 def check_contracts(contracts: dict[str, dict]):
