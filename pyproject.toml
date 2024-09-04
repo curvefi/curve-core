@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "curve-lite"
+name = "curve-core"
 version = "0.1.0"
 description = "Deploys all smart contracts related to Curve Finance on any EVM compatible chain."
 authors = ["Curve.Fi"]

@@ -1,4 +1,4 @@
-# Curve Lite
+# Curve Core
 
 A minimal version of all curve infrastructure for AMM in one place.
 
