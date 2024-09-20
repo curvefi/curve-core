@@ -20,7 +20,10 @@ def get_latest_commit_hash(file_path):
             check=True,
         )
         # Return the commit hash
-        return result.stdout.strip()
+        commit_hash = result.stdout.strip()
+        if len(commit_hash) == 0:
+            logger.warning(f"No commit hash found for {file_path}")
+        return commit_hash
     except subprocess.CalledProcessError as e:
         logger.warning(f"Error fetching commit hash: {e}")
         return None
