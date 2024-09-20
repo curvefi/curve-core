@@ -180,28 +180,28 @@ contracts:
   gauge:
     child_gauge:
       factory:
-        address: '0xB4c6A1e8A14e9Fe74c88b06275b747145DD41206'
+        address: '0x0B8D6B6CeFC7Aa1C2852442e518443B1b22e1C52'
         compiler_settings:
           compiler_version: 0.3.10
           evm_version: paris
           optimisation_level: GAS
-        constructor_args_encoded: null
-        contract_github_url: https://github.com/curvefi/curve-lite/blob/6f52fba699d6be12b0a92cf6b0e26e2248067569/contracts/gauge/child_gauge/factory/factory_v_100.vy
-        contract_path: /contracts/gauge/child_gauge/factory/factory_v_100.vy
-        contract_version: 1.0.0
-        deployment_timestamp: 1723738821
+        constructor_args_encoded: 000000000000000000000000306a45a1478a000dc701a6e1f7a569afb8d9dcd600000000000000000000000096720942f9ff22efd8611f696e5333fe3671717a00000000000000000000000050fb01ee521b9d22cdcb713a505019f41b8bbff4
+        contract_github_url: https://github.com/curvefi/curve-lite/blob/091d18ea6fe820209ce5c5a8ec45f2bc27dc3db0/contracts/gauge/child_gauge/factory/factory_v_201.vy
+        contract_path: /contracts/gauge/child_gauge/factory/factory_v_201.vy
+        contract_version: 2.0.1
+        deployment_timestamp: 1726860365
         deployment_type: normal
       implementation:
-        address: '0xDF264E9a02E0D1C1F0b83AE067dE2Bc0031e1e7a'
+        address: '0x50eD95CEb917443eE0790Eea97494121CA318a6C'
         compiler_settings:
           compiler_version: 0.3.10
-          evm_version: paris
+          evm_version: null
           optimisation_level: GAS
-        constructor_args_encoded: 000000000000000000000000b4c6a1e8a14e9fe74c88b06275b747145dd41206
-        contract_github_url: https://github.com/curvefi/curve-lite/blob/65d63770a56f231e123c811eb734813156b9cc36/contracts/gauge/child_gauge/implementation/implementation_v_020.vy
-        contract_path: /contracts/gauge/child_gauge/implementation/implementation_v_020.vy
-        contract_version: 0.2.0
-        deployment_timestamp: 1723738853
+        constructor_args_encoded: 0000000000000000000000007be6bd57a319a7180f71552e58c9d32da32b6f96
+        contract_github_url: https://github.com/curvefi/curve-lite/blob/091d18ea6fe820209ce5c5a8ec45f2bc27dc3db0/contracts/gauge/child_gauge/implementation/implementation_v_100.vy
+        contract_path: /contracts/gauge/child_gauge/implementation/implementation_v_100.vy
+        contract_version: 1.0.0
+        deployment_timestamp: 1726767591
         deployment_type: normal
   governance:
     agent:

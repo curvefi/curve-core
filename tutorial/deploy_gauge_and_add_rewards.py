@@ -12,38 +12,39 @@ boa.env.add_account(account)
 
 # Test pool deployed, change address of deployed contract here
 POOL_ADDRESS = LP_TOKEN_ADDRESS = "0x8AAC9F7068d2942E4Be0b979D98e098D9C42075D"
-GAUGE_FACTORY = "0xB4c6A1e8A14e9Fe74c88b06275b747145DD41206"
-TOKEN_ADDRESS = CRV = "0x50FB01Ee521b9D22cdcb713a505019f41b8BBFf4"
+GAUGE_FACTORY = "0x0B8D6B6CeFC7Aa1C2852442e518443B1b22e1C52"
+TOKEN_ADDRESS = crvUSD = "0x92fc3EfE9129675A6d1405519C38b3aDdE4E0ADe"
 
-# to deploy deterministically, to be changed if needed
-SALT = "0x0000000000000000000000000000000000000000000000000000000000000000"
+# Can be anything, used for address derivation
+SALT = "0x" + '0' * (64 - len(TOKEN_ADDRESS[2:])) + TOKEN_ADDRESS[2:]
+### 0x00000000000000000000000050FB01Ee521b9D22cdcb713a505019f41b8BBFf4
 
-gauge_factory = boa.load_partial(Path(BASE_DIR, "contracts", "gauge", "child_gauge", "factory", "factory_v_100.vy")).at(
+gauge_factory = boa.load_partial(Path(BASE_DIR, "contracts", "gauge", "child_gauge", "factory", "factory_v_201.vy")).at(
     GAUGE_FACTORY
 )
 
 # <--------------------------- DEPLOY GAUGE --------------------------->
 gauge_address = gauge_factory.deploy_gauge(LP_TOKEN_ADDRESS, bytes.fromhex(SALT[2:]))
-### 0x8b8E9b2B6a28A8ad97787AF2E6d5fad2B477B29a
-gauge_address = "0x8b8E9b2B6a28A8ad97787AF2E6d5fad2B477B29a"
+### 0x561b6B55CD02f9A91aD6474CBE0aa41169871901
+gauge_address = "0x561b6B55CD02f9A91aD6474CBE0aa41169871901"
 
 gauge = boa.load_partial(
-    Path(BASE_DIR, "contracts", "gauge", "child_gauge", "implementation", "implementation_v_020.vy")
+    Path(BASE_DIR, "contracts", "gauge", "child_gauge", "implementation", "implementation_v_100.vy")
 ).at(gauge_address)
 
 # <--------------------------- ADD REWARD TOKEN TO GAUGE --------------------------->
 # this will add TOKEN_ADDRESS as reward and account as manager for reward
-reward_token = boa.load_partial(Path(BASE_DIR, "tutorial", "contracts", "ERC20mock.vy")).at(CRV)
+reward_token = boa.load_partial(Path(BASE_DIR, "tutorial", "contracts", "ERC20mock.vy")).at(crvUSD)
 AMOUNT = 10_000 * 10**18
 assert reward_token.balanceOf(account.address) >= AMOUNT, "Not enough tokens to add"
 
-gauge.add_reward(CRV, account.address)
+gauge.add_reward(crvUSD, account.address)
 reward_token.approve(gauge_address, AMOUNT)
-gauge.deposit_reward_token(CRV, AMOUNT)
+gauge.deposit_reward_token(crvUSD, AMOUNT)
 
 # <--------------------------- DEPOSIT LP TOKEN --------------------------->
 # deposits LP token to gauge to start earning rewards
-# any user with LP can depost
+# any user with LP can deposit
 lp_token = boa.load_partial(
     Path(BASE_DIR, "contracts", "amm", "twocryptoswap", "implementation", "implementation_v_210.vy")
 ).at(POOL_ADDRESS)
