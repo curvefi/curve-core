@@ -1,0 +1,18 @@
+network_name: fraxtal_testnet
+chain_id: 2522
+rollup_type: op_stack
+dao:
+  crv: "0x2CAb811d351B4eF492D8C197E09939F1C9f54330"
+  crvusd: "0x4D6E79013212F10A026A1FB0b926C9Fd0432b96c"
+  emergency_admin: "0x53Ae1433Ab4563d7D5a84d27524784837259f105"
+  ownership_admin: "0x53Ae1433Ab4563d7D5a84d27524784837259f105"
+  parameter_admin: "0x53Ae1433Ab4563d7D5a84d27524784837259f105"
+  vault: "0xbF464732Fa68466D3f2f67d3E7704859292363BC"
+explorer_base_url: https://holesky.fraxscan.com
+
+layer: 2
+native_currency_symbol: ETH 
+native_currency_coingecko_id: ethereum
+platform_coingecko_id: ethereum
+public_rpc_url: https://rpc.testnet.frax.com
+wrapped_native_token: "0xFC00000000000000000000000000000000000006"
