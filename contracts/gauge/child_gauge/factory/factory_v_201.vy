@@ -228,6 +228,7 @@ def set_crv(_crv: ERC20):
     """
     assert msg.sender == self.owner
     assert _crv != empty(ERC20)
+    assert self.crv == empty(ERC20), "CRV already set"
 
     self.crv = _crv
 
