@@ -65,8 +65,8 @@ def deploy_contract(chain_settings: ChainConfig, contract_folder: Path, *args, a
         abi_path = str(relpath).replace("contracts", "abi").replace(".vy", ".json")
         abi_path = BASE_DIR / Path(*Path(abi_path).parts[1:])
 
-        if not os.path.exists(abi_path):
-            os.makedirs(abi_path)
+        if not os.path.exists(abi_path.parent):
+            os.makedirs(abi_path.parent)
 
         with open(abi_path, "w") as abi_file:
             json.dump(deployed_contract.abi, abi_file, indent=4)
