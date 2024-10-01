@@ -12,7 +12,7 @@ boa.env.add_account(account)
 
 # Test pool deployed, change address of deployed contract here
 POOL_ADDRESS = LP_TOKEN_ADDRESS = "0x8AAC9F7068d2942E4Be0b979D98e098D9C42075D"
-GAUGE_FACTORY = "0x0B8D6B6CeFC7Aa1C2852442e518443B1b22e1C52"
+GAUGE_FACTORY = "0xA0a2998810cfCa4e3Bc2bc20621000713027939d"
 TOKEN_ADDRESS = crvUSD = "0x92fc3EfE9129675A6d1405519C38b3aDdE4E0ADe"
 
 # Can be anything, used for address derivation
@@ -25,7 +25,6 @@ gauge_factory = boa.load_partial(Path(BASE_DIR, "contracts", "gauge", "child_gau
 
 # <--------------------------- DEPLOY GAUGE --------------------------->
 gauge_address = gauge_factory.deploy_gauge(LP_TOKEN_ADDRESS, bytes.fromhex(SALT[2:]))
-### 0x561b6B55CD02f9A91aD6474CBE0aa41169871901
 gauge_address = "0x561b6B55CD02f9A91aD6474CBE0aa41169871901"
 
 gauge = boa.load_partial(
