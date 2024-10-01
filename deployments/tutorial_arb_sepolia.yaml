@@ -6,7 +6,7 @@ config:
     emergency_admin: '0x16DC9823eE3800910295A38509d6a35518eDf879'
     ownership_admin: '0x5c9960B42BD99F98e9418002286f88E35037F903'
     parameter_admin: '0x069E8D9FFba2915eC2268a51e7da93FF64bafB61'
-    vault: '0xd220D0e9Aa2Da3daF4E15BdBC53bF254b0b1888d'
+    vault: '0xD5C3e070E121488806AaA5565283A164ACEB94Df'
   explorer_base_url: https://sepolia.arbiscan.io/
   layer: 2
   native_currency_coingecko_id: ethereum
@@ -180,16 +180,16 @@ contracts:
   gauge:
     child_gauge:
       factory:
-        address: '0x0B8D6B6CeFC7Aa1C2852442e518443B1b22e1C52'
+        address: '0xE9262Aa028E6DFeB1dCa3bb1C07faf0707544b86'
         compiler_settings:
           compiler_version: 0.3.10
           evm_version: paris
           optimisation_level: GAS
         constructor_args_encoded: 000000000000000000000000306a45a1478a000dc701a6e1f7a569afb8d9dcd600000000000000000000000096720942f9ff22efd8611f696e5333fe3671717a00000000000000000000000050fb01ee521b9d22cdcb713a505019f41b8bbff4
-        contract_github_url: https://github.com/curvefi/curve-lite/blob/091d18ea6fe820209ce5c5a8ec45f2bc27dc3db0/contracts/gauge/child_gauge/factory/factory_v_201.vy
+        contract_github_url: https://github.com/curvefi/curve-lite/blob/f37535f05041bd1d5fe4f17aec7f6adbc8d31a01/contracts/gauge/child_gauge/factory/factory_v_201.vy
         contract_path: /contracts/gauge/child_gauge/factory/factory_v_201.vy
         contract_version: 2.0.1
-        deployment_timestamp: 1726860365
+        deployment_timestamp: 1727790000
         deployment_type: normal
       implementation:
         address: '0x50eD95CEb917443eE0790Eea97494121CA318a6C'
@@ -230,7 +230,7 @@ contracts:
         deployment_timestamp: 1723738601
         deployment_type: normal
     vault:
-      address: '0xd220D0e9Aa2Da3daF4E15BdBC53bF254b0b1888d'
+      address: '0xD5C3e070E121488806AaA5565283A164ACEB94Df'
       compiler_settings:
         compiler_version: 0.3.10
         evm_version: null
@@ -239,7 +239,7 @@ contracts:
       contract_github_url: https://github.com/curvefi/curve-lite/blob/8c05198c971b90d3bb120de91f55485a304c7847/contracts/governance/vault/vault_v_100.vy
       contract_path: /contracts/governance/vault/vault_v_100.vy
       contract_version: 1.0.0
-      deployment_timestamp: 1723738769
+      deployment_timestamp: 1727789994
       deployment_type: normal
   helpers:
     deposit_and_stake_zap:

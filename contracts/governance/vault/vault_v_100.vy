@@ -26,11 +26,27 @@ NATIVE: constant(address) = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
 owner: public(address)
 future_owner: public(address)
 
+deployer: immutable(address)
+
 
 @external
 def __init__(_owner: address):
     self.owner = _owner
 
+    log ApplyOwnership(_owner)
+
+    deployer = msg.sender
+
+
+@external
+def set_owner(_owner: address):
+
+    assert msg.sender == deployer
+    assert self.owner == deployer
+    assert _owner != deployer
+
+    self.owner = _owner
+    log CommitOwnership(_owner)
     log ApplyOwnership(_owner)
 
 
