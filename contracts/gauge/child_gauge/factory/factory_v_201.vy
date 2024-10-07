@@ -89,6 +89,8 @@ get_gauge_from_lp_token: public(HashMap[address, address])
 get_gauge_count: public(uint256)
 get_gauge: public(address[max_value(int128)])
 
+deployer: immutable(address)
+
 
 @external
 def __init__(_root_factory: address, _root_impl: address, _crv: address):
@@ -110,6 +112,19 @@ def __init__(_root_factory: address, _root_impl: address, _crv: address):
 
     self.manager = msg.sender
     log UpdateManager(msg.sender)
+
+    deployer = msg.sender
+
+
+@external
+def set_owner(_owner: address):
+
+    assert msg.sender == deployer
+    assert self.owner == deployer
+    assert _owner != deployer
+
+    log TransferOwnership(self.owner, _owner)
+    self.owner = _owner
 
 
 @internal

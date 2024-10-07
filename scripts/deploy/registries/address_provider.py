@@ -62,8 +62,14 @@ def update_address_provider(chain_settings: ChainConfig):
 
     logger.info("Updating Address Provider.")
     if ids_to_add:
-        address_provider.add_new_ids(ids_to_add, addresses_to_add, descriptions_to_add)
+        if address_provider.admin() != boa.env.eoa:
+            logger.warning("Can not add new ideas, not admin anymore")
+        else:
+            address_provider.add_new_ids(ids_to_add, addresses_to_add, descriptions_to_add)
 
     for id in ids_to_update:
         logger.info(f"Updating ID {id} in the Address Provider.")
-        address_provider.update_address(id, address_provider_inputs[id])
+        if address_provider.admin() != boa.env.eoa:
+            logger.warning("Could not update, not admin anymore")
+        else:
+            address_provider.update_address(id, address_provider_inputs[id])

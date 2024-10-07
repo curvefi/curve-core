@@ -10,7 +10,7 @@ logger = get_logger(__name__)
 
 def deploy_liquidity_gauge_infra(chain_settings: ChainConfig):
 
-    # deploy gauge factory and gauge implementaiton address
+    # deploy gauge factory and gauge implementation address
     child_gauge_factory = deploy_contract(
         chain_settings,
         Path(BASE_DIR, "contracts", "gauge", "child_gauge", "factory"),
