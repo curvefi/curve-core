@@ -25,6 +25,7 @@ class RollupType(StrEnum):
     arb_orbit = "arb_orbit"
     polygon_cdk = "polygon_cdk"
     zksync = "zksync"
+    taiko = "taiko"
     not_rollup = "_"
 
 
