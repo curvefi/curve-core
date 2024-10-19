@@ -100,3 +100,30 @@ File will have the same name as chain. ABI is stored in [abi](/abi) folder.
 Deployments are reusable, so if something fails, it can be fixed and rerun.
 **NOTE:** contracts should be verified separately on explorers like etherscan since it doesn't support Vyper contract 
 verification by API.
+
+#### Adding pools
+Make sure you have `env` file at `/settings` directory.
+
+Deployed pool (cryptoswap) using command
+```
+python manage.py deploy crypto_pool {chain} {pool name} {pool symbol} {coins separated by comma}
+```
+
+Example
+```
+FXS/dUSD
+
+python manage.py deploy crypto_pool fraxtal_testnet dTrinity_FXS_dUSD FXSDUSD 0x98182ec55Be5091d653F9Df016fb1070add7a16E,0x4D6E79013212F10A026A1FB0b926C9Fd0432b96c
+```
+
+Add liquidity using command
+```
+python add_liquidity.py --pool_address {pool_address} --amount_token_0 {amount_with_decimals} --amount_token_1 {amount_with_decimals}
+```
+
+Example
+```
+FXS/dUSD
+
+python add_liquidity.py --pool_address 0xD978195666B3863Bed21C240f260d0F8bBa3250b --amount_token_0 2000000000000000000 --amount_token_1 1500000
+```
