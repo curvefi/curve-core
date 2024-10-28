@@ -1,4 +1,4 @@
-network_name: example_polygon_cdk
+network_name: Polygon Local
 chain_id: 137
 rollup_type: polygon_cdk
 dao:

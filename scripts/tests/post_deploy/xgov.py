@@ -4,6 +4,9 @@ from scripts.tests.post_deploy.utils import check_contracts, get_contract
 
 def test_xgov_deployment(deployment: DeploymentConfig):
     current_deployment = deployment.contracts.governance
+    if current_deployment is None:
+        return
+
     current_deployment = current_deployment.model_dump()
     current_deployment["relayer"] = current_deployment["relayer"][deployment.config.rollup_type]
 

@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=Path(BASE_DIR, "settings", "env"))
 
-    DEBUG: bool = False
+    DEBUG: bool = True
     DEV: bool = False
 
     WEB3_PROVIDER_URL: str
@@ -40,6 +40,7 @@ class CurveDAOSettings(BaseModel):
 class ChainConfig(BaseSettings):
     model_config = SettingsConfigDict(use_enum_values=True)
 
+    file_name: str
     network_name: str
     chain_id: int
     layer: int
@@ -70,6 +71,7 @@ def get_chain_settings(chain: str):
 
     class YamlChainConfig(ChainConfig):
         model_config = SettingsConfigDict(yaml_file=config_file)
+        file_name: str = chain
 
         @classmethod
         def settings_customise_sources(

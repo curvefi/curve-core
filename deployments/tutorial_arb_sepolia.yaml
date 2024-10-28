@@ -8,10 +8,11 @@ config:
     parameter_admin: '0x6300D9f6983C088345203C3a9110A46Fe9Fc9BEc'
     vault: '0xff12c0df72E02ab9C1fD8b986d21FF8992a8cCEE'
   explorer_base_url: https://sepolia.arbiscan.io/
+  file_name: tutorial_arb_sepolia
   layer: 2
   native_currency_coingecko_id: ethereum
   native_currency_symbol: ETH
-  network_name: tutorial_arb_sepolia
+  network_name: Arbitrum Sepolia
   platform_coingecko_id: ethereum
   public_rpc_url: https://sepolia-rollup.arbitrum.io/rpc
   rollup_type: arb_orbit

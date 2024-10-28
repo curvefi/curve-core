@@ -35,6 +35,7 @@ class DaoSettings(BaseModel):
 class ChainParameters(BaseModel):
     model_config = BaseModelConfigDict(use_enum_values=True)
 
+    file_name: str
     network_name: str
     chain_id: int
     layer: int
@@ -338,7 +339,7 @@ class YamlDeploymentFile:
 
 
 def get_deployment_obj(chain_settings: ChainConfig) -> Path:
-    deployment_file_name = f"{chain_settings.network_name}.yaml"
+    deployment_file_name = f"{chain_settings.file_name}.yaml"
     if settings.DEBUG:
-        deployment_file_name = f"{chain_settings.network_name}_DEBUG.yaml"
+        deployment_file_name = f"{chain_settings.file_name}_DEBUG.yaml"
     return YamlDeploymentFile(Path(BASE_DIR, "deployments", deployment_file_name))
