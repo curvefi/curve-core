@@ -1,4 +1,4 @@
-network_name: example_op_stack
+network_name: Optimism Local
 chain_id: 10
 rollup_type: op_stack
 dao:

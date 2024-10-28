@@ -1,4 +1,4 @@
-network_name: example_arb_orbit
+network_name: Arbitrum Local
 chain_id: 42161
 rollup_type: arb_orbit
 dao:

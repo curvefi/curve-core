@@ -1,4 +1,4 @@
-network_name: tutorial_arb_sepolia
+network_name: Arbitrum Sepolia
 chain_id: 421614
 rollup_type: arb_orbit
 dao:
