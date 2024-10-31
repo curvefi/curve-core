@@ -139,3 +139,13 @@ Example
 ```
 python swap.py --pool_address 0x1BBB5CAf76868698F00056f48f77ba13cfc5fE8D --views_address 0x0D5824948C879Fa459e41008F66E1Efc9211Cc32 --amount_token_0 4421718
 ```
+
+##### Get pool info to CurveJS using command
+```
+python get_pool_info.py --pool_addresses {pool_address1} {pool_address2} ...
+```
+
+Example
+```
+python get_pool_info.py --pool_addresses 0x1BBB5CAf76868698F00056f48f77ba13cfc5fE8D 0xD978195666B3863Bed21C240f260d0F8bBa3250b
+```

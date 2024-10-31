@@ -1,6 +1,5 @@
 from pathlib import Path
 import json
-import time
 import boa
 from eth_account import Account
 import argparse
@@ -42,36 +41,29 @@ def get_pool_info(pool_addresses):
             pool_data = {
                 "id": pool_address,
                 "address": pool_address,
-                "coinsAddresses": [
-                    pool.coins(0),
-                    pool.coins(1)
-                ],
-                "decimals": [
-                    str(coin0.decimals()),
-                    str(coin1.decimals())
-                ],
-                "virtualPrice": format_amount(pool.get_virtual_price(), 18),
                 "amplificationCoefficient": str(pool.A()),
                 "name": pool.name(),
                 "symbol": pool.symbol(),
-                "totalSupply": str(pool.totalSupply()),
+                "totalSupply": pool.totalSupply(),
+                "assetTypeName": "CRYPTO",
+                "isMetaPool": False,
+                "gaugeRewards": [],
+                "usdTotal": pool_tvl,
+                "gaugeCrvApy": [None, None],
                 "implementationAddress": pool_address,
-                "priceOracle": format_amount(pool.price_oracle(), 18),
                 "implementation": "twocrypto-optimized",
                 "coins": [
                     {
                         "address": pool.coins(0),
                         "decimals": str(coin0.decimals()),
                         "symbol": coin0.symbol(),
-                        "name": coin0.name(),
-                        "poolBalance": str(pool.balances(0))
+                        "usdPrice": format_amount(pool.price_oracle(), 18)
                     },
                     {
                         "address": pool.coins(1),
                         "decimals": str(coin1.decimals()),
                         "symbol": coin1.symbol(),
-                        "name": coin1.name(),
-                        "poolBalance": str(pool.balances(1))
+                        "usdPrice": format_amount(pool.price_oracle(), 18)
                     }
                 ]
             }
@@ -83,13 +75,9 @@ def get_pool_info(pool_addresses):
 
     # Construct final response
     response = {
-        "success": True,
-        "data": {
-            "poolData": pools_data,
-            "tvlAll": total_tvl,
-            "tvl": total_tvl
-        },
-        "generatedTimeMs": int(time.time() * 1000)
+        "poolData": pools_data,
+        "tvlAll": total_tvl,
+        "tvl": total_tvl
     }
     
     return response
