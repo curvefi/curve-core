@@ -40,7 +40,35 @@ print(f"Token 1 balance: {token1.balanceOf(account.address)}")
 assert token0.balanceOf(account.address) >= AMOUNT_TOKEN_0, "Not enough tokens to add"
 assert token1.balanceOf(account.address) >= AMOUNT_TOKEN_1, "Not enough tokens to add"
 
-token0.approve(POOL_ADDRESS, AMOUNT_TOKEN_0)
-token1.approve(POOL_ADDRESS, AMOUNT_TOKEN_1)
+# Add debug prints for token details
+print(f"\nToken 0 Details:")
+print(f"Name: {token0.name()}")
+print(f"Symbol: {token0.symbol()}")
+print(f"Decimals: {token0.decimals()}")
 
-pool.add_liquidity([AMOUNT_TOKEN_0, AMOUNT_TOKEN_1], 0)
+print(f"\nToken 1 Details:")
+print(f"Name: {token1.name()}")
+print(f"Symbol: {token1.symbol()}")
+print(f"Decimals: {token1.decimals()}")
+
+# Add try-catch blocks around the critical operations
+try:
+    token0.approve(POOL_ADDRESS, AMOUNT_TOKEN_0)
+    print(f"Successfully approved token0")
+except Exception as e:
+    print(f"Failed to approve token0: {str(e)}")
+    exit(1)
+
+try:
+    token1.approve(POOL_ADDRESS, AMOUNT_TOKEN_1)
+    print(f"Successfully approved token1")
+except Exception as e:
+    print(f"Failed to approve token1: {str(e)}")
+    exit(1)
+
+try:
+    pool.add_liquidity([AMOUNT_TOKEN_0, AMOUNT_TOKEN_1], 0)
+    print("Successfully added liquidity")
+except Exception as e:
+    print(f"Failed to add liquidity: {str(e)}")
+    exit(1)
