@@ -16,7 +16,7 @@ poetry = "^1.8.3"
 pydantic-settings = "^2.3.4"
 click = "^8.1.7"
 pydantic = "^2.8.2"
-curve-boa = "0.1.10.0"
+curve-boa = "0.1.10.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "24.4.2"

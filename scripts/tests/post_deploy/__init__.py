@@ -1,8 +1,6 @@
-import logging
-from pathlib import Path
-
-from scripts.deploy.deployment_file import YamlDeploymentFile, get_deployment_obj
-from settings.config import BASE_DIR, get_chain_settings
+from scripts.deploy.deployment_file import get_deployment_obj
+from scripts.logging_config import get_logger
+from settings.config import get_chain_settings
 
 from .amm.stableswap import test_stableswap_deployment
 from .amm.tricrypto import test_tricrypto_deployment
@@ -12,10 +10,10 @@ from .helpers import test_helpers_deployment
 from .registries import test_registries_deployment
 from .xgov import test_xgov_deployment
 
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
-def test_post_deploy(chain: str):
+def test_post_deploy(chain: str, ignore_deployments: list[str]):
     """Test is run after whole infra is deployed"""
 
     logger.info("Starting post-deployment tests...")
@@ -38,8 +36,11 @@ def test_post_deploy(chain: str):
     test_registries_deployment(deployment, chain_settings)
     logger.info("Registries tests ... PASSED")
 
-    test_xgov_deployment(deployment)
-    logger.info("Xgov tests ... PASSED")
+    if "xgov" in ignore_deployments:
+        logger.warning("Xgov tests ... IGNORED")
+    else:
+        test_xgov_deployment(deployment)
+        logger.info("Xgov tests ... PASSED")
 
     test_gauge_deployment(deployment)
     logger.info("Gauge tests ... PASSED")

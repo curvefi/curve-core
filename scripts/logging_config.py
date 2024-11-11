@@ -10,8 +10,8 @@ LOGGER_CONFIG = {
 }
 
 
-def get_logger(name):
-    logger = logging.getLogger(name)
+def get_logger():
+    logger = logging.getLogger()
     logger.setLevel(LOGGER_CONFIG["level"])
 
     if not logger.handlers:

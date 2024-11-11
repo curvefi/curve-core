@@ -8,7 +8,7 @@ from scripts.deploy.deployment_utils import deploy_contract
 from scripts.logging_config import get_logger
 from settings.config import BASE_DIR, ChainConfig
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 
 def deploy_address_provider(chain_settings: ChainConfig):

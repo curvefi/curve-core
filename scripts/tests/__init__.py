@@ -1,12 +1,11 @@
-import logging
-
 import click
 
+from scripts.logging_config import get_logger
 from scripts.tests.post_deploy import test_post_deploy
 from scripts.tests.pre_deployment import test_pre_deploy
 from settings.config import get_chain_settings
 
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
 @click.group(name="test")

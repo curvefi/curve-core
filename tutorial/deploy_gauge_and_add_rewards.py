@@ -16,7 +16,7 @@ GAUGE_FACTORY = "0xA0a2998810cfCa4e3Bc2bc20621000713027939d"
 TOKEN_ADDRESS = crvUSD = "0x92fc3EfE9129675A6d1405519C38b3aDdE4E0ADe"
 
 # Can be anything, used for address derivation
-SALT = "0x" + '0' * (64 - len(TOKEN_ADDRESS[2:])) + TOKEN_ADDRESS[2:]
+SALT = "0x" + "0" * (64 - len(TOKEN_ADDRESS[2:])) + TOKEN_ADDRESS[2:]
 ### 0x00000000000000000000000050FB01Ee521b9D22cdcb713a505019f41b8BBFf4
 
 gauge_factory = boa.load_partial(Path(BASE_DIR, "contracts", "gauge", "child_gauge", "factory", "factory_v_201.vy")).at(

@@ -1,12 +1,11 @@
-import logging
-
 import boa
 from requests.exceptions import HTTPError
 
 from scripts.deploy.constants import CREATE2DEPLOYER_ADDRESS, MULTICALL3_ADDRESS
+from scripts.logging_config import get_logger
 from settings.config import settings
 
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
 def test_chain_id(chain_id: int):
