@@ -17,7 +17,7 @@ from settings.config import BASE_DIR, ChainConfig, RollupType, settings
 
 from .utils import get_latest_commit_hash, get_relative_path
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 
 #  <-------------------------- Chain Config -------------------------->

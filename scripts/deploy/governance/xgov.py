@@ -7,7 +7,7 @@ from scripts.deploy.utils import get_relative_path
 from scripts.logging_config import get_logger
 from settings.config import BASE_DIR, ChainConfig, RollupType
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 
 def deploy_xgov(chain_settings: ChainConfig):
@@ -26,6 +26,8 @@ def deploy_xgov(chain_settings: ChainConfig):
             )
         case RollupType.arb_orbit:
             r_args = ("0x0000000000000000000000000000000000000064",)  # arbsys
+        case RollupType.taiko:
+            r_args = ()
         case _:
             raise NotImplementedError(f"{rollup_type} currently not supported")
 

@@ -7,7 +7,7 @@ from scripts.tests import test_commands
 from settings.config import settings
 from settings.logger import setup_logger
 
-setup_logger()
+# setup_logger()
 
 
 @click.group("commands")

@@ -15,7 +15,7 @@ from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRES
 from .deployment_file import YamlDeploymentFile
 from .utils import fetch_latest_contract, get_relative_path, get_version_from_filename, version_a_gt_version_b
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 
 def dump_initial_chain_settings(chain_settings: ChainConfig):

@@ -1,4 +1,3 @@
-import logging
 import os
 import re
 import subprocess
@@ -6,7 +5,7 @@ from pathlib import Path
 
 from scripts.logging_config import get_logger
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 
 def get_latest_commit_hash(file_path):

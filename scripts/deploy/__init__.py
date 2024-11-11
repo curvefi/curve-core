@@ -1,8 +1,8 @@
-import logging
 from pathlib import Path
 
 import click
 
+from scripts.logging_config import get_logger
 from scripts.tests.post_deploy import test_post_deploy
 from scripts.tests.pre_deployment import test_pre_deploy
 from settings.config import BASE_DIR, RollupType, get_chain_settings, settings
@@ -20,7 +20,7 @@ from .helpers.stable_swap_meta_zap import deploy_stable_swap_meta_zap
 from .registries.address_provider import deploy_address_provider, update_address_provider
 from .registries.metaregistry import deploy_metaregistry, update_metaregistry
 
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
 @click.group(name="deploy")
@@ -33,6 +33,10 @@ def deploy_commands():
 @click.argument("chain", type=click.STRING)
 def run_deploy_all(chain: str) -> None:
 
+    # in case we have a few deployed contracts not deployed via curve-core
+    # we will ignore them, e.g. relayer, agent blueprint etc. needed for testing
+    # xgov.
+    ignore_tests = []
     chain_settings = get_chain_settings(chain)
     if chain_settings.rollup_type == RollupType.zksync:
         raise NotImplementedError("zksync currently not supported")
@@ -51,14 +55,21 @@ def run_deploy_all(chain: str) -> None:
     # Save chain settings
     dump_initial_chain_settings(chain_settings)
 
-    if chain_settings.rollup_type == RollupType.not_rollup:
-        logger.info("No xgov for L1, setting temporary owner")
+    # check if there is a need to deploy xgov and vaults
+    if chain_settings.rollup_type == RollupType.not_rollup or (
+        chain_settings.dao.ownership_admin
+        and chain_settings.dao.parameter_admin
+        and chain_settings.dao.emergency_admin
+        and chain_settings.dao.vault
+    ):
+        logger.info("No xgov for L1, setting admins from chain_settings file ...")
         admins = (
             chain_settings.dao.ownership_admin,
             chain_settings.dao.parameter_admin,
             chain_settings.dao.emergency_admin,
         )
         dao_vault = chain_settings.dao.vault
+        ignore_tests.append("xgov")
     else:
         # deploy xgov and dao vault
         admins = deploy_xgov(chain_settings)
@@ -107,7 +118,7 @@ def run_deploy_all(chain: str) -> None:
     transfer_ownership(chain_settings)
 
     # test post deployment
-    test_post_deploy(chain)
+    test_post_deploy(chain, ignore_tests)
 
     # final!
     logger.info("Infra deployed and tested!")
