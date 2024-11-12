@@ -11,7 +11,7 @@ account = Account.from_key(settings.DEPLOYER_EOA_PRIVATE_KEY)
 boa.env.add_account(account)
 
 # Test pool deployed, change address of deployed contract here
-POOL_ADDRESS = "0x8AAC9F7068d2942E4Be0b979D98e098D9C42075D"
+POOL_ADDRESS = "0xF93cB94D001fd7948958913090DaD23D345E01D7"
 
 pool = boa.load_partial(
     Path(BASE_DIR, "contracts", "amm", "twocryptoswap", "implementation", "implementation_v_210.vy")
