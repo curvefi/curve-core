@@ -10,7 +10,7 @@ config:
   explorer_base_url: https://taikoscan.io/
   file_name: taiko
   layer: 2
-  native_currency_coingecko_id: ethereum
+  native_currency_coingecko_id: taiko
   native_currency_symbol: ETH
   network_name: taiko
   platform_coingecko_id: taiko
