@@ -18,7 +18,7 @@ def test_evm_version():
     try:
         capabilities = boa.env.capabilities.describe_capabilities()
         result = "PASSED"
-        if capabilities != "cancun":
+        if capabilities not in ["shanghai", "cancun"]:
             result = "FAILED"
 
         logger.info("Chain version is %r... %s", capabilities, result)

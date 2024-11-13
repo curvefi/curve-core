@@ -1,5 +1,6 @@
 # pragma version 0.3.10
 # pragma optimize gas
+# pragma evm-version shanghai
 """
 @title CurveXChainLiquidityGauge
 @license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
