@@ -8,6 +8,7 @@ dao:
   parameter_admin: "0xEC5AFc9590964f2fA0FeED54f0fBB2A34480908D"
   vault: "0x3c0a405E914337139992625D5100Ea141a9C4d11"
 explorer_base_url: https://taikoscan.io/
+logo_url: https://ibb.co/j4tnzjY
 
 # Not related to development, for further integrations
 layer: 2

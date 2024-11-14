@@ -49,6 +49,7 @@ class ChainConfig(BaseSettings):
     wrapped_native_token: str
     dao: CurveDAOSettings | None = None
     explorer_base_url: str
+    logo_url: str
     native_currency_symbol: str
     native_currency_coingecko_id: str
     platform_coingecko_id: str
