@@ -1,0 +1,19 @@
+network_name: corn_maizenet
+chain_id: 21000000
+rollup_type: _
+dao:
+  crv: "0x09413312b263fD252C16e592A45f4689F26cb79d"
+  emergency_admin: "0xA73EdCf18421B56D9AF1cE08A34E102E23b2C4B6"
+  ownership_admin: "0x6c9578402A3ace046A12839f45F84Aa5448E9c30"
+  parameter_admin: "0xEC5AFc9590964f2fA0FeED54f0fBB2A34480908D"
+  vault: "0x3c0a405E914337139992625D5100Ea141a9C4d11"
+explorer_base_url: https://cornscan.io/
+
+# Not related to development, for further integrations
+layer: 2
+logo_url: https://ibb.co/KG1NCFf
+native_currency_symbol: BTCN
+native_currency_coingecko_id: bitcoin
+platform_coingecko_id: ethereum
+public_rpc_url: https://maizenet-rpc.usecorn.com 
+wrapped_native_token: "0xda5dDd7270381A7C2717aD10D1c0ecB19e3CDFb2"
