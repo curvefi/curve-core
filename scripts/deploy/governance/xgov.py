@@ -11,10 +11,21 @@ logger = get_logger()
 
 
 def deploy_xgov(chain_settings: ChainConfig):
-    agent_blueprint = deploy_contract(
-        chain_settings, Path(BASE_DIR, "contracts", "governance", "agent"), as_blueprint=True
-    )
+
     rollup_type = chain_settings.rollup_type
+
+    # for specific rollup types we shall deploy v_100 agent since it is
+    # vyper 0.3.10:
+    version_to_deploy = "v_000"  # just deploy latest version!
+    if rollup_type in ["arb_orbit", "op_stack", "polygon_cdk"]:
+        version_to_deploy = "v_100"
+
+    agent_blueprint = deploy_contract(
+        chain_settings,
+        Path(BASE_DIR, "contracts", "governance", "agent"),
+        as_blueprint=True,
+        deploy_contract_version=version_to_deploy,
+    )
 
     match rollup_type:
         case RollupType.op_stack:

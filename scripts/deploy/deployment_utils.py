@@ -13,7 +13,13 @@ from settings.config import BASE_DIR, ChainConfig, CryptoPoolPresets
 
 from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRESS
 from .deployment_file import YamlDeploymentFile
-from .utils import fetch_latest_contract, get_relative_path, get_version_from_filename, version_a_gt_version_b
+from .utils import (
+    fetch_filename_from_version,
+    fetch_latest_contract,
+    get_relative_path,
+    get_version_from_filename,
+    version_a_gt_version_b,
+)
 
 logger = get_logger()
 
@@ -30,60 +36,78 @@ def get_deployment_config(chain_settings: ChainConfig):
     return get_deployment_obj(chain_settings).get_deployment_config()
 
 
-def deploy_contract(chain_settings: ChainConfig, contract_folder: Path, *args, as_blueprint: bool = False):
+def deploy_contract(
+    chain_settings: ChainConfig,
+    contract_folder: Path,
+    *args,
+    as_blueprint: bool = False,
+    deploy_contract_version: str = "v_000",
+):
     deployment_file = get_deployment_obj(chain_settings)
 
-    # fetch latest contract
-    latest_contract = fetch_latest_contract(contract_folder)
-    version_latest_contract = get_version_from_filename(latest_contract)
+    # ---------------------------------------------- FETCH CONTRACT ----------------------------------------------
 
-    # check if it has been deployed already
-    parts = contract_folder.parts
-    yaml_keys = contract_folder.parts[parts.index("contracts") :]
-    contract_designation = parts[-1]
-    # deployed_contract_dict = get_deployment(yaml_keys, deployment_file)
-    deployed_contract = deployment_file.get_contract_deployment(yaml_keys)
+    if deploy_contract_version is not "v_000":
 
-    # if deployed, fetch deployed version
-    deployed_contract_version = "0.0.0"  # contract has never been deployed
-    if deployed_contract:
-        deployed_contract_version = deployed_contract.contract_version  # contract has been deployed
-
-    # deploy contract if nothing has been deployed, or if deployed contract is old
-    if version_a_gt_version_b(version_latest_contract, deployed_contract_version):
-
-        logger.info(f"Deploying {os.path.basename(latest_contract)} version {version_latest_contract}")
-
-        # deploy contract
-        if not as_blueprint:
-            deployed_contract = boa.load_partial(latest_contract).deploy(*args)
-        else:
-            deployed_contract = boa.load_partial(latest_contract).deploy_as_blueprint(*args)
-
-        # store abi
-        relpath = get_relative_path(contract_folder / os.path.basename(latest_contract))
-        abi_path = str(relpath).replace("contracts", "abi").replace(".vy", ".json")
-        abi_path = BASE_DIR / Path(*Path(abi_path).parts[1:])
-
-        if not os.path.exists(abi_path.parent):
-            os.makedirs(abi_path.parent)
-
-        with open(abi_path, "w") as abi_file:
-            json.dump(deployed_contract.abi, abi_file, indent=4)
-            abi_file.write("\n")
-
-        # update deployment yaml file
-        deployment_file.update_contract_deployment(
-            contract_folder,
-            deployed_contract,
-            args,
-            as_blueprint=as_blueprint,
-        )
+        contract_to_deploy = fetch_filename_from_version(contract_folder, deploy_contract_version)
 
     else:
-        # return contract object of existing deployment
-        logger.info(f"{contract_designation} contract already deployed at {deployed_contract.address}. Fetching ...")
-        deployed_contract = boa.load_partial(latest_contract).at(deployed_contract.address)
+
+        # fetch latest contract
+        latest_contract = fetch_latest_contract(contract_folder)
+        version_latest_contract = get_version_from_filename(latest_contract)
+
+        # check if it has been deployed already
+        parts = contract_folder.parts
+        yaml_keys = contract_folder.parts[parts.index("contracts") :]
+        contract_designation = parts[-1]
+        deployed_contract = deployment_file.get_contract_deployment(yaml_keys)
+
+        # if deployed, fetch deployed version
+        deployed_contract_version = "0.0.0"  # contract has never been deployed
+        if deployed_contract:
+            deployed_contract_version = deployed_contract.contract_version  # contract has been deployed
+
+        # deploy contract if nothing has been deployed, or if deployed contract is old
+        if version_a_gt_version_b(version_latest_contract, deployed_contract_version):
+
+            logger.info(f"Deploying {os.path.basename(latest_contract)} version {version_latest_contract}")
+            contract_to_deploy = latest_contract
+
+        else:
+
+            # return contract object of existing deployment
+            logger.info(
+                f"{contract_designation} contract already deployed at {deployed_contract.address}. Fetching ..."
+            )
+            return boa.load_partial(latest_contract).at(deployed_contract.address)
+
+    # ---------------------------------------------------- DEPLOY ----------------------------------------------------
+
+    if not as_blueprint:
+        deployed_contract = boa.load_partial(contract_to_deploy).deploy(*args)
+    else:
+        deployed_contract = boa.load_partial(contract_to_deploy).deploy_as_blueprint(*args)
+
+    # store abi
+    relpath = get_relative_path(contract_folder / os.path.basename(contract_to_deploy))
+    abi_path = str(relpath).replace("contracts", "abi").replace(".vy", ".json")
+    abi_path = BASE_DIR / Path(*Path(abi_path).parts[1:])
+
+    if not os.path.exists(abi_path.parent):
+        os.makedirs(abi_path.parent)
+
+    with open(abi_path, "w") as abi_file:
+        json.dump(deployed_contract.abi, abi_file, indent=4)
+        abi_file.write("\n")
+
+    # update deployment yaml file
+    deployment_file.update_contract_deployment(
+        contract_folder,
+        deployed_contract,
+        args,
+        as_blueprint=as_blueprint,
+    )
 
     return deployed_contract
 
