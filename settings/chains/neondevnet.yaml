@@ -1,0 +1,19 @@
+network_name: neondevnet
+chain_id: 245022926
+rollup_type: _
+dao:
+  crv: ""
+  crvusd: ""
+  emergency_admin: ""
+  ownership_admin: ""
+  parameter_admin: ""
+  vault: ""
+explorer_base_url: https://devnet.neonscan.org
+
+# Not related to development, for further integrations
+layer: 1
+native_currency_symbol: NEON
+native_currency_coingecko_id: neon
+platform_coingecko_id: neon
+public_rpc_url: https://devnet.neonevm.org
+wrapped_native_token: "0x11adC2d986E334137b9ad0a0F290771F31e9517F"
