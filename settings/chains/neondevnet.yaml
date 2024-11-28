@@ -2,16 +2,17 @@ network_name: neondevnet
 chain_id: 245022926
 rollup_type: _
 dao:
-  crv: ""
-  crvusd: ""
-  emergency_admin: ""
-  ownership_admin: ""
-  parameter_admin: ""
-  vault: ""
+  crv: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
+  crvusd: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
+  emergency_admin: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
+  ownership_admin: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
+  parameter_admin: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
+  vault: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
 explorer_base_url: https://devnet.neonscan.org
 
 # Not related to development, for further integrations
 layer: 1
+logo_url: https://i.ibb.co/pz7KQ47/vq-If-Bf-I0-400x400.jpg
 native_currency_symbol: NEON
 native_currency_coingecko_id: neon
 platform_coingecko_id: neon
