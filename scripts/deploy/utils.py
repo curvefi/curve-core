@@ -28,6 +28,18 @@ def get_latest_commit_hash(file_path):
         return None
 
 
+def fetch_filename_from_version(contract_folder: Path, version: str):
+
+    pattern = re.compile(rf".*_v_(\d+).vy")
+
+    for file in contract_folder.iterdir():
+        match = pattern.match(os.path.basename(file))
+        if match and version in str(file):
+            return file
+
+    return None
+
+
 def fetch_latest_contract(contract_folder: Path) -> Path:
     # Regex pattern to match version numbers in filenames
     contract_name = os.path.basename(contract_folder)
