@@ -2,8 +2,8 @@ network_name: corn_maizenet
 chain_id: 21000000
 rollup_type: arb_orbit
 dao:
-  crv: "0xda5dDd7270381A7C2717aD10D1c0ecB19e3CDFb2"
-  crvusd: "0xda5dDd7270381A7C2717aD10D1c0ecB19e3CDFb2"
+  crv: "0x1b3757d5EE281Eaf6a9c8E5D9b8488b4475Aa955"
+  crvusd: "0xEAEdD2B1b3F0fEC6388A4d6b2fE500B59Fd9f755"
 explorer_base_url: https://cornscan.io/
 
 # Not related to development, for further integrations
