@@ -32,23 +32,6 @@ class DaoSettings(BaseModel):
     vault: str | None = None
 
 
-class ChainParameters(BaseModel):
-    model_config = BaseModelConfigDict(use_enum_values=True)
-
-    file_name: str
-    network_name: str
-    chain_id: int
-    layer: int
-    rollup_type: RollupType
-    dao: DaoSettings | None = None
-    explorer_base_url: str
-    logo_url: str
-    native_currency_symbol: str
-    reference_token_addresses: ReferenceTokenAddresses | None = None
-    public_rpc_url: str
-    wrapped_native_token: str
-
-
 #  <-------------------------- Contracts -------------------------->
 
 
@@ -161,7 +144,7 @@ class ContractsDeployment(BaseModel):
 
 
 class DeploymentConfig(BaseModel):
-    config: ChainParameters
+    config: ChainConfig
     contracts: ContractsDeployment | None = None
 
 
