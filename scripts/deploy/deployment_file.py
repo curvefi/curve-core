@@ -13,7 +13,7 @@ from pydantic import ConfigDict as BaseModelConfigDict
 from pydantic.v1.utils import deep_update
 
 from scripts.logging_config import get_logger
-from settings.config import BASE_DIR, ChainConfig, RollupType, settings
+from settings.config import BASE_DIR, ChainConfig, ReferenceTokenAddresses, RollupType, settings
 
 from .utils import get_latest_commit_hash, get_relative_path
 
@@ -44,6 +44,7 @@ class ChainParameters(BaseModel):
     explorer_base_url: str
     logo_url: str
     native_currency_symbol: str
+    reference_token_addresses: ReferenceTokenAddresses | None = None
     public_rpc_url: str
     wrapped_native_token: str
 
