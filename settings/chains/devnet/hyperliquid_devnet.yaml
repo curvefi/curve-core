@@ -1,4 +1,4 @@
-network_name: hyperliquid-devnet
+network_name: hyperliquid
 chain_id: 998
 rollup_type: _
 dao:
@@ -16,3 +16,7 @@ logo_url: https://i.postimg.cc/9Q5S5B3p/hyperliquid.png
 native_currency_symbol: HYPE
 public_rpc_url: https://api.hyperliquid-testnet.xyz/evm
 wrapped_native_token: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
+reference_token_addresses:
+  usdc: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
+  usdt: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
+  weth: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"

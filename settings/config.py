@@ -57,7 +57,7 @@ class ChainConfig(BaseSettings):
     explorer_base_url: str
     logo_url: str
     native_currency_symbol: str
-    reference_token_addresses: ReferenceTokenAddresses | None = None
+    reference_token_addresses: ReferenceTokenAddresses
     public_rpc_url: str
 
 
