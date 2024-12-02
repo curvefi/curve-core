@@ -51,8 +51,6 @@ class ChainConfig(BaseSettings):
     explorer_base_url: str
     logo_url: str
     native_currency_symbol: str
-    native_currency_coingecko_id: str
-    platform_coingecko_id: str
     public_rpc_url: str
 
 

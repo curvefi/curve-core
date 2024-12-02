@@ -43,9 +43,7 @@ class ChainParameters(BaseModel):
     dao: DaoSettings | None = None
     explorer_base_url: str
     logo_url: str
-    native_currency_coingecko_id: str
     native_currency_symbol: str
-    platform_coingecko_id: str
     public_rpc_url: str
     wrapped_native_token: str
 
