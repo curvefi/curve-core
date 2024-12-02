@@ -38,6 +38,12 @@ class CurveDAOSettings(BaseModel):
     vault: str | None = None
 
 
+class ReferenceTokenAddresses(BaseModel):
+    usdc: str | None = None
+    usdt: str | None = None
+    weth: str | None = None
+
+
 class ChainConfig(BaseSettings):
     model_config = SettingsConfigDict(use_enum_values=True)
 
@@ -51,6 +57,7 @@ class ChainConfig(BaseSettings):
     explorer_base_url: str
     logo_url: str
     native_currency_symbol: str
+    reference_token_addresses: ReferenceTokenAddresses | None = None
     public_rpc_url: str
 
 
