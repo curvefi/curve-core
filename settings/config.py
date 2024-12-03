@@ -38,11 +38,18 @@ class CurveDAOSettings(BaseModel):
     vault: str | None = None
 
 
+class ReferenceTokenAddresses(BaseModel):
+    usdc: str | None = None
+    usdt: str | None = None
+    weth: str | None = None
+
+
 class ChainConfig(BaseSettings):
     model_config = SettingsConfigDict(use_enum_values=True)
 
     file_name: str
     network_name: str
+    is_testnet: bool
     chain_id: int
     layer: int
     rollup_type: RollupType
@@ -51,7 +58,9 @@ class ChainConfig(BaseSettings):
     explorer_base_url: str
     logo_url: str
     native_currency_symbol: str
+    reference_token_addresses: ReferenceTokenAddresses
     public_rpc_url: str
+    multicall2: str | None = None
 
 
 class CryptoPoolPresets(BaseModel):
