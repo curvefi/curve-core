@@ -49,6 +49,7 @@ class ChainConfig(BaseSettings):
 
     file_name: str
     network_name: str
+    is_testnet: bool
     chain_id: int
     layer: int
     rollup_type: RollupType
