@@ -60,7 +60,7 @@ class ChainConfig(BaseSettings):
     native_currency_symbol: str
     reference_token_addresses: ReferenceTokenAddresses
     public_rpc_url: str
-    multicall2: str
+    multicall2: str | None = None
 
 
 class CryptoPoolPresets(BaseModel):
