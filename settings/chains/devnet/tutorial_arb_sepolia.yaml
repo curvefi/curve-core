@@ -5,11 +5,16 @@ dao:
   crv: "0x50FB01Ee521b9D22cdcb713a505019f41b8BBFf4"
   crvusd: "0x92fc3EfE9129675A6d1405519C38b3aDdE4E0ADe"
 explorer_base_url: https://sepolia.arbiscan.io/
+is_testnet: true
+logo_url: ""
 
 # Not related to development, for further integrations
 layer: 2
 native_currency_symbol: ETH
-native_currency_coingecko_id: ethereum
-platform_coingecko_id: ethereum
 public_rpc_url: https://sepolia-rollup.arbitrum.io/rpc
 wrapped_native_token: "0x980B62Da83eFf3D4576C647993b0c1D7faf17c73"
+reference_token_addresses:
+  usdc: ""
+  usdt: ""
+  weth: ""
+multicall2: ""
