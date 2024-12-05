@@ -185,10 +185,9 @@ def run_deploy_twocrypto(chain: str, name: str, symbol: str, coins: str) -> None
 @deploy_commands.command("test_pools", short_help="deploy test tokens and pool on devnet")
 @click.argument("chain", type=click.STRING)
 def run_test_pools_deployment(chain: str) -> None:
-    assert "devnet" in chain, "Command only for devnets"
-
     chain_settings = get_chain_settings(chain)
-    chain_settings.file_name = chain
+    assert chain_settings.is_testnet, "Only for devnets"
+
     deployment_file = get_deployment_obj(chain_settings)
     deployment_config = deployment_file.get_deployment_config()
     assert deployment_config is not None, "No deployment"
