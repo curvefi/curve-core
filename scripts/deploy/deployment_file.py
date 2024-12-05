@@ -143,9 +143,31 @@ class ContractsDeployment(BaseModel):
     registries: RegistriesDeployment | None = None
 
 
+#  <----------------------------------------------------------------->
+
+
+class Token(BaseModel):
+    address: str
+
+
+#  <----------------------------------------------------------------->
+
+
+class Pool(BaseModel):
+    symbol: str
+    address: str
+    factory: str
+    tokens: list[Token]
+
+
+#  <----------------------------------------------------------------->
+
+
 class DeploymentConfig(BaseModel):
     config: ChainConfig
     contracts: ContractsDeployment | None = None
+    tokens: list[Token] | None = None
+    pools: list[Pool] | None = None
 
 
 class YamlDeploymentFile:
@@ -321,7 +343,7 @@ class YamlDeploymentFile:
         return contract_info
 
 
-def get_deployment_obj(chain_settings: ChainConfig) -> Path:
+def get_deployment_obj(chain_settings: ChainConfig) -> YamlDeploymentFile:
     deployment_file_name = f"{chain_settings.file_name}.yaml"
     if settings.DEBUG:
         deployment_file_name = f"{chain_settings.file_name}_DEBUG.yaml"
