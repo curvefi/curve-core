@@ -13,7 +13,7 @@ config:
   logo_url: https://ibb.co/KG1NCFf
   native_currency_coingecko_id: bitcoin
   native_currency_symbol: BTCN
-  network_name: corn_maizenet
+  network_name: corn
   platform_coingecko_id: ethereum
   public_rpc_url: https://rpc.ankr.com/corn_maizenet
   rollup_type: arb_orbit
