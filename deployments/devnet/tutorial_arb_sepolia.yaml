@@ -9,12 +9,17 @@ config:
     vault: '0xff12c0df72E02ab9C1fD8b986d21FF8992a8cCEE'
   explorer_base_url: https://sepolia.arbiscan.io/
   file_name: tutorial_arb_sepolia
+  is_testnet: true
   layer: 2
-  native_currency_coingecko_id: ethereum
+  logo_url: ''
+  multicall2: null
   native_currency_symbol: ETH
   network_name: Arbitrum Sepolia
-  platform_coingecko_id: ethereum
   public_rpc_url: https://sepolia-rollup.arbitrum.io/rpc
+  reference_token_addresses:
+    usdc: ''
+    usdt: ''
+    weth: ''
   rollup_type: arb_orbit
   wrapped_native_token: '0x980B62Da83eFf3D4576C647993b0c1D7faf17c73'
 contracts:
@@ -353,3 +358,13 @@ contracts:
           contract_version: 1.1.0
           deployment_timestamp: 1727794138
           deployment_type: normal
+pools:
+- address: '0x9294e02cF32D1B62D929e6769FBD663E1A22c3C0'
+  factory: '0x47b6eC48a4fb04Cc33bDb9040dD5bca1d87D886B'
+  symbol: TST
+  tokens:
+  - address: '0x7257f8E83ff0Cf761fc78985BaFce218B37aAe5F'
+  - address: '0xa2264d690A4757A8BcFe0E1A8090A79949869ADF'
+tokens:
+- address: '0x7257f8E83ff0Cf761fc78985BaFce218B37aAe5F'
+- address: '0xa2264d690A4757A8BcFe0E1A8090A79949869ADF'
