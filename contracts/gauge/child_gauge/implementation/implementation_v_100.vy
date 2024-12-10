@@ -73,7 +73,7 @@ WEEK: constant(uint256) = 604800
 
 VERSION: constant(String[8]) = "1.0.0"
 
-EIP712_TYPEHASH: constant(bytes32) = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)")
+EIP712_TYPEHASH: constant(bytes32) = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,bytes32 salt)")
 EIP2612_TYPEHASH: constant(bytes32) = keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)")
 ERC1271_MAGIC_VAL: constant(bytes32) = 0x1626ba7e00000000000000000000000000000000000000000000000000000000
 
@@ -171,7 +171,8 @@ def initialize(_lp_token: address, _root: address, _manager: address):
             keccak256(name),
             keccak256(VERSION),
             chain.id,
-            self
+            self,
+            salt,
         )
     )
 
