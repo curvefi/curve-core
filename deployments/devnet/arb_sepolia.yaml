@@ -10,6 +10,7 @@ config:
   explorer_base_url: https://sepolia.arbiscan.io/
   file_name: arbitrum-sepolia
   file_path: devnet/arb_sepolia.yaml
+  is_testnet: True
   layer: 2
   native_currency_coingecko_id: ethereum
   native_currency_symbol: ETH

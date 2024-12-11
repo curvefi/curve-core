@@ -1,14 +1,16 @@
 config:
   chain_id: 245022926
   dao:
-    crv: '0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C'
-    crvusd: '0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C'
-    emergency_admin: '0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C'
-    ownership_admin: '0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C'
-    parameter_admin: '0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C'
-    vault: '0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C'
+    crv: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
+    crvusd: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
+    emergency_admin: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
+    ownership_admin: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
+    parameter_admin: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
+    vault: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
   explorer_base_url: https://devnet.neonscan.org
   file_name: neondevnet
+  file_path: devnet/neondevnet.yaml
+  is_testnet: True
   layer: 1
   logo_url: https://i.ibb.co/pz7KQ47/vq-If-Bf-I0-400x400.jpg
   native_currency_coingecko_id: neon
@@ -17,12 +19,12 @@ config:
   platform_coingecko_id: neon
   public_rpc_url: https://devnet.neonevm.org
   rollup_type: _
-  wrapped_native_token: '0x11adC2d986E334137b9ad0a0F290771F31e9517F'
+  wrapped_native_token: "0x11adC2d986E334137b9ad0a0F290771F31e9517F"
 contracts:
   amm:
     stableswap:
       factory:
-        address: '0x1F79C367aEC8931C1a41556d72F885E108a98212'
+        address: "0x1F79C367aEC8931C1a41556d72F885E108a98212"
         compiler_settings:
           compiler_version: 0.3.10
           evm_version: shanghai
@@ -34,7 +36,7 @@ contracts:
         deployment_timestamp: 1732809577
         deployment_type: normal
       implementation:
-        address: '0x7093880573D44500888b06d8B34CDF4B949aA6eC'
+        address: "0x7093880573D44500888b06d8B34CDF4B949aA6eC"
         compiler_settings:
           compiler_version: 0.3.10
           evm_version: shanghai
@@ -46,7 +48,7 @@ contracts:
         deployment_timestamp: 1732809483
         deployment_type: blueprint
       math:
-        address: '0xdBF26254Fa00B6386B4975eACa0D9695C405F1b1'
+        address: "0xdBF26254Fa00B6386B4975eACa0D9695C405F1b1"
         compiler_settings:
           compiler_version: 0.3.10
           evm_version: shanghai
@@ -58,7 +60,7 @@ contracts:
         deployment_timestamp: 1732809391
         deployment_type: normal
       meta_implementation:
-        address: '0xEC4fDe63EE7e4e74941093bB5FB91a2C26C0d1Fd'
+        address: "0xEC4fDe63EE7e4e74941093bB5FB91a2C26C0d1Fd"
         compiler_settings:
           compiler_version: 0.3.10
           evm_version: paris
@@ -70,7 +72,7 @@ contracts:
         deployment_timestamp: 1732809528
         deployment_type: blueprint
       views:
-        address: '0xeE662202E5a34149Bb6b365f484F95781c9bb681'
+        address: "0xeE662202E5a34149Bb6b365f484F95781c9bb681"
         compiler_settings:
           compiler_version: 0.3.10
           evm_version: paris
@@ -83,7 +85,7 @@ contracts:
         deployment_type: normal
     tricryptoswap:
       factory:
-        address: '0xd5E1C8d5895308cd03535f7B5692D04cb069091e'
+        address: "0xd5E1C8d5895308cd03535f7B5692D04cb069091e"
         compiler_settings:
           compiler_version: 0.3.10
           evm_version: paris
@@ -95,7 +97,7 @@ contracts:
         deployment_timestamp: 1732809912
         deployment_type: normal
       implementation:
-        address: '0xBf61b6659A3abaa9629E7729922838379c7Ed68E'
+        address: "0xBf61b6659A3abaa9629E7729922838379c7Ed68E"
         compiler_settings:
           compiler_version: 0.3.10
           evm_version: paris
@@ -107,7 +109,7 @@ contracts:
         deployment_timestamp: 1732809875
         deployment_type: blueprint
       math:
-        address: '0x4a30042C5d1E387aEC7BA1D9527F4E3Fcd94425a'
+        address: "0x4a30042C5d1E387aEC7BA1D9527F4E3Fcd94425a"
         compiler_settings:
           compiler_version: 0.3.10
           evm_version: paris
@@ -119,7 +121,7 @@ contracts:
         deployment_timestamp: 1732809766
         deployment_type: normal
       views:
-        address: '0x3873d5208d00b0058CC07B82F5845e061311167E'
+        address: "0x3873d5208d00b0058CC07B82F5845e061311167E"
         compiler_settings:
           compiler_version: 0.3.10
           evm_version: paris
@@ -132,7 +134,7 @@ contracts:
         deployment_type: normal
     twocryptoswap:
       factory:
-        address: '0x75FaC1Cc87455bD4FFB9B65d894e923728Cf99ae'
+        address: "0x75FaC1Cc87455bD4FFB9B65d894e923728Cf99ae"
         compiler_settings:
           compiler_version: 0.3.10
           evm_version: paris
@@ -144,7 +146,7 @@ contracts:
         deployment_timestamp: 1732810186
         deployment_type: normal
       implementation:
-        address: '0x996D6Dc0A3FF9Ed2C4A150eeB279D0b44dF1c10d'
+        address: "0x996D6Dc0A3FF9Ed2C4A150eeB279D0b44dF1c10d"
         compiler_settings:
           compiler_version: 0.3.10
           evm_version: paris
@@ -156,7 +158,7 @@ contracts:
         deployment_timestamp: 1732810151
         deployment_type: blueprint
       math:
-        address: '0xCe4de452D0cde0fbd10025e4d1F2a7b9a1D263a7'
+        address: "0xCe4de452D0cde0fbd10025e4d1F2a7b9a1D263a7"
         compiler_settings:
           compiler_version: 0.3.10
           evm_version: paris
@@ -168,7 +170,7 @@ contracts:
         deployment_timestamp: 1732810068
         deployment_type: normal
       views:
-        address: '0x55988f61c2975Ffbbd8a33eFF7aDbfd921e857eD'
+        address: "0x55988f61c2975Ffbbd8a33eFF7aDbfd921e857eD"
         compiler_settings:
           compiler_version: 0.3.10
           evm_version: paris
@@ -182,7 +184,7 @@ contracts:
   gauge:
     child_gauge:
       factory:
-        address: '0x3BB35aaF0346b9DE744c4c4d63388DB7c1B7BCF8'
+        address: "0x3BB35aaF0346b9DE744c4c4d63388DB7c1B7BCF8"
         compiler_settings:
           compiler_version: 0.3.10
           evm_version: paris
@@ -194,7 +196,7 @@ contracts:
         deployment_timestamp: 1732809152
         deployment_type: normal
       implementation:
-        address: '0xa2A7D89B94e08F50Acfe01B453E4765fbD718b89'
+        address: "0xa2A7D89B94e08F50Acfe01B453E4765fbD718b89"
         compiler_settings:
           compiler_version: 0.3.10
           evm_version: shanghai
@@ -208,7 +210,7 @@ contracts:
   governance: null
   helpers:
     deposit_and_stake_zap:
-      address: '0x736dD1225D6DEc59bca0Fc73F8cC60D118202e03'
+      address: "0x736dD1225D6DEc59bca0Fc73F8cC60D118202e03"
       compiler_settings:
         compiler_version: 0.3.10
         evm_version: paris
@@ -220,7 +222,7 @@ contracts:
       deployment_timestamp: 1732810335
       deployment_type: normal
     rate_provider:
-      address: '0x82eEC6410BB5f9D3fA9CB38CB618584f811e7CCD'
+      address: "0x82eEC6410BB5f9D3fA9CB38CB618584f811e7CCD"
       compiler_settings:
         compiler_version: 0.3.10
         evm_version: paris
@@ -232,7 +234,7 @@ contracts:
       deployment_timestamp: 1732810408
       deployment_type: normal
     router:
-      address: '0xb0a872947E372F6Ffb5652873cd8Bf8cDF973081'
+      address: "0xb0a872947E372F6Ffb5652873cd8Bf8cDF973081"
       compiler_settings:
         compiler_version: 0.3.10
         evm_version: paris
@@ -244,7 +246,7 @@ contracts:
       deployment_timestamp: 1732809348
       deployment_type: normal
     stable_swap_meta_zap:
-      address: '0xBEeDe3684baF3992FbE34C44CE0fb2B32C22b0F8'
+      address: "0xBEeDe3684baF3992FbE34C44CE0fb2B32C22b0F8"
       compiler_settings:
         compiler_version: 0.3.10
         evm_version: paris
@@ -257,7 +259,7 @@ contracts:
       deployment_type: normal
   registries:
     address_provider:
-      address: '0x562E4c21B1DA1C1cc30b2c7FfD4820F1B90feECf'
+      address: "0x562E4c21B1DA1C1cc30b2c7FfD4820F1B90feECf"
       compiler_settings:
         compiler_version: 0.3.10
         evm_version: paris
@@ -269,7 +271,7 @@ contracts:
       deployment_timestamp: 1732809280
       deployment_type: normal
     metaregistry:
-      address: '0x6d96Ea2f23dB6fB00752e218BcfAdEADab1bb144'
+      address: "0x6d96Ea2f23dB6fB00752e218BcfAdEADab1bb144"
       compiler_settings:
         compiler_version: 0.3.10
         evm_version: paris
@@ -282,7 +284,7 @@ contracts:
       deployment_type: normal
       registry_handlers:
         stableswap:
-          address: '0x3D2234D298048004eDF48327908ded06ea99a207'
+          address: "0x3D2234D298048004eDF48327908ded06ea99a207"
           compiler_settings:
             compiler_version: 0.3.10
             evm_version: paris
@@ -294,7 +296,7 @@ contracts:
           deployment_timestamp: 1732810456
           deployment_type: normal
         tricryptoswap:
-          address: '0xD24153EE40d7BB5643CDBC1769a9F6C5CfEE379b'
+          address: "0xD24153EE40d7BB5643CDBC1769a9F6C5CfEE379b"
           compiler_settings:
             compiler_version: 0.3.10
             evm_version: paris
@@ -306,7 +308,7 @@ contracts:
           deployment_timestamp: 1732810493
           deployment_type: normal
         twocryptoswap:
-          address: '0x342fA3CA82ebA9752B469C31d4C393Dd4e42f1C2'
+          address: "0x342fA3CA82ebA9752B469C31d4C393Dd4e42f1C2"
           compiler_settings:
             compiler_version: 0.3.10
             evm_version: paris
