@@ -17,6 +17,10 @@ config:
   network_name: corn
   platform_coingecko_id: ethereum
   public_rpc_url: https://rpc.ankr.com/corn_maizenet
+  reference_token_addresses:
+    usdc: "0xDF0B24095e15044538866576754F3C964e902Ee6"
+    usdt: ""
+    weth: "0x485BBC4F98c071C9BD74Ac255262E61F866f071a"
   rollup_type: arb_orbit
   wrapped_native_token: "0xda5dDd7270381A7C2717aD10D1c0ecB19e3CDFb2"
 contracts:
