@@ -5,7 +5,7 @@ from pathlib import Path
 import boa
 from eth_utils import keccak
 
-from scripts.deploy.deployment_file import get_deployment_obj
+from scripts.deploy.deployment_file import YamlDeploymentFile, get_deployment_obj
 from scripts.deploy.models import PoolType
 from scripts.deploy.presets import CryptoPoolPresets
 from scripts.logging_config import get_logger
@@ -133,6 +133,6 @@ def deploy_via_create2(contract_file, abi_encoded_ctor="", is_blueprint=False):
 def deploy_pool(
     chain_settings: ChainConfig, name: str, symbol: str, coins: list[str], pool_type: PoolType = PoolType.twocryptoswap
 ) -> None:
-    deployment_file = get_deployment_obj(chain_settings)
+    deployment_file: YamlDeploymentFile = get_deployment_obj(chain_settings)
     factory = deployment_file.get_contract_deployment(("contracts", "amm", pool_type.value, "factory")).get_contract()
     factory.deploy_pool(name, symbol, coins, 0, *CryptoPoolPresets().model_dump().values())
