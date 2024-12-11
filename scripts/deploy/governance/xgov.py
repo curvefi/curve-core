@@ -5,7 +5,8 @@ from scripts.deploy.deployment_file import YamlDeploymentFile, get_deployment_ob
 from scripts.deploy.deployment_utils import deploy_contract, update_deployment_chain_config
 from scripts.deploy.utils import get_relative_path
 from scripts.logging_config import get_logger
-from settings.config import BASE_DIR, ChainConfig, RollupType
+from settings.config import BASE_DIR
+from settings.models import ChainConfig, RollupType
 
 logger = get_logger()
 

@@ -1,6 +1,6 @@
-from scripts.deploy.deployment_file import DeploymentConfig
+from scripts.deploy.models import DeploymentConfig
 from scripts.tests.post_deploy.utils import check_contracts, get_contract
-from settings.config import RollupType
+from settings.models import RollupType
 
 
 def test_registries_deployment(deployment: DeploymentConfig, chain_settings):

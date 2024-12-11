@@ -15,13 +15,13 @@ def test_commands():
 
 
 @test_commands.command("pre_deploy", short_help="run pre deploy tests")
-@click.argument("chain", type=click.STRING)
-def run_test_pre_deploy(chain: str):
-    settings = get_chain_settings(chain)
+@click.argument("chain_config_file", type=click.STRING)
+def run_test_pre_deploy(chain_config_file: str):
+    settings = get_chain_settings(chain_config_file)
     test_pre_deploy(settings.chain_id)
 
 
 @test_commands.command("post_deploy", short_help="run post deploy tests")
-@click.argument("chain", type=click.STRING)
-def run_test_post_deploy(chain: str):
-    test_post_deploy(chain)
+@click.argument("chain_config_file", type=click.STRING)
+def run_test_post_deploy(chain_config_file: str):
+    test_post_deploy(chain_config_file)
