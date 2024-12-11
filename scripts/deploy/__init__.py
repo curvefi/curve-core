@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import click
@@ -44,7 +45,13 @@ def run_deploy_all(chain: str) -> None:
     # If we are in debug mode, we want to remove the existing deployment file
     # so that there are no errors while trying to fetch state from a non-existent forked deployment
     if settings.DEBUG:
-        deployment_file_path = Path(BASE_DIR, "deployments", f"{chain_settings.file_name}_DEBUG.yaml")
+
+        # create debug filepath
+        debug_filepath = Path(BASE_DIR, "deployments", "debug")
+        if not debug_filepath.exists():
+            os.mkdir(debug_filepath)
+
+        deployment_file_path = Path(BASE_DIR, "deployments", "debug", f"{chain_settings.file_name}.yaml")
         if deployment_file_path.exists():
             logger.info(f"Removing existing deployment file {deployment_file_path} for debug deployment")
             deployment_file_path.unlink()
