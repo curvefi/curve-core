@@ -1,3 +1,4 @@
+import os
 import re
 import time
 from pathlib import Path
@@ -11,7 +12,8 @@ from pydantic.v1.utils import deep_update
 
 import scripts.deploy.models as DataModels
 from scripts.logging_config import get_logger
-from settings.config import BASE_DIR, ChainConfig, settings
+from settings.config import BASE_DIR, settings
+from settings.models import ChainConfig
 
 from .utils import get_latest_commit_hash, get_relative_path
 
@@ -19,13 +21,15 @@ logger = get_logger()
 
 
 class YamlDeploymentFile:
-    def __init__(self, _file_name: Path):
-        self.file_name = _file_name
+
+    def __init__(self, _file_path: Path):
+        self.file_path = _file_path
+        self.file_name = _file_path.stem
 
     def get_deployment_config(self) -> DataModels.DeploymentConfig | None:
-        if not self.file_name.exists():
+        if not self.file_path.exists():
             return None
-        with open(self.file_name, "r") as file:
+        with open(self.file_path, "r") as file:
             deployments = yaml.safe_load(file)
 
         return DataModels.DeploymentConfig.model_validate(deployments)
@@ -58,7 +62,7 @@ class YamlDeploymentFile:
         return current_level
 
     def save_deployment_config(self, deployment: DataModels.DeploymentConfig) -> None:
-        with open(self.file_name, "w") as file:
+        with open(self.file_path, "w") as file:
             yaml.safe_dump(deployment.model_dump(), file)
 
     def update_deployment_config(self, data: dict) -> None:
@@ -77,7 +81,7 @@ class YamlDeploymentFile:
         # Validate data
         DataModels.DeploymentConfig.model_validate(updated_deployment_config)
 
-        with open(self.file_name, "w") as file:
+        with open(self.file_path, "w") as file:
             yaml.safe_dump(updated_deployment_config, file)
 
     @staticmethod
@@ -192,7 +196,7 @@ class YamlDeploymentFile:
 
 
 def get_deployment_obj(chain_settings: ChainConfig) -> Path:
-    deployment_file_name = f"{chain_settings.file_name}.yaml"
+    deployment_file_name = f"{chain_settings.file_path}.yaml"
     if settings.DEBUG:
-        deployment_file_name = f"{chain_settings.file_name}_DEBUG.yaml"
+        deployment_file_name = f"debug/{chain_settings.file_name}.yaml"
     return YamlDeploymentFile(Path(BASE_DIR, "deployments", deployment_file_name))

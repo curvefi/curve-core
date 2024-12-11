@@ -5,7 +5,8 @@ import boa
 from pydantic import BaseModel
 from pydantic import ConfigDict as BaseModelConfigDict
 
-from settings.config import BASE_DIR, ChainConfig
+from settings.config import BASE_DIR
+from settings.models import ChainConfig
 
 #  <-------------------------- Chain Config -------------------------->
 

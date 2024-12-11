@@ -45,6 +45,7 @@ class ChainConfig(BaseSettings):
     model_config = SettingsConfigDict(use_enum_values=True)
 
     file_name: str
+    file_path: str
     network_name: str
     is_testnet: bool
     chain_id: int

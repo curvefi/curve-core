@@ -13,12 +13,12 @@ from .xgov import test_xgov_deployment
 logger = get_logger()
 
 
-def test_post_deploy(chain: str, ignore_deployments: list[str]):
+def test_post_deploy(chain_config_file: str, ignore_deployments: list[str]):
     """Test is run after whole infra is deployed"""
 
     logger.info("Starting post-deployment tests...")
 
-    chain_settings = get_chain_settings(chain)
+    chain_settings = get_chain_settings(chain_config_file)
     deployment = get_deployment_obj(chain_settings).get_deployment_config()
 
     test_stableswap_deployment(deployment)

@@ -8,12 +8,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 settings = DataModels.Settings()
 
 
-def get_chain_settings(chain: str):
-    config_file = Path(BASE_DIR, "settings", "chains", f"{chain}.yaml")
+def get_chain_settings(chain_config_file: str):
+    config_file = Path(BASE_DIR, "settings", "chains", f"{chain_config_file}")
 
     class YamlChainConfig(DataModels.ChainConfig):
         model_config = SettingsConfigDict(yaml_file=config_file)
-        file_name: str = chain
+        file_path: str = chain_config_file
+        file_name: str = config_file.stem
 
         @classmethod
         def settings_customise_sources(

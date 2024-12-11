@@ -2,7 +2,7 @@ from enum import Enum
 
 from eth_utils import keccak
 
-from settings.config import RollupType
+from settings.models import RollupType
 
 MULTICALL3_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
 CREATE2_SALT = keccak(42069)
