@@ -8,8 +8,9 @@ from boa.contracts.abi.abi_contract import ABIContract
 from eth_utils import keccak
 
 from scripts.deploy.deployment_file import get_deployment_obj
+from scripts.deploy.presets import CryptoPoolPresets
 from scripts.logging_config import get_logger
-from settings.config import BASE_DIR, ChainConfig, CryptoPoolPresets
+from settings.config import BASE_DIR, ChainConfig
 
 from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRESS
 from .deployment_file import YamlDeploymentFile

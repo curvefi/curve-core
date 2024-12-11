@@ -3,7 +3,7 @@ from pathlib import Path
 import boa
 
 from scripts.deploy.constants import AddressProviderID
-from scripts.deploy.deployment_file import YamlDeploymentFile, get_deployment_obj
+from scripts.deploy.deployment_file import get_deployment_obj
 from scripts.deploy.deployment_utils import deploy_contract
 from scripts.logging_config import get_logger
 from settings.config import BASE_DIR, ChainConfig
