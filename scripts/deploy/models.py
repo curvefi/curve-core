@@ -138,3 +138,5 @@ class DeploymentConfig(BaseModel):
 
 class PoolType(StrEnum):
     twocryptoswap = "twocryptoswap"
+    stableswap = "stableswap"
+    tricryptoswap = "tricryptoswap"

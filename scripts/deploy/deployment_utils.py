@@ -1,6 +1,5 @@
 import json
 import os
-from enum import StrEnum
 from pathlib import Path
 
 import boa
@@ -14,7 +13,6 @@ from settings.config import BASE_DIR
 from settings.models import ChainConfig
 
 from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRESS
-from .deployment_file import YamlDeploymentFile
 from .utils import (
     fetch_filename_from_version,
     fetch_latest_contract,
