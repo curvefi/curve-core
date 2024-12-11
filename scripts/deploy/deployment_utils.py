@@ -133,6 +133,6 @@ def deploy_via_create2(contract_file, abi_encoded_ctor="", is_blueprint=False):
 def deploy_pool(
     chain_settings: ChainConfig, name: str, symbol: str, coins: list[str], pool_type: PoolType = PoolType.twocryptoswap
 ) -> None:
-    deployment_file = get_deployment_config(chain_settings)
+    deployment_file = get_deployment_obj(chain_settings)
     factory = deployment_file.get_contract_deployment(("contracts", "amm", pool_type.value, "factory")).get_contract()
     factory.deploy_pool(name, symbol, coins, 0, *CryptoPoolPresets().model_dump().values())
