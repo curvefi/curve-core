@@ -134,3 +134,7 @@ class ContractsDeployment(BaseModel):
 class DeploymentConfig(BaseModel):
     config: ChainConfig
     contracts: ContractsDeployment | None = None
+
+
+class PoolType(StrEnum):
+    twocryptoswap = "twocryptoswap"

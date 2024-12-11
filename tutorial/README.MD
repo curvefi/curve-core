@@ -17,7 +17,7 @@ python manage.py deploy crypto_pool {chain} {pool name} {pool symbol} {coins sep
 (token addresses are bridged tokens)
 
 ```
-python manage.py deploy crypto_pool devnet/tutorial_arb_sepolia Test TST 0x50FB01Ee521b9D22cdcb713a505019f41b8BBFf4,0x92fc3EfE9129675A6d1405519C38b3aDdE4E0ADe
+python manage.py deploy crypto_pool devnet/tutorial_arb_sepolia.yaml Test TST 0x50FB01Ee521b9D22cdcb713a505019f41b8BBFf4,0x92fc3EfE9129675A6d1405519C38b3aDdE4E0ADe
 ```
 
 ### Add liquidity

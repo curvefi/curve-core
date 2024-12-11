@@ -196,7 +196,7 @@ class YamlDeploymentFile:
 
 
 def get_deployment_obj(chain_settings: ChainConfig) -> Path:
-    deployment_file_name = f"{chain_settings.file_path}.yaml"
+    deployment_file_name = chain_settings.file_path
     if settings.DEBUG:
         deployment_file_name = f"debug/{chain_settings.file_name}.yaml"
     return YamlDeploymentFile(Path(BASE_DIR, "deployments", deployment_file_name))

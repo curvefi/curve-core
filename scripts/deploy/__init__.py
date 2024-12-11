@@ -184,4 +184,5 @@ def run_deploy_twocrypto(chain_config_file: str, fee_receiver: str) -> None:
 @click.argument("symbol", type=click.STRING)
 @click.argument("coins", type=click.STRING)
 def run_deploy_twocrypto(chain_config_file: str, name: str, symbol: str, coins: str) -> None:
-    deploy_pool(chain_config_file, name, symbol, coins.split(","))
+    chain_settings = get_chain_settings(chain_config_file)
+    deploy_pool(chain_settings, name, symbol, coins.split(","))
