@@ -12,10 +12,8 @@ config:
   file_path: devnet/arb_sepolia.yaml
   is_testnet: True
   layer: 2
-  native_currency_coingecko_id: ethereum
   native_currency_symbol: ETH
   network_name: Arbitrum Sepolia
-  platform_coingecko_id: ethereum
   public_rpc_url: https://sepolia-rollup.arbitrum.io/rpc
   rollup_type: arb_orbit
   wrapped_native_token: "0x980B62Da83eFf3D4576C647993b0c1D7faf17c73"
