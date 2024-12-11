@@ -8,7 +8,9 @@ config:
     parameter_admin: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
     vault: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
   explorer_base_url: https://testnet.purrsec.com
-  file_name: devnet/hyperliquid_devnet
+  file_name: hyperliquid
+  file_path: devnet/hyperliquid.yaml
+  is_testnet: True
   layer: 1
   logo_url: https://i.postimg.cc/9Q5S5B3p/hyperliquid.png
   native_currency_symbol: HYPE
