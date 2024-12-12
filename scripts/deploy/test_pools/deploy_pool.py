@@ -3,9 +3,10 @@ from pathlib import Path
 
 import boa
 
-from settings.config import BASE_DIR, CryptoPoolPresets
+from settings.config import BASE_DIR
 
 from ..deployment_file import YamlDeploymentFile
+from ..presets import CryptoPoolPresets
 from ..utils import fetch_latest_contract
 
 

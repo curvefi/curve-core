@@ -1,188 +1,39 @@
 import re
 import time
-from enum import StrEnum, auto
 from pathlib import Path
 
-import boa
 import yaml
 from boa.contracts.abi.abi_contract import ABIFunction
 from boa.contracts.vyper.vyper_contract import VyperContract
 from boa.util.abi import abi_encode
 from pydantic import BaseModel
-from pydantic import ConfigDict as BaseModelConfigDict
 from pydantic.v1.utils import deep_update
 
+import scripts.deploy.models as DataModels
 from scripts.logging_config import get_logger
-from settings.config import BASE_DIR, ChainConfig, ReferenceTokenAddresses, RollupType, settings
+from settings.config import BASE_DIR, settings
+from settings.models import ChainConfig
 
 from .utils import get_latest_commit_hash, get_relative_path
 
 logger = get_logger()
 
 
-#  <-------------------------- Chain Config -------------------------->
-
-
-class DaoSettings(BaseModel):
-    crv: str | None = None
-    crvusd: str | None = None
-    emergency_admin: str | None = None
-    ownership_admin: str | None = None
-    parameter_admin: str | None = None
-    vault: str | None = None
-
-
-#  <-------------------------- Contracts -------------------------->
-
-
-class CompilerSettings(BaseModel):
-    compiler_version: str
-    evm_version: str | None
-    optimisation_level: str
-
-
-class DeploymentType(StrEnum):
-    normal = auto()
-    blueprint = auto()
-
-
-class Contract(BaseModel):
-    model_config = BaseModelConfigDict(use_enum_values=True)
-
-    address: str
-    compiler_settings: CompilerSettings
-    constructor_args_encoded: str | None
-    contract_github_url: str
-    contract_path: str
-    contract_version: str
-    deployment_timestamp: int
-    deployment_type: DeploymentType
-
-    def get_contract(self):
-        contract_path = BASE_DIR / Path(self.contract_path.lstrip("/"))
-        return boa.load_partial(contract_path).at(self.address)
-
-
-#  <-------------------------- Deployments -------------------------->
-
-
-class SingleAmmDeployment(BaseModel):
-    factory: Contract | None = None
-    implementation: Contract | None = None
-    math: Contract | None = None
-    views: Contract | None = None
-
-
-class StableswapSingleAmmDeployment(SingleAmmDeployment):
-    meta_implementation: Contract | None = None
-
-
-class AmmDeployment(BaseModel):
-    stableswap: StableswapSingleAmmDeployment | None = None
-    tricryptoswap: SingleAmmDeployment | None = None
-    twocryptoswap: SingleAmmDeployment | None = None
-
-
-#  <----------------------------------------------------------------->
-
-
-class GaugeFactoryDeployment(BaseModel):
-    factory: Contract | None = None
-    implementation: Contract | None = None
-
-
-class GaugeDeployment(BaseModel):
-    child_gauge: GaugeFactoryDeployment
-
-
-#  <----------------------------------------------------------------->
-
-
-class GovernanceDeployment(BaseModel):
-    agent: Contract | None = None
-    relayer: dict[str, Contract] | None = None  # str should be RollupType
-    vault: Contract | None = None
-
-
-#  <----------------------------------------------------------------->
-
-
-class HelpersDeployment(BaseModel):
-    deposit_and_stake_zap: Contract | None = None
-    rate_provider: Contract | None = None
-    router: Contract | None = None
-    stable_swap_meta_zap: Contract | None = None
-
-
-#  <----------------------------------------------------------------->
-
-
-class MetaregistryHandlers(BaseModel):
-    stableswap: Contract | None = None
-    tricryptoswap: Contract | None = None
-    twocryptoswap: Contract | None = None
-
-
-class MetaregistyContract(Contract):
-    registry_handlers: MetaregistryHandlers | None = None
-
-
-class RegistriesDeployment(BaseModel):
-    address_provider: Contract | None = None
-    metaregistry: MetaregistyContract | None = None
-
-
-#  <----------------------------------------------------------------->
-
-
-class ContractsDeployment(BaseModel):
-    amm: AmmDeployment | None = None
-    gauge: GaugeDeployment | None = None
-    governance: GovernanceDeployment | None = None
-    helpers: HelpersDeployment | None = None
-    registries: RegistriesDeployment | None = None
-
-
-#  <----------------------------------------------------------------->
-
-
-class Token(BaseModel):
-    address: str
-
-
-#  <----------------------------------------------------------------->
-
-
-class Pool(BaseModel):
-    symbol: str
-    address: str
-    factory: str
-    tokens: list[Token]
-
-
-#  <----------------------------------------------------------------->
-
-
-class DeploymentConfig(BaseModel):
-    config: ChainConfig
-    contracts: ContractsDeployment | None = None
-    tokens: list[Token] | None = None
-    pools: list[Pool] | None = None
-
-
 class YamlDeploymentFile:
-    def __init__(self, _file_name: Path):
-        self.file_name = _file_name
 
-    def get_deployment_config(self) -> DeploymentConfig | None:
-        if not self.file_name.exists():
+    def __init__(self, _file_path: Path):
+        self.file_path = _file_path
+        self.file_name = _file_path.stem
+
+    def get_deployment_config(self) -> DataModels.DeploymentConfig | None:
+        if not self.file_path.exists():
             return None
-        with open(self.file_name, "r") as file:
+        with open(self.file_path, "r") as file:
             deployments = yaml.safe_load(file)
 
-        return DeploymentConfig.model_validate(deployments)
+        return DataModels.DeploymentConfig.model_validate(deployments)
 
-    def get_contract_deployment(self, config_keys: tuple) -> Contract | None:
+    def get_contract_deployment(self, config_keys: tuple) -> DataModels.Contract | None:
         """
         Get contract deployment from deployment file if exits
 
@@ -209,8 +60,8 @@ class YamlDeploymentFile:
                 return None
         return current_level
 
-    def save_deployment_config(self, deployment: DeploymentConfig) -> None:
-        with open(self.file_name, "w") as file:
+    def save_deployment_config(self, deployment: DataModels.DeploymentConfig) -> None:
+        with open(self.file_path, "w") as file:
             yaml.safe_dump(deployment.model_dump(), file)
 
     def update_deployment_config(self, data: dict) -> None:
@@ -227,9 +78,9 @@ class YamlDeploymentFile:
             updated_deployment_config = data
 
         # Validate data
-        DeploymentConfig.model_validate(updated_deployment_config)
+        DataModels.DeploymentConfig.model_validate(updated_deployment_config)
 
-        with open(self.file_name, "w") as file:
+        with open(self.file_path, "w") as file:
             yaml.safe_dump(updated_deployment_config, file)
 
     @staticmethod
@@ -318,7 +169,7 @@ class YamlDeploymentFile:
             }
         )
 
-        self.save_deployment_config(DeploymentConfig.model_validate(deployment_config_dict))
+        self.save_deployment_config(DataModels.DeploymentConfig.model_validate(deployment_config_dict))
 
     def dump_initial_chain_settings(self, chain_settings: ChainConfig):
         update_parameters = {
@@ -333,7 +184,7 @@ class YamlDeploymentFile:
         contract_info = []
 
         def process_contracts(obj, path):
-            if isinstance(obj, Contract):
+            if isinstance(obj, DataModels.Contract):
                 contract_info.append(obj.get_contract())
             elif isinstance(obj, BaseModel):
                 for field_name, _ in obj.__fields__.items():
@@ -344,7 +195,10 @@ class YamlDeploymentFile:
 
 
 def get_deployment_obj(chain_settings: ChainConfig) -> YamlDeploymentFile:
-    deployment_file_name = f"{chain_settings.file_name}.yaml"
+    config_filepath: Path = Path(chain_settings.file_path)
+    deployment_file: str = chain_settings.file_path
     if settings.DEBUG:
-        deployment_file_name = f"{chain_settings.file_name}_DEBUG.yaml"
-    return YamlDeploymentFile(Path(BASE_DIR, "deployments", deployment_file_name))
+        deployment_file = f"debug/{config_filepath.stem}.yaml"
+    deployment_file_path = Path(BASE_DIR, "deployments", deployment_file)
+    assert deployment_file_path.exists()
+    return YamlDeploymentFile(deployment_file_path)

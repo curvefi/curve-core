@@ -1,4 +1,4 @@
-from scripts.deploy.deployment_file import DeploymentConfig
+from scripts.deploy.models import DeploymentConfig
 from scripts.tests.post_deploy.utils import check_contracts, get_contract
 
 
