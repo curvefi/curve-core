@@ -99,7 +99,7 @@ export DEPLOYER_EOA_PRIVATE_KEY={your key}
   this chain in previous step!)
 
 ```
-python manage.py deploy all {chain_name}
+python manage.py deploy all devnet/chain_config_filename.yaml
 ```
 
 #### Deployment results
