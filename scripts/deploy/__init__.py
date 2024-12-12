@@ -190,6 +190,23 @@ def run_deploy_twocrypto(chain: str, name: str, symbol: str, coins: str) -> None
     deploy_pool(chain, name, symbol, coins.split(","))
 
 
+@deploy_commands.command("test_tokens", short_help="deploy test tokens and pool on devnet")
+@click.argument("chain", type=click.STRING)
+@click.option("--receiver", default=None, type=click.STRING)
+def run_test_tokens_deployment(chain: str, receiver: str | None = None) -> None:
+    chain_settings = get_chain_settings(f"{chain}.yaml")
+    assert chain_settings.is_testnet, "Only for devnets"
+
+    deployment_file = get_deployment_obj(chain_settings)
+    deployment_config = deployment_file.get_deployment_config()
+    assert deployment_config is not None, "No deployment"
+
+    token0, token1 = deploy_tokens(receiver)
+    tokens = [Token(address=token0.address), Token(address=token1.address)]
+    deployment_config.tokens = tokens
+    deployment_file.update_deployment_config(deployment_config.model_dump())
+
+
 @deploy_commands.command("test_pools", short_help="deploy test tokens and pool on devnet")
 @click.argument("chain", type=click.STRING)
 def run_test_pools_deployment(chain: str) -> None:
