@@ -13,9 +13,14 @@ config:
   is_testnet: True
   layer: 1
   logo_url: https://i.postimg.cc/9Q5S5B3p/hyperliquid.png
+  multicall2: ""
   native_currency_symbol: HYPE
   network_name: hyperliquid
   public_rpc_url: https://api.hyperliquid-testnet.xyz/evm
+  reference_token_addresses:
+    usdc: ""
+    usdt: ""
+    weth: ""
   rollup_type: _
   wrapped_native_token: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
 contracts:

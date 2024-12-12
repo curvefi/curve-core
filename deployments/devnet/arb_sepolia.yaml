@@ -12,10 +12,16 @@ config:
   file_path: devnet/arb_sepolia.yaml
   is_testnet: True
   layer: 2
+  logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/arbitrum-sepolia.png
+  multicall2: ""
   native_currency_symbol: ETH
   network_name: Arbitrum Sepolia
   public_rpc_url: https://sepolia-rollup.arbitrum.io/rpc
   rollup_type: arb_orbit
+  reference_token_addresses:
+    usdc: ""
+    usdt: ""
+    weth: ""
   wrapped_native_token: "0x980B62Da83eFf3D4576C647993b0c1D7faf17c73"
 contracts:
   amm:

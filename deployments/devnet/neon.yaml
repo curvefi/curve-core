@@ -13,9 +13,14 @@ config:
   is_testnet: True
   layer: 1
   logo_url: https://i.ibb.co/pz7KQ47/vq-If-Bf-I0-400x400.jpg
+  multicall2: ""
   native_currency_symbol: NEON
   network_name: neon
   public_rpc_url: https://devnet.neonevm.org
+  reference_token_addresses:
+    usdc: ""
+    usdt: ""
+    weth: ""
   rollup_type: _
   wrapped_native_token: "0x11adC2d986E334137b9ad0a0F290771F31e9517F"
 contracts:
