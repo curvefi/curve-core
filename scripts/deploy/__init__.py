@@ -12,15 +12,18 @@ from settings.models import RollupType
 from .amm.stableswap import deploy_stableswap
 from .amm.tricrypto import deploy_tricrypto
 from .amm.twocrypto import deploy_twocrypto
-from .deployment_utils import deploy_pool, dump_initial_chain_settings, get_deployment_config
+from .deployment_utils import dump_initial_chain_settings, get_deployment_config, get_deployment_obj
 from .gauge.child_gauge import deploy_liquidity_gauge_infra
 from .governance.xgov import deploy_dao_vault, deploy_xgov, transfer_ownership
 from .helpers.deposit_and_stake_zap import deploy_deposit_and_stake_zap
 from .helpers.rate_provider import deploy_rate_provider
 from .helpers.router import deploy_router
 from .helpers.stable_swap_meta_zap import deploy_stable_swap_meta_zap
+from .models import Pool, Token
 from .registries.address_provider import deploy_address_provider, update_address_provider
 from .registries.metaregistry import deploy_metaregistry, update_metaregistry
+from .test_pools import add_liquidity, deploy_pool, deploy_tokens, swap
+from .test_pools.deploy_pool import deploy_pool
 
 logger = get_logger()
 
@@ -179,10 +182,50 @@ def run_deploy_twocrypto(chain_config_file: str, fee_receiver: str) -> None:
 
 
 @deploy_commands.command("crypto_pool", short_help="deploy twocrypto pool")
-@click.argument("chain_config_file", type=click.STRING)
+@click.argument("chain", type=click.STRING)
 @click.argument("name", type=click.STRING)
 @click.argument("symbol", type=click.STRING)
 @click.argument("coins", type=click.STRING)
-def run_deploy_twocrypto(chain_config_file: str, name: str, symbol: str, coins: str) -> None:
-    chain_settings = get_chain_settings(chain_config_file)
-    deploy_pool(chain_settings, name, symbol, coins.split(","))
+def run_deploy_twocrypto(chain: str, name: str, symbol: str, coins: str) -> None:
+    deploy_pool(chain, name, symbol, coins.split(","))
+
+
+@deploy_commands.command("test_tokens", short_help="deploy test tokens and pool on devnet")
+@click.argument("chain", type=click.STRING)
+@click.option("--receiver", default=None, type=click.STRING)
+def run_test_tokens_deployment(chain: str, receiver: str | None = None) -> None:
+    chain_settings = get_chain_settings(f"{chain}.yaml")
+    assert chain_settings.is_testnet, "Only for devnets"
+
+    deployment_file = get_deployment_obj(chain_settings)
+    deployment_config = deployment_file.get_deployment_config()
+    assert deployment_config is not None, "No deployment"
+
+    token0, token1 = deploy_tokens(receiver)
+    tokens = [Token(address=token0.address), Token(address=token1.address)]
+    deployment_config.tokens = tokens
+    deployment_file.update_deployment_config(deployment_config.model_dump())
+
+
+@deploy_commands.command("test_pools", short_help="deploy test tokens and pool on devnet")
+@click.argument("chain", type=click.STRING)
+def run_test_pools_deployment(chain: str) -> None:
+    chain_settings = get_chain_settings(f"{chain}.yaml")
+    assert chain_settings.is_testnet, "Only for devnets"
+
+    deployment_file = get_deployment_obj(chain_settings)
+    deployment_config = deployment_file.get_deployment_config()
+    assert deployment_config is not None, "No deployment"
+
+    token0, token1 = deploy_tokens()
+    tokens = [Token(address=token0.address), Token(address=token1.address)]
+    deployment_config.tokens = tokens
+
+    pool, factory_address = deploy_pool(chain, "Test", "TST", [token0.address, token1.address])
+    deployment_config.pools = [
+        Pool(symbol="TST", address=str(pool.address), factory=str(factory_address), tokens=tokens)
+    ]
+    deployment_file.update_deployment_config(deployment_config.model_dump())
+
+    add_liquidity(pool, token0, token1, 10_000 * 10**18)
+    swap(pool, token0, 1_000 * 10**18)

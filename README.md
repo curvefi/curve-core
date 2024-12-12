@@ -109,3 +109,12 @@ File will have the same name as chain. ABI is stored in [abi](/abi) folder.
 Deployments are reusable, so if something fails, it can be fixed and rerun.
 **NOTE:** contracts should be verified separately on explorers like etherscan since it doesn't support Vyper contract
 verification by API.
+
+
+### Deploy test pools
+When infra is deployed, run
+```
+python manage.py deploy test_pools {chain_name}
+```
+to deploy test tokens and pools + add liquidity and permorm a swap in test pool. WARNING!: these are test tokens, don't
+use mocks in production.

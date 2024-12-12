@@ -120,6 +120,23 @@ class RegistriesDeployment(BaseModel):
     metaregistry: MetaregistyContract | None = None
 
 
+#  <----------------------------------------------------------------->#
+
+
+class Token(BaseModel):
+    address: str
+
+
+#  <----------------------------------------------------------------->
+
+
+class Pool(BaseModel):
+    symbol: str
+    address: str
+    factory: str
+    tokens: list[Token]
+
+
 #  <----------------------------------------------------------------->
 
 
@@ -134,6 +151,8 @@ class ContractsDeployment(BaseModel):
 class DeploymentConfig(BaseModel):
     config: ChainConfig
     contracts: ContractsDeployment | None = None
+    tokens: list[Token] | None = None
+    pools: list[Pool] | None = None
 
 
 class PoolType(StrEnum):
