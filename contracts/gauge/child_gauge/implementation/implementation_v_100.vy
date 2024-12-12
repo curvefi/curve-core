@@ -19,7 +19,7 @@ interface ERC20Extended:
     def symbol() -> String[32]: view
 
 interface ERC1271:
-    def isValidSignature(_hash: bytes32, _signature: Bytes[65]) -> bytes32: view
+    def isValidSignature(_hash: bytes32, _signature: Bytes[65]) -> bytes4: view
 
 interface Factory:
     def owner() -> address: view
@@ -517,7 +517,7 @@ def permit(
     )
     if _owner.is_contract:
         sig: Bytes[65] = concat(_abi_encode(_r, _s), slice(convert(_v, bytes32), 31, 1))
-        assert ERC1271(_owner).isValidSignature(digest, sig) == ERC1271_MAGIC_VAL  # dev: invalid signature
+        assert convert(ERC1271(_owner).isValidSignature(digest, sig), bytes32) == ERC1271_MAGIC_VAL  # dev: invalid signature
     else:
         assert ecrecover(digest, _v, _r, _s) == _owner  # dev: invalid signature
 
