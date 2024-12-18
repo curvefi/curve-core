@@ -1,0 +1,23 @@
+network_name: Strata
+chain_id: 8091
+rollup_type: zk-optimistic
+dao:
+  crv: "0x0"
+  crvusd: "0x0"
+  emergency_admin: "0x0"
+  ownership_admin: "0x0"
+  parameter_admin: "0x0"
+  vault: "0x0"
+explorer_base_url: https://blockscoutb86fae58ae.devnet-annapurna.stratabtc.org/
+
+# Not related to development, for further integrations
+layer: 2
+logo_url: https://raw.githubusercontent.com/alpenlabs/docs/refs/heads/main/docs/images/Strata_Small.png
+native_currency_symbol: BTC
+public_rpc_url: https://stratareth3666f0713.devnet-annapurna.stratabtc.org
+wrapped_native_token: "0x2fb867AE94cEff131a54Aa281b21621bC4b5Fce6"
+reference_token_addresses:
+  usdc: "0x0"
+  usdt: "0x0"
+  weth: "0x0"
+multicall2: "0xc9C8Ab3C0De997652F6Ebb385E63Ae9a0ae2A7F6"
