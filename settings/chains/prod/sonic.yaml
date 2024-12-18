@@ -1,0 +1,18 @@
+network_name: sonic
+chain_id: 146
+rollup_type: _
+dao:
+  crv: ""
+  emergency_admin: ""
+  ownership_admin: ""
+  parameter_admin: ""
+  vault: ""
+explorer_base_url: https://sonicscan.org/
+# Not related to development, for further integrations
+layer: 1
+logo_url: https://assets.coingecko.com/coins/images/38108/standard/Logomark_Sonic_Black.png?1734534767
+native_currency_symbol: S
+native_currency_coingecko_id: sonic
+platform_coingecko_id: sonic
+public_rpc_url: https://rpc.soniclabs.com
+wrapped_native_token: "0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38"
