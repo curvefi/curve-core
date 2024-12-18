@@ -634,7 +634,6 @@ def deposit_reward_token(_reward_token: address, _amount: uint256, _epoch: uint2
     """
     assert msg.sender == self.reward_data[_reward_token].distributor
     assert 3 * WEEK / 7 <= _epoch and _epoch <= WEEK * 4 * 12, "Epoch duration"
-    assert _reward_token != self, "Cannot use Gauge token as reward"
 
     self._checkpoint_rewards(empty(address), self.totalSupply, False, empty(address))
 
@@ -682,7 +681,7 @@ def add_reward(_reward_token: address, _distributor: address):
     @param _distributor Address permitted to fund this contract with the reward token
     """
     assert msg.sender in [self.manager, FACTORY.owner()]  # dev: only manager or factory admin
-    assert _reward_token != FACTORY.crv().address  # dev: can not distinguish CRV reward from CRV emission
+    assert _reward_token not in [FACTORY.crv().address, self]  # dev: can not distinguish CRV reward from CRV emission; do not use gauge token as reward token
     assert _distributor != empty(address)  # dev: distributor cannot be zero address
 
     reward_count: uint256 = self.reward_count
