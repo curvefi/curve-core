@@ -2,8 +2,8 @@ network_name: ink
 chain_id: 57073
 rollup_type: op_stack
 dao:
-  crv: "0x1b3757d5EE281Eaf6a9c8E5D9b8488b4475Aa955"
-  crvusd: "0xEAEdD2B1b3F0fEC6388A4d6b2fE500B59Fd9f755"
+  crv: "0x0"
+  crvusd: "0x0"
 explorer_base_url: https://explorer.inkonchain.com/
 
 # Not related to development, for further integrations
