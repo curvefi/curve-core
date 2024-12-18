@@ -87,6 +87,7 @@ allowance: public(HashMap[address, HashMap[address, uint256]])
 
 name: public(String[64])
 symbol: public(String[40])
+salt: public(bytes32)
 
 # ERC2612
 DOMAIN_SEPARATOR: public(bytes32)
@@ -163,6 +164,7 @@ def initialize(_lp_token: address, _root: address, _manager: address):
 
     self.name = name
     self.symbol = concat(symbol, "-gauge")
+    self.salt = block.prevhash
 
     self.period_timestamp[0] = block.timestamp
     self.DOMAIN_SEPARATOR = keccak256(
@@ -172,7 +174,7 @@ def initialize(_lp_token: address, _root: address, _manager: address):
             keccak256(VERSION),
             chain.id,
             self,
-            salt,
+            self.salt,
         )
     )
 
@@ -632,6 +634,7 @@ def deposit_reward_token(_reward_token: address, _amount: uint256, _epoch: uint2
     """
     assert msg.sender == self.reward_data[_reward_token].distributor
     assert 3 * WEEK / 7 <= _epoch and _epoch <= WEEK * 4 * 12, "Epoch duration"
+    assert _reward_token != self, "Cannot use Gauge token as reward"
 
     self._checkpoint_rewards(empty(address), self.totalSupply, False, empty(address))
 
