@@ -1,18 +1,26 @@
 network_name: sonic
 chain_id: 146
+is_testnet: False
 rollup_type: _
 dao:
-  crv: ""
-  emergency_admin: ""
-  ownership_admin: ""
-  parameter_admin: ""
-  vault: ""
+  crv: _
+  crvusd: _
+  emergency_admin: _
+  ownership_admin: _
+  parameter_admin: _
+  vault: _
 explorer_base_url: https://sonicscan.org/
+
 # Not related to development, for further integrations
 layer: 1
-logo_url: https://assets.coingecko.com/coins/images/38108/standard/Logomark_Sonic_Black.png?1734534767
+logo_url: https://raw.githubusercontent.com/0xsoniclabs/mediakit/refs/heads/main/200xS_token_Black-BG.png
 native_currency_symbol: S
 native_currency_coingecko_id: sonic
 platform_coingecko_id: sonic
 public_rpc_url: https://rpc.soniclabs.com
 wrapped_native_token: "0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38"
+reference_token_addresses:
+  usdc: "0x29219dd400f2Bf60E5a23d13Be72B486D4038894"
+  usdt: _
+  weth: "0x309C92261178fA0CF748A855e90Ae73FDb79EBc7"
+multicall3: "0xcA11bde05977b3631167028862bE2a173976CA11"
