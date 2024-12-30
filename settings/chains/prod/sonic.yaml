@@ -5,10 +5,10 @@ rollup_type: _
 dao:
   crv: _
   crvusd: _
-  emergency_admin: _
-  ownership_admin: _
-  parameter_admin: _
-  vault: _
+  emergency_admin: "0xA73EdCf18421B56D9AF1cE08A34E102E23b2C4B6"
+  ownership_admin: "0x6c9578402A3ace046A12839f45F84Aa5448E9c30"
+  parameter_admin: "0xEC5AFc9590964f2fA0FeED54f0fBB2A34480908D"
+  vault: "0x3c0a405E914337139992625D5100Ea141a9C4d11"
 explorer_base_url: https://sonicscan.org/
 
 # Not related to development, for further integrations
