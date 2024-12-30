@@ -3,8 +3,6 @@ chain_id: 146
 is_testnet: False
 rollup_type: _
 dao:
-  crv: _
-  crvusd: _
   emergency_admin: "0xA73EdCf18421B56D9AF1cE08A34E102E23b2C4B6"
   ownership_admin: "0x6c9578402A3ace046A12839f45F84Aa5448E9c30"
   parameter_admin: "0xEC5AFc9590964f2fA0FeED54f0fBB2A34480908D"
@@ -16,11 +14,9 @@ layer: 1
 logo_url: https://raw.githubusercontent.com/0xsoniclabs/mediakit/refs/heads/main/200xS_token_Black-BG.png
 native_currency_symbol: S
 native_currency_coingecko_id: sonic
-platform_coingecko_id: sonic
 public_rpc_url: https://rpc.soniclabs.com
 wrapped_native_token: "0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38"
 reference_token_addresses:
   usdc: "0x29219dd400f2Bf60E5a23d13Be72B486D4038894"
-  usdt: _
   weth: "0x309C92261178fA0CF748A855e90Ae73FDb79EBc7"
 multicall3: "0xcA11bde05977b3631167028862bE2a173976CA11"
