@@ -56,6 +56,8 @@ class ChainConfig(BaseSettings):
     explorer_base_url: str
     logo_url: str
     native_currency_symbol: str
+    native_currency_coingecko_id: str
     reference_token_addresses: ReferenceTokenAddresses
     public_rpc_url: str
     multicall2: str | None = None
+    multicall3: str = "0xcA11bde05977b3631167028862bE2a173976CA11"
