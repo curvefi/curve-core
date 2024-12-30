@@ -22,7 +22,7 @@ config:
   reference_token_addresses:
     usdc: '0x29219dd400f2Bf60E5a23d13Be72B486D4038894'
     usdt: null
-    weth: '0x309C92261178fA0CF748A855e90Ae73FDb79EBc7'
+    weth: '0x50c42deacd8fc9773493ed674b675be577f2634b'
   rollup_type: _
   wrapped_native_token: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38'
 contracts:
