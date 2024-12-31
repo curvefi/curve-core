@@ -11,6 +11,5 @@ layer: 2
 logo_url: https://ibb.co/KG1NCFf
 native_currency_symbol: BTCN
 native_currency_coingecko_id: bitcoin
-platform_coingecko_id: ethereum
 public_rpc_url: https://rpc.ankr.com/corn_maizenet
 wrapped_native_token: "0xda5dDd7270381A7C2717aD10D1c0ecB19e3CDFb2"

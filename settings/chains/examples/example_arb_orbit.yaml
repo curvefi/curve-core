@@ -10,6 +10,5 @@ explorer_base_url: https://arbiscan.io
 layer: 2
 native_currency_symbol: ETH
 native_currency_coingecko_id: ethereum
-platform_coingecko_id: ethereum
 public_rpc_url: https://arbitrum.llamarpc.com
 wrapped_native_token: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"

@@ -8,9 +8,8 @@ explorer_base_url: https://explorer.inkonchain.com/
 
 # Not related to development, for further integrations
 layer: 2
-logo_url: https://docs.inkonchain.com/work-with-ink/brand-kit
+logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/ink.png
 native_currency_symbol: ETH
 native_currency_coingecko_id: ethereum
-platform_coingecko_id: ethereum
 public_rpc_url: https://rpc-gel.inkonchain.com
 wrapped_native_token: "0x4200000000000000000000000000000000000006"
