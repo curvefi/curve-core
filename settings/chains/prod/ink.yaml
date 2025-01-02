@@ -2,8 +2,8 @@ network_name: ink
 chain_id: 57073
 rollup_type: op_stack
 dao:
-  crv: "0x0"
-  crvusd: "0x0"
+  crv: "0xac73671a1762fe835208fb93b7ae7490d1c2ccb3"
+  crvusd: "0x39fec550cc6ddced810eccfa9b2931b4b5f2344d"
 explorer_base_url: https://explorer.inkonchain.com/
 
 # Not related to development, for further integrations
@@ -14,3 +14,5 @@ native_currency_coingecko_id: ethereum
 platform_coingecko_id: ethereum
 public_rpc_url: https://rpc-gel.inkonchain.com
 wrapped_native_token: "0x4200000000000000000000000000000000000006"
+reference_token_addresses:
+  usdc: "0xf1815bd50389c46847f0bda824ec8da914045d14"
