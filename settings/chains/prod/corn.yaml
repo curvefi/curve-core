@@ -1,4 +1,4 @@
-network_name: corn_maizenet
+network_name: corn
 chain_id: 21000000
 rollup_type: arb_orbit
 dao:
