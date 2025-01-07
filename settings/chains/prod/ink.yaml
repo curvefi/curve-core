@@ -1,15 +1,20 @@
 network_name: ink
 chain_id: 57073
+is_testnet: False
 rollup_type: op_stack
 dao:
-  crv: "0x0"
-  crvusd: "0x0"
+  crv: "0xAC73671a1762FE835208Fb93b7aE7490d1c2cCb3"
+  crvusd: "0x39fec550CC6DDCEd810eCCfA9B2931b4B5f2344D"
 explorer_base_url: https://explorer.inkonchain.com/
 
-# Not related to development, for further integrations
+# Frontend-specific inputs
 layer: 2
 logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/ink.png
 native_currency_symbol: ETH
 native_currency_coingecko_id: ethereum
 public_rpc_url: https://rpc-gel.inkonchain.com
 wrapped_native_token: "0x4200000000000000000000000000000000000006"
+reference_token_addresses:
+  usdc: "0xF1815bd50389c46847f0Bda824eC8da914045D14"
+  weth: "0x4200000000000000000000000000000000000006"
+multicall3: "0xcA11bde05977b3631167028862bE2a173976CA11"
