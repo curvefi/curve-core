@@ -15,6 +15,5 @@ layer: 1
 logo_url: https://i.ibb.co/pz7KQ47/vq-If-Bf-I0-400x400.jpg
 native_currency_symbol: NEON
 native_currency_coingecko_id: neon
-platform_coingecko_id: neon
 public_rpc_url: https://devnet.neonevm.org
 wrapped_native_token: "0x11adC2d986E334137b9ad0a0F290771F31e9517F"

@@ -10,6 +10,5 @@ explorer_base_url: https://optimistic.etherscan.io
 layer: 2
 native_currency_symbol: ETH
 native_currency_coingecko_id: ethereum
-platform_coingecko_id: ethereum
 public_rpc_url: https://optimism.llamarpc.com
 wrapped_native_token: "0x4200000000000000000000000000000000000006"

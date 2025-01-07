@@ -14,6 +14,5 @@ explorer_base_url: https://etherscan.io
 layer: 1
 native_currency_symbol: ETH
 native_currency_coingecko_id: ethereum
-platform_coingecko_id: ethereum
 public_rpc_url: https://eth.llamarpc.com
 wrapped_native_token: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
