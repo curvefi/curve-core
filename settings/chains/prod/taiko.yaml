@@ -1,4 +1,4 @@
-network_name: example_taiko
+network_name: taiko
 chain_id: 167000
 rollup_type: _
 dao:
