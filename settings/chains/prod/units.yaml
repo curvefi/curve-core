@@ -1,0 +1,21 @@
+network_name: units network
+chain_id: 88811
+is_testnet: False
+rollup_type: _ # custom consensus layer built on Waves blockchain
+dao:
+  crv: "0xAC73671a1762FE835208Fb93b7aE7490d1c2cCb3" # n/a
+  crvusd: "0x39fec550CC6DDCEd810eCCfA9B2931b4B5f2344D" # n/a
+explorer_base_url: https://explorer.unit0.dev/
+
+# Frontend-specific inputs
+layer: 2
+logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/images/assets-arbitrum/0xe80698d9c55d9212c4dae8bed00e1357d804c62a.png
+native_currency_symbol: UNIT0
+native_currency_coingecko_id: unit0
+public_rpc_url: https://rpc.unit0.dev
+wrapped_native_token: "0xCF43F7703d9B4E8835f977eF364B4014fA7e856E" # WUNIT0
+reference_token_addresses: # wrapped tokens by Eywa - CrossCurve, Arbitrum blockchain.
+  usdc: "0xEb19000D90f17FFbd3AD9CDB8915D928F4980fD1"
+  weth: "0x1B100DE3F13E3f8Bb2f66FE58c1949c32E71248B"
+  usdt: "0xb303d80db8415FD1d3C9FED68A52EEAc9a052671"
+  wbtc: "0x9CE808657ba90C65a2700b1cA5D943eC72834B52"
