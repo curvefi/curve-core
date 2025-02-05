@@ -1,23 +1,25 @@
 network_name: Strata
 chain_id: 8091
-rollup_type: zk-optimistic
+is_testnet: True
+rollup_type: _ # leave '_' if not one of: 'op_stack', 'arb_orbit', 'polygon_cdk', 'zksync', 'taiko'
 dao:
-  crv: "0x0"
-  crvusd: "0x0"
-  emergency_admin: "0x0"
-  ownership_admin: "0x0"
-  parameter_admin: "0x0"
-  vault: "0x0"
+  crv: "0x0000000000000000000000000000000000000000"
+  crvusd: "0x0000000000000000000000000000000000000000"
+  vault: "0x0000000000000000000000000000000000000000"
+  emergency_admin: "0x0000000000000000000000000000000000000000"
+  ownership_admin: "0x0000000000000000000000000000000000000000"
+  parameter_admin: "0x0000000000000000000000000000000000000000"
 explorer_base_url: https://blockscoutb86fae58ae.devnet-annapurna.stratabtc.org/
 
 # Not related to development, for further integrations
 layer: 2
 logo_url: https://raw.githubusercontent.com/alpenlabs/docs/refs/heads/main/docs/images/Strata_Small.png
 native_currency_symbol: BTC
+native_currency_coingecko_id: bitcoin
 public_rpc_url: https://stratareth3666f0713.devnet-annapurna.stratabtc.org
 wrapped_native_token: "0x2fb867AE94cEff131a54Aa281b21621bC4b5Fce6"
 reference_token_addresses:
-  usdc: "0x0"
-  usdt: "0x0"
-  weth: "0x0"
-multicall2: "0xc9C8Ab3C0De997652F6Ebb385E63Ae9a0ae2A7F6"
+  usdc: "0x0000000000000000000000000000000000000000"
+  usdt: "0x0000000000000000000000000000000000000000"
+  weth: "0x0000000000000000000000000000000000000000"
+multicall2: "0xc9C8Ab3C0De997652F6Ebb385E63Ae9a0ae2A7F6" # for multicall3, add it with the key 'multicall3'
