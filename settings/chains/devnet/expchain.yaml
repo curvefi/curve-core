@@ -1,0 +1,16 @@
+network_name: EXPchain
+chain_id: 18880
+is_testnet: True
+rollup_type: _
+dao:
+  crv: "0x0000000000000000000000000000000000000000"
+  crvusd: "0x0000000000000000000000000000000000000000"
+explorer_base_url: https://blockscout-testnet.expchain.ai/
+
+# Frontend-specific inputs
+layer: 1
+logo_url: https://github.com/PolyhedraZK/VisualAsset/blob/main/EXPchain/EXPchain%20Symbol_Black%20on%20White.svg
+native_currency_symbol: tZKJ
+native_currency_coingecko_id: polyhedra-network
+public_rpc_url: https://rpc0-testnet.expchain.ai
+wrapped_native_token: "0xB671A1B90CD11Fb9554F6BA8bad1cc13129E3BB2"
