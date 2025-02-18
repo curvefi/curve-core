@@ -1,0 +1,22 @@
+network_name: hyperliquid
+chain_id: 999
+is_testnet: False
+rollup_type: _
+dao:
+  emergency_admin: "0xb101b2b0aa02b7167D238B98dc1B0b0404a760E8" # heswithme.eth EOA until ownership is transferred to the DAO
+  ownership_admin: "0xb101b2b0aa02b7167D238B98dc1B0b0404a760E8"
+  parameter_admin: "0xb101b2b0aa02b7167D238B98dc1B0b0404a760E8"
+explorer_base_url: https://purrsec.com/
+
+# Frontend-specific inputs
+layer: 2
+logo_url: https://i.postimg.cc/9Q5S5B3p/hyperliquid.png
+native_currency_symbol: HYPE
+native_currency_coingecko_id: hype
+public_rpc_url: https://rpc.hyperliquid.xyz/evm
+wrapped_native_token: "0x5555555555555555555555555555555555555555"
+reference_token_addresses:
+  usdc: ""
+  usdt: ""
+  weth: ""
+multicall3: "0xcA11bde05977b3631167028862bE2a173976CA11"
