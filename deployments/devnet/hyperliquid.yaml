@@ -16,7 +16,7 @@ config:
   multicall2: ""
   native_currency_symbol: HYPE
   network_name: hyperliquid
-  public_rpc_url: https://api.hyperliquid-testnet.xyz/evm
+  public_rpc_url: https://rpc.hyperliquid-testnet.xyz/evm
   reference_token_addresses:
     usdc: ""
     usdt: ""
