@@ -66,12 +66,9 @@ def run_deploy_all(chain_config_file: str) -> None:
     # Save chain settings
     dump_initial_chain_settings(chain_settings)
 
-    # check if there is a need to deploy xgov and vaults
+    # check if there is a need to deploy xgov:
     if chain_settings.rollup_type == RollupType.not_rollup or (
-        chain_settings.dao.ownership_admin
-        and chain_settings.dao.parameter_admin
-        and chain_settings.dao.emergency_admin
-        and chain_settings.dao.vault
+        chain_settings.dao.ownership_admin and chain_settings.dao.parameter_admin and chain_settings.dao.emergency_admin
     ):
         logger.info("No xgov for L1, setting admins from chain_settings file ...")
         admins = (
@@ -79,14 +76,22 @@ def run_deploy_all(chain_config_file: str) -> None:
             chain_settings.dao.parameter_admin,
             chain_settings.dao.emergency_admin,
         )
-        dao_vault = chain_settings.dao.vault
         ignore_tests.append("xgov")
+
     else:
-        # deploy xgov and dao vault
+
+        logger.info("Deploying xgov ...")
         admins = deploy_xgov(chain_settings)
-        dao_vault = deploy_dao_vault(chain_settings, admins[0]).address
 
         # get updated chain settings from deployment file
+        chain_settings = get_deployment_config(chain_settings).config
+
+    # Check if there is a need to deploy dao vault
+    if chain_settings.dao.vault:
+        dao_vault = chain_settings.dao.vault
+    else:
+        logger.info("Deploying Vault ...")
+        dao_vault = deploy_dao_vault(chain_settings, admins[0]).address
         chain_settings = get_deployment_config(chain_settings).config
 
     # Old compatibility
