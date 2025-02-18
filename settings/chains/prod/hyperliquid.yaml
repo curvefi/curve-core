@@ -12,7 +12,7 @@ explorer_base_url: https://purrsec.com/
 layer: 2
 logo_url: https://i.postimg.cc/9Q5S5B3p/hyperliquid.png
 native_currency_symbol: HYPE
-native_currency_coingecko_id: hype
+native_currency_coingecko_id: hyperliquid
 public_rpc_url: https://rpc.hyperliquid.xyz/evm
 wrapped_native_token: "0x5555555555555555555555555555555555555555"
 reference_token_addresses:
