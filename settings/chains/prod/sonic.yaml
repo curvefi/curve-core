@@ -3,6 +3,8 @@ chain_id: 146
 is_testnet: False
 rollup_type: _
 dao:
+  crv: '0x5Af79133999f7908953E94b7A5CF367740Ebee35'
+  crvusd: '0x7FFf4C4a827C84E32c5E175052834111B2ccd270'
   emergency_admin: "0xA73EdCf18421B56D9AF1cE08A34E102E23b2C4B6"
   ownership_admin: "0x6c9578402A3ace046A12839f45F84Aa5448E9c30"
   parameter_admin: "0xEC5AFc9590964f2fA0FeED54f0fBB2A34480908D"
