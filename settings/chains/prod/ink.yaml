@@ -5,6 +5,10 @@ rollup_type: op_stack
 dao:
   crv: "0xAC73671a1762FE835208Fb93b7aE7490d1c2cCb3"
   crvusd: "0x39fec550CC6DDCEd810eCCfA9B2931b4B5f2344D"
+  emergency_admin: "0xcAEF324bea3Ff5c7a08710081294F3344fFAdC54"
+  ownership_admin: "0x63Eb7846642630456707C3efBb50A03c79B89D81"
+  parameter_admin: "0xa8eB7B41fe8dF7Ea3de982397AD183721784D987"
+  vault: "0x686bdb3D24Bc6F3ED89ed3d3B659765c54aC78B4"
 explorer_base_url: https://explorer.inkonchain.com/
 
 # Frontend-specific inputs
