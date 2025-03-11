@@ -4,6 +4,10 @@ rollup_type: arb_orbit
 dao:
   crv: "0x1b3757d5EE281Eaf6a9c8E5D9b8488b4475Aa955"
   crvusd: "0xEAEdD2B1b3F0fEC6388A4d6b2fE500B59Fd9f755"
+  emergency_admin: "0x970777A6A50c3927Cd7735A538431512b2592C96"
+  ownership_admin: "0x676053Ab2fFfBdd0464eC784A52dA1dEA5355300"
+  parameter_admin: "0x11DFBcB581D2146338B76739C086FA902f233f1c"
+  vault: "0x506F594ceb4E33F5161139bAe3Ee911014df9f7f"
 explorer_base_url: https://cornscan.io/
 
 # Not related to development, for further integrations
