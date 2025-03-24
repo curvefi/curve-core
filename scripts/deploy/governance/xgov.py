@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import boa
+
 from scripts.deploy.constants import BROADCASTERS
 from scripts.deploy.deployment_file import YamlDeploymentFile, get_deployment_obj
 from scripts.deploy.deployment_utils import deploy_contract, update_deployment_chain_config
@@ -42,7 +44,7 @@ def deploy_xgov(chain_settings: ChainConfig):
             r_args = ()
         case RollupType.not_rollup:
             # Currently temporary admin, Verifier with LZ Blockhash provider s00n
-            r_args = ("0xaddress",)  # messenger
+            r_args = (boa.env.account,)  # messenger
         case _:
             raise NotImplementedError(f"{rollup_type} currently not supported")
 
