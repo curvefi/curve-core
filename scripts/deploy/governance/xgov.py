@@ -40,6 +40,9 @@ def deploy_xgov(chain_settings: ChainConfig):
             r_args = ("0x0000000000000000000000000000000000000064",)  # arbsys
         case RollupType.taiko:
             r_args = ()
+        case RollupType.not_rollup:
+            # Currently temporary admin, Verifier with LZ Blockhash provider s00n
+            r_args = ("0xaddress",)  # messenger
         case _:
             raise NotImplementedError(f"{rollup_type} currently not supported")
 
