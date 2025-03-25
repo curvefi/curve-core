@@ -12,7 +12,7 @@ config:
   file_path: devnet/megaeth.yaml
   is_testnet: true
   layer: 2
-  logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/mega-testnet.png
+  logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/megaeth.png
   multicall2: '0x0000000000000000000000000000000000000000'
   multicall3: '0xcA11bde05977b3631167028862bE2a173976CA11'
   native_currency_coingecko_id: ethereum
