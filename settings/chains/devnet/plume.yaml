@@ -1,0 +1,21 @@
+chain_id: 98867
+dao:
+  crv: "0x0000000000000000000000000000000000000000"
+  crvusd: "0x0000000000000000000000000000000000000000"
+explorer_base_url: https://testnet-explorer.plumenetwork.xyz
+file_name: plume
+file_path: devnet/plume.yaml
+is_testnet: True
+layer: 2
+logo_url: https://assets.plumenetwork.xyz/images/logos/plume.png
+native_currency_coingecko_id: plume
+native_currency_symbol: PLUME
+network_name: Plume Testnet
+public_rpc_url: https://testnet-rpc.plumenetwork.xyz
+rollup_type: arb_orbit
+wrapped_native_token: "0xC1FD14775c8665B31c7154074f537338774351EB"
+reference_token_addresses:
+  usdc: ""
+  usdt: ""
+  weth: ""
+multicall2: ""

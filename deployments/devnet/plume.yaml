@@ -1,21 +1,373 @@
 config:
   chain_id: 98867
   dao:
-    crv: ""
-    crvusd: ""
-    emergency_admin: ""
-    ownership_admin: ""
-    parameter_admin: ""
-    vault: ""
+    crv: '0x0000000000000000000000000000000000000000'
+    crvusd: '0x0000000000000000000000000000000000000000'
+    emergency_admin: '0x784e366f50c0397c55EaaA0BE3449a24E2A7F5cd'
+    ownership_admin: '0xBc22A87348b5B4f51b3D29Eea984A4763376eD3A'
+    parameter_admin: '0x0CCdF6bD76Dc18917cE16DdC6a50d9389C897824'
+    vault: '0xD6714592b9018fDab9DdeA9f9D81Bd7ded0BE96D'
   explorer_base_url: https://testnet-explorer.plumenetwork.xyz
   file_name: plume
   file_path: devnet/plume.yaml
-  is_testnet: True
+  is_testnet: true
   layer: 2
   logo_url: https://assets.plumenetwork.xyz/images/logos/plume.png
+  multicall2: ''
+  multicall3: '0xcA11bde05977b3631167028862bE2a173976CA11'
   native_currency_coingecko_id: plume
   native_currency_symbol: PLUME
   network_name: Plume Testnet
   public_rpc_url: https://testnet-rpc.plumenetwork.xyz
+  reference_token_addresses:
+    usdc: ''
+    usdt: ''
+    weth: ''
   rollup_type: arb_orbit
-  wrapped_native_token: "0xC1FD14775c8665B31c7154074f537338774351EB"
+  wrapped_native_token: '0xC1FD14775c8665B31c7154074f537338774351EB'
+contracts:
+  amm:
+    stableswap:
+      factory:
+        address: '0xF39ea1CdBf13BC8b2f9fA5f89cAaB6CeF5c93eF0'
+        compiler_settings:
+          compiler_version: 0.3.10
+          evm_version: shanghai
+          optimisation_level: GAS
+        constructor_args_encoded: 000000000000000000000000d6714592b9018fdab9ddea9f9d81bd7ded0be96d0000000000000000000000006fdd7c9c4b9975f0fa5e25c5d54c63455f08bb03
+        contract_github_url: https://github.com/curvefi/curve-lite/blob/6f52fba699d6be12b0a92cf6b0e26e2248067569/contracts/amm/stableswap/factory/factory_v_100.vy
+        contract_path: /contracts/amm/stableswap/factory/factory_v_100.vy
+        contract_version: 1.0.0
+        deployment_timestamp: 1742927500
+        deployment_type: normal
+      implementation:
+        address: '0x637e66a17120dc126545B8D70079b0DC1a3D4Bc8'
+        compiler_settings:
+          compiler_version: 0.3.10
+          evm_version: shanghai
+          optimisation_level: CODESIZE
+        constructor_args_encoded: null
+        contract_github_url: https://github.com/curvefi/curve-lite/blob/39693133dc01e53f4c2ba5b1d58aeefb493fe7f7/contracts/amm/stableswap/implementation/implementation_v_700.vy
+        contract_path: /contracts/amm/stableswap/implementation/implementation_v_700.vy
+        contract_version: 7.0.0
+        deployment_timestamp: 1742927485
+        deployment_type: blueprint
+      math:
+        address: '0x49720fd58d53eca6b79D6B03F5C220a607082c35'
+        compiler_settings:
+          compiler_version: 0.3.10
+          evm_version: shanghai
+          optimisation_level: GAS
+        constructor_args_encoded: null
+        contract_github_url: https://github.com/curvefi/curve-lite/blob/dd15266111683807cf1ea57f1dfc45c25e61ec3a/contracts/amm/stableswap/math/math_v_100.vy
+        contract_path: /contracts/amm/stableswap/math/math_v_100.vy
+        contract_version: 1.0.0
+        deployment_timestamp: 1742927473
+        deployment_type: normal
+      meta_implementation:
+        address: '0xB0c9f6FE758ca35d9453EDf40FE2858014465fC9'
+        compiler_settings:
+          compiler_version: 0.3.10
+          evm_version: paris
+          optimisation_level: CODESIZE
+        constructor_args_encoded: null
+        contract_github_url: https://github.com/curvefi/curve-lite/blob/dd15266111683807cf1ea57f1dfc45c25e61ec3a/contracts/amm/stableswap/meta_implementation/meta_implementation_v_700.vy
+        contract_path: /contracts/amm/stableswap/meta_implementation/meta_implementation_v_700.vy
+        contract_version: 7.0.0
+        deployment_timestamp: 1742927491
+        deployment_type: blueprint
+      views:
+        address: '0x5F14D12BB1d3AeE83C208dd703Da80C634DdacE7'
+        compiler_settings:
+          compiler_version: 0.3.10
+          evm_version: paris
+          optimisation_level: GAS
+        constructor_args_encoded: null
+        contract_github_url: https://github.com/curvefi/curve-lite/blob/03cd0cecb6cf78ec926310a2fe8976efa607d0e6/contracts/amm/stableswap/views/views_v_120.vy
+        contract_path: /contracts/amm/stableswap/views/views_v_120.vy
+        contract_version: 1.2.0
+        deployment_timestamp: 1742927480
+        deployment_type: normal
+    tricryptoswap:
+      factory:
+        address: '0xf414ce7743254c8DB1D5956905Ce934746433A21'
+        compiler_settings:
+          compiler_version: 0.3.10
+          evm_version: paris
+          optimisation_level: GAS
+        constructor_args_encoded: 000000000000000000000000d6714592b9018fdab9ddea9f9d81bd7ded0be96d
+        contract_github_url: https://github.com/curvefi/curve-lite/blob/6f52fba699d6be12b0a92cf6b0e26e2248067569/contracts/amm/tricryptoswap/factory/factory_v_200.vy
+        contract_path: /contracts/amm/tricryptoswap/factory/factory_v_200.vy
+        contract_version: 2.0.0
+        deployment_timestamp: 1742927547
+        deployment_type: normal
+      implementation:
+        address: '0x29f6234fAb1Fa7a7e69A3CD861e292242C541660'
+        compiler_settings:
+          compiler_version: 0.3.10
+          evm_version: paris
+          optimisation_level: GAS
+        constructor_args_encoded: null
+        contract_github_url: https://github.com/curvefi/curve-lite/blob/14022145c05a95650d8379b45e51e72b1860e4e3/contracts/amm/tricryptoswap/implementation/implementation_v_200.vy
+        contract_path: /contracts/amm/tricryptoswap/implementation/implementation_v_200.vy
+        contract_version: 2.0.0
+        deployment_timestamp: 1742927541
+        deployment_type: blueprint
+      math:
+        address: '0x574Dd70e4B1AaE2b00aaD5267501aFD68f946a2c'
+        compiler_settings:
+          compiler_version: 0.3.10
+          evm_version: paris
+          optimisation_level: GAS
+        constructor_args_encoded: null
+        contract_github_url: https://github.com/curvefi/curve-lite/blob/a4cb8201f2c584baec668707a695d35e469ff73b/contracts/amm/tricryptoswap/math/math_v_200.vy
+        contract_path: /contracts/amm/tricryptoswap/math/math_v_200.vy
+        contract_version: 2.0.0
+        deployment_timestamp: 1742927530
+        deployment_type: normal
+      views:
+        address: '0x301957eC1722EC48E12FDC88dFC1CE97335f3dC1'
+        compiler_settings:
+          compiler_version: 0.3.10
+          evm_version: paris
+          optimisation_level: GAS
+        constructor_args_encoded: null
+        contract_github_url: https://github.com/curvefi/curve-lite/blob/a4cb8201f2c584baec668707a695d35e469ff73b/contracts/amm/tricryptoswap/views/views_v_200.vy
+        contract_path: /contracts/amm/tricryptoswap/views/views_v_200.vy
+        contract_version: 2.0.0
+        deployment_timestamp: 1742927535
+        deployment_type: normal
+    twocryptoswap:
+      factory:
+        address: '0xA76F1Fd2dF215B76143839FCaCC55EC047C490F0'
+        compiler_settings:
+          compiler_version: 0.3.10
+          evm_version: paris
+          optimisation_level: GAS
+        constructor_args_encoded: 000000000000000000000000d6714592b9018fdab9ddea9f9d81bd7ded0be96d
+        contract_github_url: https://github.com/curvefi/curve-lite/blob/6f52fba699d6be12b0a92cf6b0e26e2248067569/contracts/amm/twocryptoswap/factory/factory_v_200.vy
+        contract_path: /contracts/amm/twocryptoswap/factory/factory_v_200.vy
+        contract_version: 2.0.0
+        deployment_timestamp: 1742927587
+        deployment_type: normal
+      implementation:
+        address: '0x40e02078910D7762D7603447976AaC8963f1Be9D'
+        compiler_settings:
+          compiler_version: 0.3.10
+          evm_version: paris
+          optimisation_level: GAS
+        constructor_args_encoded: null
+        contract_github_url: https://github.com/curvefi/curve-lite/blob/14022145c05a95650d8379b45e51e72b1860e4e3/contracts/amm/twocryptoswap/implementation/implementation_v_210.vy
+        contract_path: /contracts/amm/twocryptoswap/implementation/implementation_v_210.vy
+        contract_version: 2.1.0
+        deployment_timestamp: 1742927581
+        deployment_type: blueprint
+      math:
+        address: '0xf5B12cf233d9de8CE912dFB4d29D2f99474b9749'
+        compiler_settings:
+          compiler_version: 0.3.10
+          evm_version: paris
+          optimisation_level: GAS
+        constructor_args_encoded: null
+        contract_github_url: https://github.com/curvefi/curve-lite/blob/6a6508e2cc2d40c34187d2db23792633c119c844/contracts/amm/twocryptoswap/math/math_v_210.vy
+        contract_path: /contracts/amm/twocryptoswap/math/math_v_210.vy
+        contract_version: 2.1.0
+        deployment_timestamp: 1742927569
+        deployment_type: normal
+      views:
+        address: '0xe1f39b0f4c9f977b215BfA513e8f3C12D4279086'
+        compiler_settings:
+          compiler_version: 0.3.10
+          evm_version: paris
+          optimisation_level: GAS
+        constructor_args_encoded: null
+        contract_github_url: https://github.com/curvefi/curve-lite/blob/a4cb8201f2c584baec668707a695d35e469ff73b/contracts/amm/twocryptoswap/views/views_v_200.vy
+        contract_path: /contracts/amm/twocryptoswap/views/views_v_200.vy
+        contract_version: 2.0.0
+        deployment_timestamp: 1742927575
+        deployment_type: normal
+  gauge:
+    child_gauge:
+      factory:
+        address: '0x4a41842E50BEf7558bF2e850Fb777467A0b9c8B4'
+        compiler_settings:
+          compiler_version: 0.3.10
+          evm_version: paris
+          optimisation_level: GAS
+        constructor_args_encoded: 000000000000000000000000306a45a1478a000dc701a6e1f7a569afb8d9dcd600000000000000000000000096720942f9ff22efd8611f696e5333fe3671717a0000000000000000000000000000000000000000000000000000000000000000
+        contract_github_url: https://github.com/curvefi/curve-lite/blob/5bb8237e41dc0776598884c95797a21b2cad9144/contracts/gauge/child_gauge/factory/factory_v_201.vy
+        contract_path: /contracts/gauge/child_gauge/factory/factory_v_201.vy
+        contract_version: 2.0.1
+        deployment_timestamp: 1742927437
+        deployment_type: normal
+      implementation:
+        address: '0x6B8818F67a69e589CB14F88c258015BB0e165114'
+        compiler_settings:
+          compiler_version: 0.3.10
+          evm_version: null
+          optimisation_level: GAS
+        constructor_args_encoded: 0000000000000000000000004a41842e50bef7558bf2e850fb777467a0b9c8b4
+        contract_github_url: https://github.com/curvefi/curve-lite/blob/17774245dbd4b68a030705206fba3f1998017550/contracts/gauge/child_gauge/implementation/implementation_v_110.vy
+        contract_path: /contracts/gauge/child_gauge/implementation/implementation_v_110.vy
+        contract_version: 1.1.0
+        deployment_timestamp: 1742927444
+        deployment_type: normal
+  governance:
+    agent:
+      address: '0xA041f31be46B7CfC470C2e450AE04da5804Eff0f'
+      compiler_settings:
+        compiler_version: 0.3.10
+        evm_version: null
+        optimisation_level: GAS
+      constructor_args_encoded: null
+      contract_github_url: https://github.com/curvefi/curve-lite/blob/8c05198c971b90d3bb120de91f55485a304c7847/contracts/governance/agent/agent_v_100.vy
+      contract_path: /contracts/governance/agent/agent_v_100.vy
+      contract_version: 1.0.0
+      deployment_timestamp: 1742927413
+      deployment_type: blueprint
+    relayer:
+      arb_orbit:
+        address: '0x181135C382F534d8432C2fE401bd19E328b00934'
+        compiler_settings:
+          compiler_version: 0.3.10
+          evm_version: null
+          optimisation_level: GAS
+        constructor_args_encoded: 00000000000000000000000094630a56519c00be339bbd8bd26f342bf4bd7ee0000000000000000000000000a041f31be46b7cfc470c2e450ae04da5804eff0f0000000000000000000000000000000000000000000000000000000000000064
+        contract_github_url: https://github.com/curvefi/curve-lite/blob/b6b9850aba3e6964e8dfd732251024ff7d1bb7cd/contracts/governance/relayer/arb_orbit/relayer_v_101.vy
+        contract_path: /contracts/governance/relayer/arb_orbit/relayer_v_101.vy
+        contract_version: 1.0.1
+        deployment_timestamp: 1742927421
+        deployment_type: normal
+    vault:
+      address: '0xD6714592b9018fDab9DdeA9f9D81Bd7ded0BE96D'
+      compiler_settings:
+        compiler_version: 0.3.10
+        evm_version: null
+        optimisation_level: GAS
+      constructor_args_encoded: 000000000000000000000000bc22a87348b5b4f51b3d29eea984a4763376ed3a
+      contract_github_url: https://github.com/curvefi/curve-lite/blob/5bb8237e41dc0776598884c95797a21b2cad9144/contracts/governance/vault/vault_v_100.vy
+      contract_path: /contracts/governance/vault/vault_v_100.vy
+      contract_version: 1.0.0
+      deployment_timestamp: 1742927429
+      deployment_type: normal
+  helpers:
+    deposit_and_stake_zap:
+      address: '0xF2441f254E9368bC65b3Dbf61CbFc2131Ef3d476'
+      compiler_settings:
+        compiler_version: 0.3.10
+        evm_version: paris
+        optimisation_level: GAS
+      constructor_args_encoded: null
+      contract_github_url: https://github.com/curvefi/curve-lite/blob/0f3143402f74b3e43f8287e65130b3ce32aa89ac/contracts/helpers/deposit_and_stake_zap/deposit_and_stake_zap_v_100.vy
+      contract_path: /contracts/helpers/deposit_and_stake_zap/deposit_and_stake_zap_v_100.vy
+      contract_version: 1.0.0
+      deployment_timestamp: 1742927608
+      deployment_type: normal
+    rate_provider:
+      address: '0x4CC7286b83015CA46CE654001026aeA5A490Ba4a'
+      compiler_settings:
+        compiler_version: 0.3.10
+        evm_version: paris
+        optimisation_level: GAS
+      constructor_args_encoded: 0000000000000000000000002e914cb1da049ec070d4fe3650028ddd48b7eea9
+      contract_github_url: https://github.com/curvefi/curve-lite/blob/30c8dc394ab187934f063ec545da48d5e4ac46db/contracts/helpers/rate_provider/rate_provider_v_101.vy
+      contract_path: /contracts/helpers/rate_provider/rate_provider_v_101.vy
+      contract_version: 1.0.1
+      deployment_timestamp: 1742927619
+      deployment_type: normal
+    router:
+      address: '0xF86877CcF160160Fd81f9483eA898A7704aF279C'
+      compiler_settings:
+        compiler_version: 0.3.10
+        evm_version: paris
+        optimisation_level: GAS
+      constructor_args_encoded: 000000000000000000000000c1fd14775c8665b31c7154074f537338774351eb
+      contract_github_url: https://github.com/curvefi/curve-lite/blob/0f3143402f74b3e43f8287e65130b3ce32aa89ac/contracts/helpers/router/router_v_110.vy
+      contract_path: /contracts/helpers/router/router_v_110.vy
+      contract_version: 1.1.0
+      deployment_timestamp: 1742927468
+      deployment_type: normal
+    stable_swap_meta_zap:
+      address: '0x7FC3A655b62c6Ee255Ded62C2b4cb29C135E8a5B'
+      compiler_settings:
+        compiler_version: 0.3.10
+        evm_version: paris
+        optimisation_level: GAS
+      constructor_args_encoded: null
+      contract_github_url: https://github.com/curvefi/curve-lite/blob/eb1dba99925e42e4f5320b8f032dbd0b24ff28d2/contracts/helpers/stable_swap_meta_zap/stable_swap_meta_zap_v_100.vy
+      contract_path: /contracts/helpers/stable_swap_meta_zap/stable_swap_meta_zap_v_100.vy
+      contract_version: 1.0.0
+      deployment_timestamp: 1742927614
+      deployment_type: normal
+  registries:
+    address_provider:
+      address: '0x2E914CB1Da049EC070d4FE3650028Ddd48b7eeA9'
+      compiler_settings:
+        compiler_version: 0.3.10
+        evm_version: paris
+        optimisation_level: GAS
+      constructor_args_encoded: null
+      contract_github_url: https://github.com/curvefi/curve-lite/blob/6f52fba699d6be12b0a92cf6b0e26e2248067569/contracts/registries/address_provider/address_provider_v_201.vy
+      contract_path: /contracts/registries/address_provider/address_provider_v_201.vy
+      contract_version: 2.0.1
+      deployment_timestamp: 1742927455
+      deployment_type: normal
+    metaregistry:
+      address: '0x11388d3982cDe382C406240Ce570679EBC5F6FdB'
+      compiler_settings:
+        compiler_version: 0.3.10
+        evm_version: paris
+        optimisation_level: GAS
+      constructor_args_encoded: 0000000000000000000000004a41842e50bef7558bf2e850fb777467a0b9c8b4ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+      contract_github_url: https://github.com/curvefi/curve-lite/blob/6f52fba699d6be12b0a92cf6b0e26e2248067569/contracts/registries/metaregistry/metaregistry_v_110.vy
+      contract_path: /contracts/registries/metaregistry/metaregistry_v_110.vy
+      contract_version: 1.1.0
+      deployment_timestamp: 1742927462
+      deployment_type: normal
+      registry_handlers:
+        stableswap:
+          address: '0xA8DbC5Af59D2e4a23a0196656F34D0bbc1F887b8'
+          compiler_settings:
+            compiler_version: 0.3.10
+            evm_version: paris
+            optimisation_level: GAS
+          constructor_args_encoded: 000000000000000000000000f39ea1cdbf13bc8b2f9fa5f89caab6cef5c93ef0
+          contract_github_url: https://github.com/curvefi/curve-lite/blob/312513e50c4c7a4a084da44af73ed944e08d37f7/contracts/registries/metaregistry/registry_handlers/stableswap/handler_v_110.vy
+          contract_path: /contracts/registries/metaregistry/registry_handlers/stableswap/handler_v_110.vy
+          contract_version: 1.1.0
+          deployment_timestamp: 1742927627
+          deployment_type: normal
+        tricryptoswap:
+          address: '0xF0c6FC6170A2C237F4133546cbA1729cBADc31Ad'
+          compiler_settings:
+            compiler_version: 0.3.10
+            evm_version: paris
+            optimisation_level: GAS
+          constructor_args_encoded: 000000000000000000000000f414ce7743254c8db1d5956905ce934746433a21
+          contract_github_url: https://github.com/curvefi/curve-lite/blob/312513e50c4c7a4a084da44af73ed944e08d37f7/contracts/registries/metaregistry/registry_handlers/tricryptoswap/handler_v_110.vy
+          contract_path: /contracts/registries/metaregistry/registry_handlers/tricryptoswap/handler_v_110.vy
+          contract_version: 1.1.0
+          deployment_timestamp: 1742927635
+          deployment_type: normal
+        twocryptoswap:
+          address: '0xfc551b9d5D89d3a25124405c55C7033F8F1e5c28'
+          compiler_settings:
+            compiler_version: 0.3.10
+            evm_version: paris
+            optimisation_level: GAS
+          constructor_args_encoded: 000000000000000000000000a76f1fd2df215b76143839fcacc55ec047c490f0
+          contract_github_url: https://github.com/curvefi/curve-lite/blob/312513e50c4c7a4a084da44af73ed944e08d37f7/contracts/registries/metaregistry/registry_handlers/twocryptoswap/handler_v_110.vy
+          contract_path: /contracts/registries/metaregistry/registry_handlers/twocryptoswap/handler_v_110.vy
+          contract_version: 1.1.0
+          deployment_timestamp: 1742927642
+          deployment_type: normal
+pools:
+- address: '0x873790505128523cD366d2796Dc4c28613bBee3E'
+  factory: '0xA76F1Fd2dF215B76143839FCaCC55EC047C490F0'
+  symbol: TST
+  tokens:
+  - address: '0xBE0d1962C9470e06e5F66a5C7DDa082C45544c28'
+  - address: '0x9d0E2c03A89d4d298C66fc9F45a16Ad546836664'
+tokens:
+- address: '0xBE0d1962C9470e06e5F66a5C7DDa082C45544c28'
+- address: '0x9d0E2c03A89d4d298C66fc9F45a16Ad546836664'
