@@ -7,7 +7,7 @@ config:
     ownership_admin: '0x0000000000000000000000000000000000000000'
     parameter_admin: '0x0000000000000000000000000000000000000000'
     vault: '0x0000000000000000000000000000000000000000'
-  explorer_base_url: https://blockscout2-testnet.expchain.ai/
+  explorer_base_url: https://blockscout-testnet.expchain.ai/
   file_name: expchain
   file_path: devnet/expchain.yaml
   is_testnet: true
@@ -18,7 +18,7 @@ config:
   native_currency_coingecko_id: polyhedra-network
   native_currency_symbol: tZKJ
   network_name: EXPchain
-  public_rpc_url: https://rpc2-testnet.expchain.ai/
+  public_rpc_url: https://rpc0-testnet.expchain.ai 
   reference_token_addresses:
     usdc: '0x0000000000000000000000000000000000000000'
     usdt: '0x0000000000000000000000000000000000000000'
