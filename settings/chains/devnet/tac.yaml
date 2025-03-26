@@ -8,16 +8,18 @@ dao:
   ownership_admin: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
   parameter_admin: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
   vault: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
-explorer_base_url: https://explorer.tac-turin.ankr.com/
+explorer_base_url: https://turin.explorer.tac.build/
+is_testnet: true
 
 # Not related to development, for further integrations
 layer: 1
 logo_url: https://tacpreloader.s3.us-east-1.amazonaws.com/2024-12-11+12.54.58.jpg
 native_currency_symbol: TAC
-public_rpc_url: https://newyork-inap-72-251-230-233.ankr.com/tac_tacd_testnet_full_rpc_1
-wrapped_native_token: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
+native_currency_coingecko_id: TAC
+public_rpc_url: https://turin.rpc.tac.build
+wrapped_native_token: "0x07840B012d84095397Fd251Ea619cee6F866bC39"
 reference_token_addresses:
-  usdc: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
-  usdt: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
-  weth: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
-multicall2: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"
+  usdt: "0xa4014D04BF612709A2657E1d6f21DF6b02B55d79"
+  usde: "0xd98BaAeAb71f090d753DCC299Ce5f27C5B8A961E"
+  weth: "0xa48fA4354B908377bc76D44AF91A249CCE49cd19"
+multicall2: "0x51ebbB6F8167E39C3b867d50332c82fbd92d3861"
