@@ -14,15 +14,15 @@ config:
   layer: 2
   logo_url: https://raw.githubusercontent.com/alpenlabs/docs/refs/heads/main/docs/images/Strata_Small.png
   multicall2: '0xc9C8Ab3C0De997652F6Ebb385E63Ae9a0ae2A7F6'
-  multicall3: '0xcA11bde05977b3631167028862bE2a173976CA11'
+  multicall3: null
   native_currency_coingecko_id: bitcoin
   native_currency_symbol: BTC
   network_name: Strata
   public_rpc_url: https://stratareth3666f0713.devnet-annapurna.stratabtc.org
   reference_token_addresses:
-    usdc: '0x0000000000000000000000000000000000000000'
-    usdt: '0x0000000000000000000000000000000000000000'
-    weth: '0x0000000000000000000000000000000000000000'
+    usdc: null
+    usdt: null
+    weth: null
   rollup_type: _
   wrapped_native_token: '0x2fb867AE94cEff131a54Aa281b21621bC4b5Fce6'
 contracts:
