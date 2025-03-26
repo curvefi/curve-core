@@ -324,7 +324,13 @@ contracts:
           contract_version: 1.1.0
           deployment_timestamp: 1742958206
           deployment_type: normal
-pools: null
+pools:
+  - address: '0x1f4A1DdA1205e2C120639072656802c5D5938FE4'
+  - factory: '0xaf1d6dc7A8AD45B66C5095Cb927740b27450d0b4'
+  - symbol: TSTCRV
+  - tokens:
+    - address: '0xa659e3c23521E1Fe1892aFB8395C22B94239ad0c'
+    - address: '0xA14F8338c824D3eA6d09988D95D171e2CB4d5DB7'
 tokens:
 - address: '0xa659e3c23521E1Fe1892aFB8395C22B94239ad0c'
 - address: '0xA14F8338c824D3eA6d09988D95D171e2CB4d5DB7'
