@@ -14,7 +14,7 @@ config:
   layer: 1
   logo_url: https://github.com/PolyhedraZK/VisualAsset/blob/main/EXPchain/EXPchain%20Symbol_Black%20on%20White.svg
   multicall2: '0x0000000000000000000000000000000000000000'
-  multicall3: '0xcA11bde05977b3631167028862bE2a173976CA11'
+  multicall3: '0x6b9A7AFcD8f6e20a5DEaCC0656a31516bFBd0F77'
   native_currency_coingecko_id: polyhedra-network
   native_currency_symbol: tZKJ
   network_name: EXPchain
