@@ -1,0 +1,22 @@
+network_name: Plume
+chain_id: 98866
+is_testnet: False
+rollup_type: _
+dao:
+  emergency_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF" # deployer as admin until DAO ownership transfer
+  ownership_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+  parameter_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+explorer_base_url: https://explorer.plume.org
+
+# Frontend-specific inputs
+layer: 2
+logo_url: https://assets.plume.org/images/logos/plume/plume.svg
+native_currency_symbol: PLUME
+native_currency_coingecko_id: plume
+public_rpc_url: https://rpc.plume.org
+wrapped_native_token: "0xEa237441c92CAe6FC17Caaf9a7acB3f953be4bd1"
+reference_token_addresses:
+  usdc: "0x78adD880A697070c1e765Ac44D65323a0DcCE913"
+  usdt: "0xda6087E69C51E7D31b6DBAD276a3c44703DFdCAd"
+  weth: "0xca59cA09E5602fAe8B629DeE83FfA819741f14be"
+multicall3: "0xcA11bde05977b3631167028862bE2a173976CA11"
