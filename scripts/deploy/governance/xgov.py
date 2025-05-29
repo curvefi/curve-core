@@ -3,11 +3,11 @@ from pathlib import Path
 import boa
 
 from scripts.deploy.constants import BROADCASTERS
-from scripts.deploy.deployment_file import YamlDeploymentFile, get_deployment_obj
+from scripts.deploy.deployment_file import get_deployment_obj
 from scripts.deploy.deployment_utils import deploy_contract, update_deployment_chain_config
 from scripts.deploy.utils import get_relative_path
 from scripts.logging_config import get_logger
-from settings.config import BASE_DIR
+from settings.config import BASE_DIR, settings
 from settings.models import ChainConfig, RollupType
 
 logger = get_logger()
@@ -44,24 +44,34 @@ def deploy_xgov(chain_settings: ChainConfig):
             r_args = ()
         case RollupType.not_rollup:
             # Currently temporary admin, Verifier with LZ Blockhash provider s00n
-            r_args = (boa.env.account,)  # messenger
+            r_args = (str(boa.env.eoa),)  # messenger
         case _:
             raise NotImplementedError(f"{rollup_type} currently not supported")
+
+    if rollup_type == RollupType.not_rollup:
+        args = (
+            agent_blueprint.address,
+            *r_args,
+        )
+    else:
+        args = (
+            BROADCASTERS[rollup_type],
+            agent_blueprint.address,
+            *r_args,
+        )
 
     relayer = deploy_contract(
         chain_settings,
         Path(BASE_DIR, "contracts", "governance", "relayer", chain_settings.rollup_type),
-        BROADCASTERS[rollup_type],
-        agent_blueprint.address,
-        *r_args,
+        *args,
     )
     update_deployment_chain_config(
         chain_settings,
         {
             "dao": {
-                "emergency_admin": relayer._immutables.EMERGENCY_AGENT,
-                "ownership_admin": relayer._immutables.OWNERSHIP_AGENT,
-                "parameter_admin": relayer._immutables.PARAMETER_AGENT,
+                "emergency_admin": str(relayer.EMERGENCY_AGENT()),
+                "ownership_admin": str(relayer.OWNERSHIP_AGENT()),
+                "parameter_admin": str(relayer.PARAMETER_AGENT()),
             }
         },
     )
@@ -85,6 +95,7 @@ def transfer_ownership(chain_settings):
     deployments = deployment_file.get_deployed_contracts()
     owner = chain_settings.dao.ownership_admin
 
+    # TODO: rewrite it as VVM Contract doesn't have _storage
     for deployment in deployments:
 
         deployment_name = get_relative_path(deployment.compiler_data.contract_name)

@@ -1,6 +1,6 @@
 network_name: Arbitrum Sepolia
 chain_id: 421614
-rollup_type: arb_orbit
+rollup_type: not_rollup
 dao:
   crv: "0x50FB01Ee521b9D22cdcb713a505019f41b8BBFf4"
   crvusd: "0x92fc3EfE9129675A6d1405519C38b3aDdE4E0ADe"
@@ -13,6 +13,7 @@ native_currency_symbol: ETH
 logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/arbitrum-sepolia.png
 file_name: arbitrum-sepolia
 file_path: devnet/arb_sepolia.yaml
+native_currency_coingecko_id: ethereum
 public_rpc_url: https://sepolia-rollup.arbitrum.io/rpc
 wrapped_native_token: "0x980B62Da83eFf3D4576C647993b0c1D7faf17c73"
 reference_token_addresses:

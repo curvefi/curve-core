@@ -14,7 +14,7 @@ config:
   native_currency_symbol: ETH
   network_name: example
   public_rpc_url: https://eth.llamarpc.com
-  rollup_type: _
+  rollup_type: not_rollup
   wrapped_native_token: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 contracts:
   amm:

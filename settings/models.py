@@ -23,7 +23,7 @@ class RollupType(StrEnum):
     polygon_cdk = "polygon_cdk"
     zksync = "zksync"
     taiko = "taiko"
-    not_rollup = "_"
+    not_rollup = "not_rollup"
 
 
 class CurveDAOSettings(BaseModel):

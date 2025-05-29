@@ -1,8 +1,10 @@
-# @version 0.3.10
+# pragma version 0.3.10
 """
 @title XYZ Relayer
 @author CurveFi
 """
+
+version: public(constant(String[8])) = "1.0.0"
 
 
 event SetMessenger:

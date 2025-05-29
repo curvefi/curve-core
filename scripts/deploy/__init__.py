@@ -67,9 +67,7 @@ def run_deploy_all(chain_config_file: str) -> None:
     dump_initial_chain_settings(chain_settings)
 
     # check if there is a need to deploy xgov:
-    if chain_settings.rollup_type == RollupType.not_rollup or (
-        chain_settings.dao.ownership_admin and chain_settings.dao.parameter_admin and chain_settings.dao.emergency_admin
-    ):
+    if chain_settings.dao.ownership_admin and chain_settings.dao.parameter_admin and chain_settings.dao.emergency_admin:
         logger.info("No xgov for L1, setting admins from chain_settings file ...")
         admins = (
             chain_settings.dao.ownership_admin,

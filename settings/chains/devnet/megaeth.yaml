@@ -1,7 +1,7 @@
 network_name: MEGA Testnet
 chain_id: 6342
 is_testnet: True
-rollup_type: _
+rollup_type: not_rollup
 dao:
   crv: "0x0000000000000000000000000000000000000000"
   crvusd: "0x0000000000000000000000000000000000000000"

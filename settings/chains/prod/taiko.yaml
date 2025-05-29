@@ -1,6 +1,6 @@
 network_name: taiko
 chain_id: 167000
-rollup_type: _
+rollup_type: not_rollup
 dao:
   crv: "0x09413312b263fD252C16e592A45f4689F26cb79d"
   crvusd: "0xc8F4518ed4bAB9a972808a493107926cE8237068"

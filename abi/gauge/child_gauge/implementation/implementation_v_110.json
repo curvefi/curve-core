@@ -727,18 +727,6 @@
         ]
     },
     {
-        "stateMutability": "pure",
-        "type": "function",
-        "name": "version",
-        "inputs": [],
-        "outputs": [
-            {
-                "name": "",
-                "type": "string"
-            }
-        ]
-    },
-    {
         "stateMutability": "view",
         "type": "function",
         "name": "factory",
@@ -747,6 +735,18 @@
             {
                 "name": "",
                 "type": "address"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "version",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
             }
         ]
     },

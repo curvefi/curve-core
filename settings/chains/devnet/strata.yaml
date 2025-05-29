@@ -1,7 +1,7 @@
 network_name: Strata
 chain_id: 8091
 is_testnet: True
-rollup_type: _ # leave '_' if not one of: 'op_stack', 'arb_orbit', 'polygon_cdk', 'zksync', 'taiko'
+rollup_type: not_rollup
 dao:
   crv: "0x0000000000000000000000000000000000000000"
   crvusd: "0x0000000000000000000000000000000000000000"
