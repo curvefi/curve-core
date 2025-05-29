@@ -1,7 +1,7 @@
 network_name: Plume
 chain_id: 98866
 is_testnet: False
-rollup_type: _
+rollup_type: not_rollup
 dao:
   emergency_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF" # deployer as admin until DAO ownership transfer
   ownership_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"

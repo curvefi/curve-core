@@ -9,7 +9,7 @@ from scripts.deploy.deployment_file import YamlDeploymentFile, get_deployment_ob
 from scripts.deploy.models import PoolType
 from scripts.deploy.presets import CryptoPoolPresets
 from scripts.logging_config import get_logger
-from settings.config import BASE_DIR
+from settings.config import BASE_DIR, settings
 from settings.models import ChainConfig
 
 from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRESS
@@ -97,13 +97,14 @@ def deploy_contract(
     if not os.path.exists(abi_path.parent):
         os.makedirs(abi_path.parent)
 
+    # TODO: deployed_contract.abi is empty list here
     with open(abi_path, "w") as abi_file:
         json.dump(deployed_contract.abi, abi_file, indent=4)
         abi_file.write("\n")
 
     # update deployment yaml file
     deployment_file.update_contract_deployment(
-        contract_folder,
+        contract_to_deploy,
         deployed_contract,
         args,
         as_blueprint=as_blueprint,

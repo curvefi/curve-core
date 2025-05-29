@@ -8,6 +8,8 @@
 @custom:version 1.1.0
 """
 
+version: public(constant(String[8])) = "1.1.0"
+
 
 from vyper.interfaces import ERC20
 
@@ -79,8 +81,6 @@ struct Reward:
 MAX_REWARDS: constant(uint256) = 8
 TOKENLESS_PRODUCTION: constant(uint256) = 40
 WEEK: constant(uint256) = 604800
-
-VERSION: constant(String[8]) = "1.1.0"
 
 EIP712_TYPEHASH: constant(bytes32) = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,bytes32 salt)")
 EIP2612_TYPEHASH: constant(bytes32) = keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)")
@@ -191,7 +191,7 @@ def initialize(_lp_token: address, _root: address, _manager: address):
         _abi_encode(
             EIP712_TYPEHASH,
             keccak256(name),
-            keccak256(VERSION),
+            keccak256(version),
             chain.id,
             self,
             self.salt,
@@ -837,16 +837,6 @@ def decimals() -> uint8:
     @return uint8 decimal places
     """
     return 18
-
-
-@pure
-@external
-def version() -> String[8]:
-    """
-    @notice Get the version of this gauge contract
-    @return Version in x.x.x format
-    """
-    return VERSION
 
 
 @view
