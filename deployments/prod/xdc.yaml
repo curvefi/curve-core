@@ -15,7 +15,7 @@ config:
   logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/xdc.png
   multicall2: null
   multicall3: '0x0B1795ccA8E4eC4df02346a082df54D437F8D9aF'
-  native_currency_coingecko_id: xdc-network
+  native_currency_coingecko_id: xdce-crowd-sale
   native_currency_symbol: XDC
   network_name: XDC
   public_rpc_url: https://rpc1.xinfin.network
