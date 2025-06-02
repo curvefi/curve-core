@@ -1,0 +1,22 @@
+network_name: XDC
+chain_id: 50
+is_testnet: False
+rollup_type: _
+dao:
+  emergency_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF" # deployer as admin until DAO ownership transfer
+  ownership_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+  parameter_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+explorer_base_url: https://xdcscan.com
+
+# Frontend-specific inputs
+layer: 1
+logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/xdc.png
+native_currency_symbol: XDC
+native_currency_coingecko_id: xdc-network
+public_rpc_url: https://rpc1.xinfin.network
+wrapped_native_token: "0x951857744785E80e2De051c32EE7b25f9c458C42"
+reference_token_addresses:
+  usdc: "0x2A8E898b6242355c290E1f4Fc966b8788729A4D4"
+  usdt: "0xcdA5b77E2E2268D9E09c874c1b9A4c3F07b37555"
+  weth: "0xa7348290de5cf01772479c48D50dec791c3fC212"
+multicall3: "0x0B1795ccA8E4eC4df02346a082df54D437F8D9aF"
