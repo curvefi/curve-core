@@ -26,14 +26,14 @@ def deploy_liquidity_gauge_infra(chain_settings: ChainConfig):
     )
 
     # set child gauge implementation on the child gauge factory
-    current_implementation = child_gauge_factory._storage.get_implementation.get()
+    current_implementation = child_gauge_factory.get_implementation()
     if not current_implementation == child_gauge_implementation.address:
         logger.info(f"Current liquidity child gauge implementation: {current_implementation}")
         child_gauge_factory.set_implementation(child_gauge_implementation.address)
         logger.info(f"Set liquidity child gauge implementation to {child_gauge_implementation.address}.")
 
     if chain_settings.dao and chain_settings.dao.crv:
-        crv_address = child_gauge_factory._storage.crv.get()
+        crv_address = child_gauge_factory.crv()
         if crv_address != chain_settings.dao.crv:
             child_gauge_factory.set_crv(chain_settings.dao.crv)
 

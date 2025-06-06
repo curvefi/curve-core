@@ -23,7 +23,7 @@ config:
     usdc: ''
     usdt: ''
     weth: ''
-  rollup_type: _
+  rollup_type: not_rollup
   wrapped_native_token: '0x5555555555555555555555555555555555555555'
 contracts:
   amm:

@@ -23,7 +23,7 @@ config:
     usdc: null
     usdt: '0xa4014D04BF612709A2657E1d6f21DF6b02B55d79'
     weth: '0xa48fA4354B908377bc76D44AF91A249CCE49cd19'
-  rollup_type: _
+  rollup_type: not_rollup
   wrapped_native_token: '0x07840B012d84095397Fd251Ea619cee6F866bC39'
 contracts:
   amm:

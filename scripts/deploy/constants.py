@@ -241,6 +241,7 @@ BROADCASTERS = {
     RollupType.polygon_cdk: "0xB5e7fE8eA8ECbd33504485756fCabB5f5D29C051",
     RollupType.arb_orbit: "0x94630a56519c00Be339BBd8BD26f342Bf4bd7eE0",
     RollupType.taiko: "0x05A3a7B57Cb60419fF0B087e9EAE8469c28aC8CD",
+    RollupType.not_rollup: None,
 }
 
 ROOT_GAUGE_FACTORY = "0x306A45a1478A000dC701A6e1f7a569afb8D9DCD6"
