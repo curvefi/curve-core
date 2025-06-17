@@ -30,25 +30,25 @@ def set_chain_settings(chain_settings: ChainConfig):
     logger.info(f"Chain settings initialized with EVM version: {chain_settings.evm_version}")
 
 
-def load_partial_wrapper(*args, **kwargs):
-    """Wrapper for boa.load_partial that includes compiler args from chain settings."""
+def _inject_compiler_args(kwargs):
+    """Inject compiler args into kwargs if not already present."""
     if _chain_settings_initialized and "compiler_args" not in kwargs:
         kwargs["compiler_args"] = {"evm_version": _current_chain_settings.evm_version}
     elif not _chain_settings_initialized and "compiler_args" not in kwargs:
         # Default to shanghai for standalone scripts
         kwargs["compiler_args"] = {"evm_version": "shanghai"}
         logger.warning("Chain settings not initialized. Using default EVM version: shanghai")
+
+
+def load_partial_wrapper(*args, **kwargs):
+    """Wrapper for boa.load_partial that includes compiler args from chain settings."""
+    _inject_compiler_args(kwargs)
     return _original_load_partial(*args, **kwargs)
 
 
 def load_wrapper(*args, **kwargs):
     """Wrapper for boa.load that includes compiler args from chain settings."""
-    if _chain_settings_initialized and "compiler_args" not in kwargs:
-        kwargs["compiler_args"] = {"evm_version": _current_chain_settings.evm_version}
-    elif not _chain_settings_initialized and "compiler_args" not in kwargs:
-        # Default to shanghai for standalone scripts
-        kwargs["compiler_args"] = {"evm_version": "shanghai"}
-        logger.warning("Chain settings not initialized. Using default EVM version: shanghai")
+    _inject_compiler_args(kwargs)
     return _original_load(*args, **kwargs)
 
 
