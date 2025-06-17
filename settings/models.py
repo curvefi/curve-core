@@ -51,6 +51,7 @@ class ChainConfig(BaseSettings):
     chain_id: int
     layer: int
     rollup_type: RollupType
+    evm_version: str = "shanghai"
     wrapped_native_token: str
     dao: CurveDAOSettings | None = None
     explorer_base_url: str

@@ -106,6 +106,7 @@ class YamlDeploymentFile:
         contract_path: Path,
         contract_object: VyperContract,
         ctor_args: tuple,
+        chain_settings: ChainConfig,
         as_blueprint: bool = False,
     ):
         deployment_config_dict = self.get_deployment_config().model_dump()
@@ -149,13 +150,7 @@ class YamlDeploymentFile:
         if match:
             optimisation_level = match.group(1)
 
-        # fetch data from contract pragma:
-        pattern = r"# pragma evm-version ([a-z]+)"
-        match = re.search(pattern, source_code)
-        if match:
-            evm_version = match.group(1)
-        else:
-            raise ValueError("Contract evm-version is set incorrectly")
+        evm_version = chain_settings.evm_version
 
         if not as_blueprint:
             version = contract_object.version().strip()

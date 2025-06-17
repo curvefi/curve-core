@@ -12,6 +12,7 @@ from scripts.logging_config import get_logger
 from settings.config import BASE_DIR, settings
 from settings.models import ChainConfig
 
+from .boa_patch import set_chain_settings  # Import and re-export from boa_patch module
 from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRESS
 from .utils import (
     fetch_filename_from_version,
@@ -113,6 +114,7 @@ def deploy_contract(
         contract_to_deploy,
         deployed_contract,
         args,
+        chain_settings,
         as_blueprint=as_blueprint,
     )
 
