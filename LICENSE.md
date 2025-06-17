@@ -1,4 +1,4 @@
-(c) Curve.Fi, 2024
+(c) Curve.finance, 2025
 
 Except as otherwise provided in the header of a specific source code
 file in this repository: (a) all intellectual property (including all
