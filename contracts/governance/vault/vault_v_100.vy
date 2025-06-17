@@ -1,5 +1,4 @@
 # pragma version 0.3.10
-# pragma evm-version paris
 """
 @title Vault
 @author CurveFi

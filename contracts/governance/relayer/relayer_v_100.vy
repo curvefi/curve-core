@@ -1,5 +1,4 @@
 # pragma version 0.4.0
-# pragma evm-version shanghai
 """
 @title Relayer
 @author Curve.Fi

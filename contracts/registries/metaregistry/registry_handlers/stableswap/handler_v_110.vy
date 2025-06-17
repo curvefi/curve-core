@@ -1,5 +1,4 @@
 # pragma version 0.3.10
-# pragma evm-version paris
 """
 @title CurveStableswapFactoryNGHandler
 @custom:version 1.1.0
