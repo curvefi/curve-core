@@ -7,7 +7,7 @@ from scripts.deploy.deployment_file import get_deployment_obj
 from scripts.deploy.deployment_utils import deploy_contract, update_deployment_chain_config
 from scripts.deploy.utils import get_relative_path
 from scripts.logging_config import get_logger
-from settings.config import BASE_DIR, settings
+from settings.config import BASE_DIR
 from settings.models import ChainConfig, RollupType
 
 logger = get_logger()
@@ -95,17 +95,20 @@ def transfer_ownership(chain_settings):
     deployments = deployment_file.get_deployed_contracts()
     owner = chain_settings.dao.ownership_admin
 
-    # TODO: rewrite it as VVM Contract doesn't have _storage
     for deployment in deployments:
+        contract = deployment["contract"]
+        is_blueprint = deployment["is_blueprint"]
+        if is_blueprint:
+            continue
 
-        deployment_name = get_relative_path(deployment.compiler_data.contract_name)
-        deployment_address = deployment.address
+        deployment_name = get_relative_path(contract.contract_name)
+        deployment_address = contract.address
 
         for attr in ("admin", "owner"):
-            if hasattr(deployment._storage, attr):
-                current_owner = getattr(deployment._storage, attr).get()
+            if hasattr(contract, attr):
+                current_owner = getattr(contract, attr)()
                 if current_owner != owner:
                     logger.info(f"Current {deployment_name} ({deployment_address}) owner: {current_owner}")
-                    deployment.set_owner(owner)
+                    contract.set_owner(owner)
                     logger.info(f"Set {deployment_name} owner to {owner}.")
                 break

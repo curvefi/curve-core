@@ -47,7 +47,7 @@ def deploy_contract(
 
     # ---------------------------------------------- FETCH CONTRACT ----------------------------------------------
 
-    if deploy_contract_version is not "v_000":
+    if deploy_contract_version != "v_000":
 
         contract_to_deploy = fetch_filename_from_version(contract_folder, deploy_contract_version)
 
@@ -97,10 +97,16 @@ def deploy_contract(
     if not os.path.exists(abi_path.parent):
         os.makedirs(abi_path.parent)
 
-    # TODO: deployed_contract.abi is empty list here
-    with open(abi_path, "w") as abi_file:
-        json.dump(deployed_contract.abi, abi_file, indent=4)
-        abi_file.write("\n")
+    # workaround for implementation blueprints
+    if not as_blueprint:
+        with open(abi_path, "w") as abi_file:
+            json.dump(deployed_contract.abi, abi_file, indent=4)
+            abi_file.write("\n")
+    else:
+        c = boa.load_partial(contract_to_deploy)
+        with open(abi_path, "w") as abi_file:
+            json.dump(c.abi, abi_file, indent=4)
+            abi_file.write("\n")
 
     # update deployment yaml file
     deployment_file.update_contract_deployment(

@@ -22,7 +22,7 @@ def test_evm_version():
             result = "FAILED"
 
         logger.info("Chain version is %r... %s", capabilities, result)
-        assert result == "PASSED"  # TODO: check if chain has a certain minimum evm version: PARIS
+        assert result == "PASSED"
     except HTTPError:  # Some chains throw bad request for capabilities check
         pass
 

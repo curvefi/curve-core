@@ -143,14 +143,17 @@ class YamlDeploymentFile:
             f"{'/'.join(contract_relative_path.parts[1:])}"
         )
 
-        optimisation_level = "NONE"
+        optimisation_level = "GAS"  # it's not in new version of boa, backward compatibility
         evm_version = "shanghai"
 
-        # TODO: fix optimisation_level and evm_version (no compiler data in VVM contracts)
-        if not settings.DEBUG and not as_blueprint:
+        # fetch data from contract pragma:
+        pattern = r"# pragma evm-version ([a-z]+)"
+        match = re.search(pattern, source_code)
+        if match:
+            evm_version = match.group(1)
+
+        if not as_blueprint:
             version = contract_object.version().strip()
-            # optimisation_level = contract_object.compiler_data.settings.optimize._name_
-            # evm_version = contract_object.compiler_data.settings.evm_version
         else:
             pattern = 'version: public\(constant\(String\[8\]\)\) = "([\d.]+)"'
             match = re.search(pattern, source_code)
@@ -194,7 +197,9 @@ class YamlDeploymentFile:
 
         def process_contracts(obj, path):
             if isinstance(obj, DataModels.Contract):
-                contract_info.append(obj.get_contract())
+                contract_info.append(
+                    {"contract": obj.get_contract(), "is_blueprint": obj.deployment_type == "blueprint"}
+                )
             elif isinstance(obj, BaseModel):
                 for field_name, _ in obj.__fields__.items():
                     process_contracts(getattr(obj, field_name), f"{path}.{field_name}" if path else field_name)
