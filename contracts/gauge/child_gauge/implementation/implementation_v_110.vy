@@ -1,4 +1,5 @@
 # pragma version 0.3.10
+# pragma evm-version shanghai
 # pragma optimize gas
 """
 @title CurveXChainLiquidityGauge

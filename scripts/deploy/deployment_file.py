@@ -143,14 +143,19 @@ class YamlDeploymentFile:
             f"{'/'.join(contract_relative_path.parts[1:])}"
         )
 
-        optimisation_level = "GAS"  # it's not in new version of boa, backward compatibility
-        evm_version = "shanghai"
+        optimisation_level = "UNKNOWN"  # it's not in VVM contract, backward compatibility
+        pattern = r"# pragma optimize ([a-z]+)"
+        match = re.search(pattern, source_code)
+        if match:
+            optimisation_level = match.group(1)
 
         # fetch data from contract pragma:
         pattern = r"# pragma evm-version ([a-z]+)"
         match = re.search(pattern, source_code)
         if match:
             evm_version = match.group(1)
+        else:
+            raise ValueError("Contract evm-version is set incorrectly")
 
         if not as_blueprint:
             version = contract_object.version().strip()
