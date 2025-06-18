@@ -80,14 +80,20 @@ def deploy_contract(
             logger.info(
                 f"{contract_designation} contract already deployed at {deployed_contract.address}. Fetching ..."
             )
-            return boa.load_partial(latest_contract, compiler_args={"evm_version": chain_settings.evm_version}).at(deployed_contract.address)
+            return boa.load_partial(latest_contract, compiler_args={"evm_version": chain_settings.evm_version}).at(
+                deployed_contract.address
+            )
 
     # ---------------------------------------------------- DEPLOY ----------------------------------------------------
 
     if not as_blueprint:
-        deployed_contract = boa.load_partial(contract_to_deploy, compiler_args={"evm_version": chain_settings.evm_version}).deploy(*args)
+        deployed_contract = boa.load_partial(
+            contract_to_deploy, compiler_args={"evm_version": chain_settings.evm_version}
+        ).deploy(*args)
     else:
-        deployed_contract = boa.load_partial(contract_to_deploy, compiler_args={"evm_version": chain_settings.evm_version}).deploy_as_blueprint(*args)
+        deployed_contract = boa.load_partial(
+            contract_to_deploy, compiler_args={"evm_version": chain_settings.evm_version}
+        ).deploy_as_blueprint(*args)
 
     # store abi
     relpath = get_relative_path(contract_folder / os.path.basename(contract_to_deploy))
