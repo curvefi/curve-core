@@ -12,7 +12,6 @@ from scripts.logging_config import get_logger
 from settings.config import BASE_DIR, settings
 from settings.models import ChainConfig
 
-from .boa_patch import set_chain_settings  # Import and re-export from boa_patch module
 from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRESS
 from .utils import (
     fetch_filename_from_version,
@@ -81,14 +80,14 @@ def deploy_contract(
             logger.info(
                 f"{contract_designation} contract already deployed at {deployed_contract.address}. Fetching ..."
             )
-            return boa.load_partial(latest_contract).at(deployed_contract.address)
+            return boa.load_partial(latest_contract, compiler_args={"evm_version": chain_settings.evm_version}).at(deployed_contract.address)
 
     # ---------------------------------------------------- DEPLOY ----------------------------------------------------
 
     if not as_blueprint:
-        deployed_contract = boa.load_partial(contract_to_deploy).deploy(*args)
+        deployed_contract = boa.load_partial(contract_to_deploy, compiler_args={"evm_version": chain_settings.evm_version}).deploy(*args)
     else:
-        deployed_contract = boa.load_partial(contract_to_deploy).deploy_as_blueprint(*args)
+        deployed_contract = boa.load_partial(contract_to_deploy, compiler_args={"evm_version": chain_settings.evm_version}).deploy_as_blueprint(*args)
 
     # store abi
     relpath = get_relative_path(contract_folder / os.path.basename(contract_to_deploy))
@@ -104,7 +103,7 @@ def deploy_contract(
             json.dump(deployed_contract.abi, abi_file, indent=4)
             abi_file.write("\n")
     else:
-        c = boa.load_partial(contract_to_deploy)
+        c = boa.load_partial(contract_to_deploy, compiler_args={"evm_version": chain_settings.evm_version})
         with open(abi_path, "w") as abi_file:
             json.dump(c.abi, abi_file, indent=4)
             abi_file.write("\n")
@@ -121,9 +120,9 @@ def deploy_contract(
     return deployed_contract
 
 
-def deploy_via_create2(contract_file, abi_encoded_ctor="", is_blueprint=False):
+def deploy_via_create2(chain_settings: ChainConfig, contract_file, abi_encoded_ctor="", is_blueprint=False):
     create2deployer = boa.loads_abi(CREATE2DEPLOYER_ABI).at(CREATE2DEPLOYER_ADDRESS)
-    contract_obj = boa.load_partial(contract_file)
+    contract_obj = boa.load_partial(contract_file, compiler_args={"evm_version": chain_settings.evm_version})
     compiled_bytecode = contract_obj.compiler_data.bytecode
     deployment_bytecode = compiled_bytecode + abi_encoded_ctor
     if is_blueprint:

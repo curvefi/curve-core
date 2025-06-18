@@ -12,7 +12,7 @@ from settings.models import RollupType
 from .amm.stableswap import deploy_stableswap
 from .amm.tricrypto import deploy_tricrypto
 from .amm.twocrypto import deploy_twocrypto
-from .deployment_utils import dump_initial_chain_settings, get_deployment_config, get_deployment_obj, set_chain_settings
+from .deployment_utils import dump_initial_chain_settings, get_deployment_config, get_deployment_obj
 from .gauge.child_gauge import deploy_liquidity_gauge_infra
 from .governance.xgov import deploy_dao_vault, deploy_xgov, transfer_ownership
 from .helpers.deposit_and_stake_zap import deploy_deposit_and_stake_zap
@@ -62,9 +62,6 @@ def run_deploy_all(chain_config_file: str) -> None:
 
     # pre-deployment tests:
     test_pre_deploy(chain_settings.chain_id)
-
-    # Initialize chain settings for compiler args (must be done before any contract loading)
-    set_chain_settings(chain_settings)
 
     # Save chain settings
     dump_initial_chain_settings(chain_settings)
