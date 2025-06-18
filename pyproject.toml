@@ -17,6 +17,7 @@ pydantic-settings = "^2.3.4"
 click = "^8.1.7"
 pydantic = "^2.8.2"
 curve-boa = "0.1.10.1"
+hyperliquid-python-sdk = "^0.15.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "24.4.2"

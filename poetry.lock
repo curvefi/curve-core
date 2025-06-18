@@ -1314,6 +1314,24 @@ docs = ["sphinx (>=5.3.0)", "sphinx-rtd-theme (>=1.0.0)", "towncrier (>=21,<22)"
 test = ["eth-utils (>=2.0.0)", "hypothesis (>=3.44.24,<=6.31.6)", "pytest (>=7.0.0)", "pytest-xdist (>=2.4.0)"]
 
 [[package]]
+name = "hyperliquid-python-sdk"
+version = "0.15.0"
+description = "SDK for Hyperliquid API trading with Python."
+optional = false
+python-versions = "<4.0,>=3.9"
+files = [
+    {file = "hyperliquid_python_sdk-0.15.0-py3-none-any.whl", hash = "sha256:130adf35533a3ce9ea017db3c6d1c2d8b3acb48cb1109fb49808a9076962d043"},
+    {file = "hyperliquid_python_sdk-0.15.0.tar.gz", hash = "sha256:cc5f5908963456268da3a9d1859ae5213fb391d934eb18f79f0e9608ca9095d3"},
+]
+
+[package.dependencies]
+eth-account = ">=0.10.0,<0.14.0"
+eth-utils = ">=2.1.0,<6.0.0"
+msgpack = ">=1.0.5,<2.0.0"
+requests = ">=2.31.0,<3.0.0"
+websocket-client = ">=1.5.1,<2.0.0"
+
+[[package]]
 name = "hypothesis"
 version = "6.119.4"
 description = "A library for property-based testing"
@@ -2763,6 +2781,22 @@ lint = ["black (==23.3.0)", "flake8 (==3.9.2)", "flake8-bugbear (==20.1.4)", "fl
 test = ["eth-stdlib (==0.2.6)", "eth-tester[py-evm] (>=0.9.0b1,<0.10)", "hypothesis[lark] (>=5.37.1,<6.0)", "lark (==1.1.2)", "py-evm (>=0.7.0a1,<0.8)", "pytest (>=6.2.5,<7.0)", "pytest-cov (>=2.10,<3.0)", "pytest-instafail (>=0.4,<1.0)", "pytest-rerunfailures (>=10.2,<11)", "pytest-split (>=0.7.0,<1.0)", "pytest-xdist (>=2.5,<3.0)", "tox (>=3.15,<4.0)", "web3 (==6.0.0)"]
 
 [[package]]
+name = "websocket-client"
+version = "1.8.0"
+description = "WebSocket client for Python with low level API options"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "websocket_client-1.8.0-py3-none-any.whl", hash = "sha256:17b44cc997f5c498e809b22cdf2d9c7a9e71c02c8cc2b6c56e7c2d1239bfa526"},
+    {file = "websocket_client-1.8.0.tar.gz", hash = "sha256:3239df9f44da632f96012472805d40a23281a991027ce11d2f45a6f24ac4c3da"},
+]
+
+[package.extras]
+docs = ["Sphinx (>=6.0)", "myst-parser (>=2.0.0)", "sphinx-rtd-theme (>=1.1.0)"]
+optional = ["python-socks", "wsaccel"]
+test = ["websockets"]
+
+[[package]]
 name = "wheel"
 version = "0.45.1"
 description = "A built-package format for Python"
@@ -2867,4 +2901,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "bd63b75632a08c254649ae11c63d753f516ade02a55a7d1fabda13b397555769"
+content-hash = "f3c41b813dcbd3b8415f330f152ddfc43f2ac3e10e1a27d3936c33e21eee9ee4"

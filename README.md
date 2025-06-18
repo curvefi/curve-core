@@ -1,3 +1,86 @@
+# Setup Guide: Running the Hyperliquid Big Blocks Script
+
+## Prerequisites
+- **Python 3.11+** (this project requires Python 3.11 or higher)
+- **Homebrew** (for macOS users)
+
+## Step-by-Step Setup
+
+### 1. Install Python 3.11+
+```bash
+# Check your current Python version
+python --version
+
+# If you need Python 3.11+ on macOS:
+brew install python@3.11
+```
+
+### 2. Install Poetry
+```bash
+python3.11 -m pip install poetry==1.8.3
+```
+
+### 3. Set up the Python Environment
+```bash
+# Configure Poetry to use Python 3.11
+poetry env use python3.11
+
+# Install all project dependencies
+poetry install
+```
+
+### 4. Add the Required Package
+```bash
+# Add the Hyperliquid SDK
+poetry add hyperliquid-python-sdk
+```
+
+### 5. Configure Your Environment
+Create a `settings/env` file with your credentials:
+```
+WEB3_PROVIDER_URL=your_rpc_url_here
+DEPLOYER_EOA_PRIVATE_KEY=your_private_key_here
+```
+
+**Replace:**
+- `your_private_key_here` with your actual private key (without 0x prefix)
+- `your_rpc_url_here` with any RPC endpoint (required by the project structure, but not used by this specific script)
+
+### 6. Update the Script
+Edit `scripts/utils/hyperevm_enable_big_blocks.py` and replace:
+```python
+address = "YOUR_EOA_ADDRESS_HERE"
+```
+with your actual Ethereum address (the address corresponding to your private key).
+
+### 7. Register Your Wallet on Hyperliquid
+- Go to [app.hyperliquid.xyz](https://app.hyperliquid.xyz)
+- Connect your wallet
+- Complete any required setup/deposit to register your wallet
+
+### 8. Run the Script
+```bash
+poetry run python scripts/utils/hyperevm_enable_big_blocks.py
+```
+
+**Expected Success Output:**
+```
+Using account: 0x...
+Target address: 0x...
+Enabling big blocks (20M gas limit)...
+Result: {'status': 'ok', 'response': {'type': 'default'}}
+```
+
+## Troubleshooting
+- **"User does not exist" error:** Your wallet needs to be registered on Hyperliquid first (Step 7)
+- **Environment variable errors:** Make sure your `settings/env` file is properly configured
+- **Python version errors:** Ensure you're using Python 3.11+
+
+---
+
+That's it! Your wallet will now be configured for 20M gas limit blocks instead of the default 2M gas limit on Hyperliquid HyperEVM.
+
+### ============================ Existing README ⬇️ ================================
 # Curve Core
 
 A minimal version of all curve infrastructure for AMM in one place.
