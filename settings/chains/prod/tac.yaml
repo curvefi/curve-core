@@ -1,0 +1,20 @@
+network_name: tac
+chain_id: 239
+rollup_type: _
+dao:
+  emergency_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF" # deployer as admin until DAO ownership transfer
+  ownership_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+  parameter_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+explorer_base_url: https://tac.blockscout.com
+is_testnet: false
+
+# Not related to development, for further integrations
+layer: 1
+logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/tac.png
+native_currency_symbol: TAC
+native_currency_coingecko_id: TAC
+public_rpc_url: https://rpc.ankr.com/tac
+wrapped_native_token: "0xB63B9f0eb4A6E6f191529D71d4D88cc8900Df2C9"
+reference_token_addresses:
+  usdt: "0xAF988C3f7CB2AceAbB15f96b19388a259b6C438f"
+multicall3: "0xcA11bde05977b3631167028862bE2a173976CA11"
