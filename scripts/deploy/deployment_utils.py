@@ -85,15 +85,12 @@ def deploy_contract(
             )
 
     # ---------------------------------------------------- DEPLOY ----------------------------------------------------
+    contract_deployer = boa.load_partial(contract_to_deploy, compiler_args={"evm_version": chain_settings.evm_version})
 
     if not as_blueprint:
-        deployed_contract = boa.load_partial(
-            contract_to_deploy, compiler_args={"evm_version": chain_settings.evm_version}
-        ).deploy(*args)
+        deployed_contract = contract_deployer.deploy(*args)
     else:
-        deployed_contract = boa.load_partial(
-            contract_to_deploy, compiler_args={"evm_version": chain_settings.evm_version}
-        ).deploy_as_blueprint(*args)
+        deployed_contract = contract_deployer.deploy_as_blueprint(*args)
 
     # store abi
     relpath = get_relative_path(contract_folder / os.path.basename(contract_to_deploy))
@@ -109,9 +106,8 @@ def deploy_contract(
             json.dump(deployed_contract.abi, abi_file, indent=4)
             abi_file.write("\n")
     else:
-        c = boa.load_partial(contract_to_deploy, compiler_args={"evm_version": chain_settings.evm_version})
         with open(abi_path, "w") as abi_file:
-            json.dump(c.abi, abi_file, indent=4)
+            json.dump(contract_deployer.abi, abi_file, indent=4)
             abi_file.write("\n")
 
     # update deployment yaml file
