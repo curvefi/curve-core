@@ -32,13 +32,13 @@ def deploy_stableswap(chain_settings: ChainConfig, fee_receiver):
     )
 
     # Set up AMM implementations:
-    current_views_impl = factory._storage.views_implementation.get()
+    current_views_impl = factory.views_implementation()
     if not current_views_impl == views_contract.address:
         logger.info(f"Current views implementation: {current_views_impl}")
         factory.set_views_implementation(views_contract.address)
         logger.info(f"Set views implementation to: {views_contract.address}")
 
-    current_math_impl = factory._storage.math_implementation.get()
+    current_math_impl = factory.math_implementation()
     if not current_math_impl == math_contract.address:
         logger.info(f"Current math implementation: {current_math_impl}")
         factory.set_math_implementation(math_contract.address)

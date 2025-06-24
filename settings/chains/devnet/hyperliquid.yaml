@@ -1,7 +1,7 @@
 network_name: hyperliquid
 chain_id: 998
 is_testnet: True
-rollup_type: _
+rollup_type: not_rollup
 dao:
   crv: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C" # dummy valules
   crvusd: "0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C"

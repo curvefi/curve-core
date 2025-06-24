@@ -1,7 +1,7 @@
 network_name: hyperliquid
 chain_id: 999
 is_testnet: False
-rollup_type: _
+rollup_type: not_rollup
 dao:
   emergency_admin: "0xb101b2b0aa02b7167D238B98dc1B0b0404a760E8" # heswithme.eth EOA until ownership is transferred to the DAO
   ownership_admin: "0xb101b2b0aa02b7167D238B98dc1B0b0404a760E8"

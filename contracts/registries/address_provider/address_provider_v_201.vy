@@ -1,5 +1,4 @@
 # pragma version 0.3.10
-# pragma evm-version paris
 """
 @title CurveAddressProvider
 @custom:version 2.0.1

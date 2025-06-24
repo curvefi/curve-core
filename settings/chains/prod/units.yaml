@@ -1,7 +1,7 @@
 network_name: units network
 chain_id: 88811
 is_testnet: False
-rollup_type: _ # custom consensus layer built on Waves blockchain
+rollup_type: not_rollup # custom consensus layer built on Waves blockchain
 dao:
   crv: "0xAC73671a1762FE835208Fb93b7aE7490d1c2cCb3" # n/a
   crvusd: "0x39fec550CC6DDCEd810eCCfA9B2931b4B5f2344D" # n/a

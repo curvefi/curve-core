@@ -103,13 +103,14 @@ class YamlDeploymentFile:
 
     def update_contract_deployment(
         self,
-        contract_folder: Path,
+        contract_path: Path,
         contract_object: VyperContract,
         ctor_args: tuple,
+        chain_settings: ChainConfig,
         as_blueprint: bool = False,
     ):
         deployment_config_dict = self.get_deployment_config().model_dump()
-        contract_path_keys = contract_folder.parts[contract_folder.parts.index("contracts") :]
+        contract_path_keys = contract_path.parts[contract_path.parts.index("contracts") : -1]
 
         # fill nested keys if they don't exist and return the innermost nest based on contract_folder:
         contract_deployment = self.ensure_nested_dict(deployment_config_dict, contract_path_keys)
@@ -124,9 +125,12 @@ class YamlDeploymentFile:
         else:
             encoded_args = None
 
+        with open(BASE_DIR / contract_path) as f:
+            source_code = f.read()
+
         # fetch data from contract pragma:
         pattern = r"# pragma version ([\d.]+)"
-        match = re.search(pattern, contract_object.compiler_data.source_code)
+        match = re.search(pattern, source_code)
         if match:
             compiler_version = match.group(1)
         else:
@@ -134,17 +138,25 @@ class YamlDeploymentFile:
 
         # latest git commit hash:
         latest_git_commit_for_file = get_latest_commit_hash(contract_object.filename)
-        contract_relative_path = get_relative_path(contract_object.filename)
+        contract_relative_path = get_relative_path(contract_path)
         github_url = (
             f"https://github.com/curvefi/curve-lite/blob/{latest_git_commit_for_file}/"
             f"{'/'.join(contract_relative_path.parts[1:])}"
         )
 
+        optimisation_level = "UNKNOWN"  # it's not in VVM contract, backward compatibility
+        pattern = r"# pragma optimize ([a-z]+)"
+        match = re.search(pattern, source_code)
+        if match:
+            optimisation_level = match.group(1)
+
+        evm_version = chain_settings.evm_version
+
         if not as_blueprint:
             version = contract_object.version().strip()
         else:
             pattern = 'version: public\(constant\(String\[8\]\)\) = "([\d.]+)"'
-            match = re.search(pattern, contract_object.compiler_data.source_code)
+            match = re.search(pattern, source_code)
 
             if match:
                 version = match.group(1)
@@ -163,8 +175,8 @@ class YamlDeploymentFile:
                 "constructor_args_encoded": encoded_args,
                 "compiler_settings": {
                     "compiler_version": compiler_version,
-                    "optimisation_level": contract_object.compiler_data.settings.optimize._name_,
-                    "evm_version": contract_object.compiler_data.settings.evm_version,
+                    "optimisation_level": optimisation_level,
+                    "evm_version": evm_version,
                 },
             }
         )
@@ -185,7 +197,9 @@ class YamlDeploymentFile:
 
         def process_contracts(obj, path):
             if isinstance(obj, DataModels.Contract):
-                contract_info.append(obj.get_contract())
+                contract_info.append(
+                    {"contract": obj.get_contract(), "is_blueprint": obj.deployment_type == "blueprint"}
+                )
             elif isinstance(obj, BaseModel):
                 for field_name, _ in obj.__fields__.items():
                     process_contracts(getattr(obj, field_name), f"{path}.{field_name}" if path else field_name)

@@ -48,7 +48,10 @@ class Contract(BaseModel):
 
     def get_contract(self):
         contract_path = BASE_DIR / Path(self.contract_path.lstrip("/"))
-        return boa.load_partial(contract_path).at(self.address)
+        compiler_args = {}
+        if self.compiler_settings.evm_version:
+            compiler_args["evm_version"] = self.compiler_settings.evm_version
+        return boa.load_partial(contract_path, compiler_args=compiler_args).at(self.address)
 
 
 #  <-------------------------- Deployments -------------------------->

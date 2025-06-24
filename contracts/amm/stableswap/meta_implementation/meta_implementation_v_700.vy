@@ -1,6 +1,5 @@
 # pragma version 0.3.10
 # pragma optimize codesize
-# pragma evm-version paris
 
 """
 @title CurveStableSwapMeta
