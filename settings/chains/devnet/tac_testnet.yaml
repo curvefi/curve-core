@@ -1,4 +1,4 @@
-network_name: tac
+network_name: tac testnet
 chain_id: 2390
 rollup_type: not_rollup
 dao:
