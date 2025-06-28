@@ -9,7 +9,7 @@ config:
     vault: '0xAB1c34b53F12980a4fa9043B70c864CEE6891c0C'
   explorer_base_url: https://turin.explorer.tac.build/
   file_name: tac-testnet
-  file_path: devnet/tac.yaml
+  file_path: devnet/tac_testnet.yaml
   is_testnet: true
   layer: 1
   logo_url: https://tacpreloader.s3.us-east-1.amazonaws.com/2024-12-11+12.54.58.jpg
