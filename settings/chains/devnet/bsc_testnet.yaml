@@ -1,0 +1,21 @@
+network_name: BSC Testnet
+chain_id: 97
+is_testnet: True
+rollup_type: not_rollup
+dao:
+  emergency_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+  ownership_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+  parameter_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF" 
+explorer_base_url: https://testnet.bscscan.com
+# Frontend-specific inputs
+layer: 1
+logo_url: https://github.com/curvefi/curve-assets/blob/main/chains/bsc.png
+native_currency_symbol: BNB
+native_currency_coingecko_id: binancecoin
+public_rpc_url: https://data-seed-prebsc-1-s1.binance.org:8545/
+wrapped_native_token: "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd"
+reference_token_addresses:
+  usdc: ""
+  usdt: ""
+  weth: ""
+multicall3: "0xcA11bde05977b3631167028862bE2a173976CA11"
