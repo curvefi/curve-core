@@ -7,7 +7,7 @@ config:
     ownership_admin: '0xb101b2b0aa02b7167D238B98dc1B0b0404a760E8'
     parameter_admin: '0xb101b2b0aa02b7167D238B98dc1B0b0404a760E8'
     vault: '0xf3A431008396df8A8b2DF492C913706BDB0874ef'
-  explorer_base_url: https://hyperscan.com/
+  explorer_base_url: https://hyperevmscan.io/
   file_name: hyperliquid
   file_path: prod/hyperliquid.yaml
   is_testnet: false
