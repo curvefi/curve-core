@@ -6,7 +6,7 @@ dao:
   emergency_admin: "0xb101b2b0aa02b7167D238B98dc1B0b0404a760E8" # heswithme.eth EOA until ownership is transferred to the DAO
   ownership_admin: "0xb101b2b0aa02b7167D238B98dc1B0b0404a760E8"
   parameter_admin: "0xb101b2b0aa02b7167D238B98dc1B0b0404a760E8"
-explorer_base_url: https://hyperscan.com/
+explorer_base_url: https://hyperevmscan.io/
 
 # Frontend-specific inputs
 layer: 2
