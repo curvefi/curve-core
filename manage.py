@@ -13,7 +13,7 @@ def commands(): ...
 
 if __name__ == "__main__":
     if settings.DEBUG:
-        boa.fork(settings.WEB3_PROVIDER_URL)
+        boa.fork(settings.WEB3_PROVIDER_URL, block_identifier="latest")
     else:
         boa.set_network_env(settings.WEB3_PROVIDER_URL)
         boa.env.add_account(Account.from_key(settings.DEPLOYER_EOA_PRIVATE_KEY))
