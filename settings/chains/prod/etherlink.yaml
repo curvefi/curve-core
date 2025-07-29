@@ -1,0 +1,22 @@
+network_name: Etherlink
+chain_id: 42793
+is_testnet: False
+rollup_type: not_rollup
+dao:
+  emergency_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF" # deployer as admin until DAO ownership transfer
+  ownership_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+  parameter_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+explorer_base_url: https://explorer.etherlink.com
+
+# Frontend-specific inputs
+layer: 2
+logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/etherlink.png
+native_currency_symbol: XTZ
+native_currency_coingecko_id: wrapped-xtz
+public_rpc_url: https://node.mainnet.etherlink.com/
+wrapped_native_token: "0xc9B53AB2679f573e480d01e0f49e2B5CFB7a3EAb"
+reference_token_addresses:
+  usdc: "0x796Ea11Fa2dD751eD01b53C372fFDB4AAa8f00F9"
+  usdt: "0x2C03058C8AFC06713be23e58D2febC8337dbfE6A"
+  weth: "0xfc24f770F94edBca6D6f885E12d4317320BcB401"
+multicall3: "0xcA11bde05977b3631167028862bE2a173976CA11"
