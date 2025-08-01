@@ -1,0 +1,22 @@
+network_name: Plasma Testnet
+chain_id: 9746
+is_testnet: True
+rollup_type: not_rollup
+dao:
+  emergency_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF" 
+  ownership_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+  parameter_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+explorer_base_url: https://testnet.plasmascan.to/
+
+# Frontend-specific inputs
+layer: 1
+logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/plasma.png
+native_currency_symbol: XPL
+native_currency_coingecko_id: plasma
+public_rpc_url: https://testnet-rpc.plasma.to
+wrapped_native_token: "0x5760e034c55838FE8e05d256d499c3b019A04f4d"
+reference_token_addresses:
+  usdc: ""
+  usdt: ""
+  weth: ""
+multicall3: ""
