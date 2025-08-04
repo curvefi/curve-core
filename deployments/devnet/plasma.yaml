@@ -15,7 +15,7 @@ config:
   layer: 1
   logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/plasma.png
   multicall2: null
-  multicall3: ''
+  multicall3: '0xBaF6cacFfFb6D57d548F0FAff486E9884a0D1747'
   native_currency_coingecko_id: plasma
   native_currency_symbol: XPL
   network_name: Plasma Testnet
