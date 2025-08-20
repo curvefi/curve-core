@@ -1,0 +1,22 @@
+network_name: Monad Testnet
+chain_id: 10143
+is_testnet: True
+rollup_type: not_rollup
+dao:
+  emergency_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+  ownership_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+  parameter_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+explorer_base_url: https://testnet.monadexplorer.com
+
+# Frontend-specific inputs
+layer: 1
+logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/monad.png
+native_currency_symbol: MON
+native_currency_coingecko_id: monad
+public_rpc_url: https://testnet-rpc.monad.xyz
+wrapped_native_token: "0x760AfE86e5de5fa0Ee542fc7B7B713e1c5425701"
+reference_token_addresses:
+  usdc: "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea"
+  usdt: "0x88b8E2161DEDC77EF4ab7585569D2415a1C1055D"
+  weth: "0xB5a30b0FDc5EA94A52fDc42e3E9760Cb8449Fb37"
+multicall3: "0xcA11bde05977b3631167028862bE2a173976CA11"
