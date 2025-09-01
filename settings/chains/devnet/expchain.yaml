@@ -1,25 +1,22 @@
-network_name: EXPchain
+network_name: EXPChain Testnet
 chain_id: 18880
 is_testnet: True
 rollup_type: not_rollup
 dao:
-  crv: "0x0000000000000000000000000000000000000000"
-  crvusd: "0x0000000000000000000000000000000000000000"
-  emergency_admin: "0x0000000000000000000000000000000000000000"
-  ownership_admin: "0x0000000000000000000000000000000000000000"
-  parameter_admin: "0x0000000000000000000000000000000000000000"
-  vault: "0x0000000000000000000000000000000000000000"
-explorer_base_url: https://blockscout2-testnet.expchain.ai/
+  emergency_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+  ownership_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+  parameter_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+explorer_base_url: https://blockscout-testnet.expchain.ai
 
 # Frontend-specific inputs
 layer: 1
-logo_url: https://github.com/PolyhedraZK/VisualAsset/blob/main/EXPchain/EXPchain%20Symbol_Black%20on%20White.svg
+logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/expchain.png
 native_currency_symbol: tZKJ
 native_currency_coingecko_id: polyhedra-network
-public_rpc_url: https://rpc2-testnet.expchain.ai/
+public_rpc_url: https://rpc0-testnet.expchain.ai
 wrapped_native_token: "0xAfF9b70ea121071Deb9540e3675486b3A465e223"
 reference_token_addresses:
-  usdc: "0x0000000000000000000000000000000000000000"
-  usdt: "0x0000000000000000000000000000000000000000"
-  weth: "0x0000000000000000000000000000000000000000"
-multicall2: "0x0000000000000000000000000000000000000000"
+  usdc: ""
+  usdt: ""
+  weth: ""
+multicall3: "0x6fCf308FCb5216F8Fc1d752ba591dd49d3FF5E46"
