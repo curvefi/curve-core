@@ -8,7 +8,7 @@ config:
     parameter_admin: '0xabc336d4C71ad275695744d32DdB1d8266Db1cbF'
     vault: '0x193110Ce1542d7371e1515BD6A2E470fDefc310D'
   evm_version: shanghai
-  explorer_base_url: https://testnet.monadexplorer.com
+  explorer_base_url: https://testnet.monadscan.com/
   file_name: monad
   file_path: devnet/monad.yaml
   is_testnet: true
@@ -19,7 +19,7 @@ config:
   native_currency_coingecko_id: monad
   native_currency_symbol: MON
   network_name: Monad Testnet
-  public_rpc_url: https://testnet-rpc.monad.xyz
+  public_rpc_url: https://rpc.ankr.com/monad_testnet
   reference_token_addresses:
     usdc: '0xf817257fed379853cDe0fa4F97AB987181B1E5Ea'
     usdt: '0x88b8E2161DEDC77EF4ab7585569D2415a1C1055D'
