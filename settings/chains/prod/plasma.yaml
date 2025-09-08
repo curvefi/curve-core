@@ -1,0 +1,22 @@
+network_name: Plasma
+chain_id: 9745
+is_testnet: False
+rollup_type: not_rollup
+dao:
+  emergency_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF" # deployer as admin until DAO ownership transfer
+  ownership_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+  parameter_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+explorer_base_url: https://plasmascan.to/
+
+# Frontend-specific inputs
+layer: 1
+logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/plasma.png
+native_currency_symbol: XPL
+native_currency_coingecko_id: plasma
+public_rpc_url: https://rpc.plasma.to
+wrapped_native_token: "0x6100E367285b01F48D07953803A2d8dCA5D19873"
+reference_token_addresses:
+  usdc: ""
+  usdt: ""
+  weth: ""
+multicall3: "0xcA11bde05977b3631167028862bE2a173976CA11"
