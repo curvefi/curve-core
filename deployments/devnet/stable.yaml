@@ -7,7 +7,7 @@ config:
     ownership_admin: '0xabc336d4C71ad275695744d32DdB1d8266Db1cbF'
     parameter_admin: '0xabc336d4C71ad275695744d32DdB1d8266Db1cbF'
     vault: '0x193110Ce1542d7371e1515BD6A2E470fDefc310D'
-  evm_version: shanghai
+  evm_version: pre-shanghai
   explorer_base_url: https://stable-explorer.testnet.chain0.dev
   file_name: stable
   file_path: devnet/stable.yaml
