@@ -1,0 +1,21 @@
+network_name: Arc Testnet 
+chain_id: 5042002
+is_testnet: True
+rollup_type: not_rollup
+dao:
+  emergency_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+  ownership_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+  parameter_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+explorer_base_url: https://testnet.arcscan.app
+# Frontend-specific inputs
+layer: 1
+logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/arc.png
+native_currency_symbol: USDC
+native_currency_coingecko_id: usd-coin
+public_rpc_url: https://rpc.testnet.arc.network
+wrapped_native_token: "0x911b4000D3422F482F4062a913885f7b035382Df"
+reference_token_addresses:
+  usdc: ""
+  usdt: ""
+  weth: ""
+multicall3: "0xcA11bde05977b3631167028862bE2a173976CA11"
