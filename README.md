@@ -12,7 +12,7 @@ A minimal version of all curve infrastructure for AMM in one place.
 
 ### Helpers
 
-- Deposit and Stake Zap - for depositing and staking LPs in one tx
+- Deposit and Stake Zap for depositing and staking LPs in one tx
 - Meta Zap - for easy exchange between LP and underlying tokens
 - Router - router contract for executing complicated trades using different places
 
