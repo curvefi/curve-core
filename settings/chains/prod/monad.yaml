@@ -1,0 +1,22 @@
+network_name: Monad 
+chain_id: 143
+is_testnet: False
+rollup_type: not_rollup
+dao:
+  emergency_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF" # deployer as admin until DAO ownership transfer
+  ownership_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+  parameter_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+explorer_base_url: https://mainnet-beta.monvision.io
+
+# Frontend-specific inputs
+layer: 1
+logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/monad.png
+native_currency_symbol: MON
+native_currency_coingecko_id: monad
+public_rpc_url: https://rpc-mainnet.monadinfra.com/
+wrapped_native_token: "0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A"
+reference_token_addresses:
+  usdc: ""
+  usdt: ""
+  weth: ""
+multicall3: "0xcA11bde05977b3631167028862bE2a173976CA11"
