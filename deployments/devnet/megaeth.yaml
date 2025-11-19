@@ -18,7 +18,7 @@ config:
   native_currency_coingecko_id: ethereum
   native_currency_symbol: ETH
   network_name: MEGA Testnet
-  public_rpc_url: https://carrot.megaeth.com/rpc
+  public_rpc_url: https://timothy.megaeth.com/mafia/rpc/o3p6a9s2d5f8g1h4j7k0l3z6x9c2v5b8n1m4q7w0
   reference_token_addresses:
     usdc: '0x0000000000000000000000000000000000000000'
     usdt: '0x0000000000000000000000000000000000000000'
