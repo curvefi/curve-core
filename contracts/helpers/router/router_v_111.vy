@@ -2,14 +2,14 @@
 
 """
 @title CurveRouter
-@custom:version 1.1.0
+@custom:version 1.1.1
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice Performs up to 5 swaps in a single transaction
         Can do estimations with get_dy and get_dx
 """
 
-version: public(constant(String[8])) = "1.1.0"  # ng pools
+version: public(constant(String[8])) = "1.1.1"
 
 
 from vyper.interfaces import ERC20
@@ -56,8 +56,11 @@ event Exchange:
     in_amount: uint256
     out_amount: uint256
 
-NATIVE_TOKEN_ADDRESS: immutable(address)
-GTOKEN_ADDRESS: immutable(address)
+
+DEFAULT_ETH_ADDRESS: constant(address) = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
+
+ETH_ADDRESS: immutable(address)
+WETH_ADDRESS: immutable(address)
 
 is_approved: HashMap[address, HashMap[address, bool]]
 
@@ -69,9 +72,9 @@ def __default__():
 
 
 @external
-def __init__( _native_token: address, _gtoken: address):
-    NATIVE_TOKEN_ADDRESS = _native_token
-    GTOKEN_ADDRESS = _gtoken
+def __init__(_weth: address, _eth: address = DEFAULT_ETH_ADDRESS):
+    WETH_ADDRESS = _weth
+    ETH_ADDRESS = _eth
 
 
 @external
@@ -103,7 +106,7 @@ def exchange(
                         5. -- legacy --
                         6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
                         7. -- legacy --
-                        8. for USDT <-> gUSDT
+                        8. for ETH <-> WETH
 
                         pool_type: 10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng, 4 - llamma
 
@@ -117,7 +120,7 @@ def exchange(
     amount: uint256 = _amount
 
     # validate / transfer initial token
-    if input_token == NATIVE_TOKEN_ADDRESS:
+    if input_token == ETH_ADDRESS:
         assert msg.value == amount
     else:
         assert msg.value == 0
@@ -131,7 +134,7 @@ def exchange(
 
         # store the initial balance of the output_token
         output_token_initial_balance: uint256 = self.balance
-        if output_token != NATIVE_TOKEN_ADDRESS:
+        if output_token != ETH_ADDRESS:
             output_token_initial_balance = ERC20(output_token).balanceOf(self)
 
         if not self.is_approved[input_token][swap]:
@@ -165,19 +168,17 @@ def exchange(
             else:  # twocrypto-ng, tricrypto-ng
                 CryptoNgPool(swap).remove_liquidity_one_coin(amount, params[1], 0)
         elif params[2] == 8:
-            if input_token == NATIVE_TOKEN_ADDRESS and output_token == GTOKEN_ADDRESS:
-                # hadnled by converter
+            if input_token == ETH_ADDRESS and output_token == WETH_ADDRESS:
                 WETH(swap).deposit(value=amount)
-            elif input_token == GTOKEN_ADDRESS and output_token == NATIVE_TOKEN_ADDRESS:
-                # hadnled by converter
+            elif input_token == WETH_ADDRESS and output_token == ETH_ADDRESS:
                 WETH(swap).withdraw(amount)
             else:
-                raise "Swap type 8 is only for USDT <-> gUSDT"
+                raise "Swap type 8 is only for ETH <-> WETH"
         else:
             raise "Bad swap type"
 
         # update the amount received
-        if output_token == NATIVE_TOKEN_ADDRESS:
+        if output_token == ETH_ADDRESS:
             amount = self.balance
         else:
             amount = ERC20(output_token).balanceOf(self)
@@ -195,7 +196,7 @@ def exchange(
     assert amount >= _min_dy, "Slippage"
 
     # transfer the final token to the receiver
-    if output_token == NATIVE_TOKEN_ADDRESS:
+    if output_token == ETH_ADDRESS:
         raw_call(_receiver, b"", value=amount)
     else:
         assert ERC20(output_token).transfer(_receiver, amount, default_return_value=True)
@@ -231,7 +232,7 @@ def get_dy(
                         5. -- legacy --
                         6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
                         7. -- legacy --
-                        8. for USDT <-> gUSDT
+                        8. for ETH <-> WETH
 
                         pool_type: 10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng, 4 - llamma
 
@@ -272,7 +273,7 @@ def get_dy(
             else:  # twocrypto-ng, tricrypto-ng
                 amount = CryptoNgPool(swap).calc_withdraw_one_coin(amount, params[1])
         elif params[2] == 8:
-            # USDT <-> gUSDT rate is 1:1
+            # ETH <--> WETH rate is 1:1
             pass
         else:
             raise "Bad swap type"
@@ -311,7 +312,7 @@ def get_dx(
                         5. -- legacy --
                         6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
                         7. -- legacy --
-                        8. for USDT <-> gUSDT
+                        8. for ETH <-> WETH
 
                         pool_type: 10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng, 4 - llamma
 
@@ -363,7 +364,7 @@ def get_dx(
                 amounts[params[1]] = amount
                 amount = TriCryptoNgPool(swap).calc_token_amount(amounts, False)
         elif params[2] == 8:
-            # USDT <-> gUSDT rate is 1:1
+            # ETH <--> WETH rate is 1:1
             pass
         else:
             raise "Bad swap type"
