@@ -10,4 +10,5 @@ def deploy_router(chain_settings: ChainConfig):
         chain_settings,
         Path(BASE_DIR, "contracts", "helpers", "router"),
         chain_settings.wrapped_native_token,
+        chain_settings.native_token,
     )
