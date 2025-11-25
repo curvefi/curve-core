@@ -8,7 +8,7 @@ config:
     parameter_admin: '0xabc336d4C71ad275695744d32DdB1d8266Db1cbF'
     vault: '0x193110Ce1542d7371e1515BD6A2E470fDefc310D'
   evm_version: shanghai
-  explorer_base_url: https://mainnet-beta.monvision.io
+  explorer_base_url: https://monadscan.com/
   file_name: monad
   file_path: prod/monad.yaml
   is_testnet: false
