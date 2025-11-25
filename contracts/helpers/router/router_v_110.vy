@@ -57,7 +57,9 @@ event Exchange:
     out_amount: uint256
 
 
-ETH_ADDRESS: constant(address) = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
+DEFAULT_ETH_ADDRESS: constant(address) = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
+
+ETH_ADDRESS: immutable(address)
 WETH_ADDRESS: immutable(address)
 
 is_approved: HashMap[address, HashMap[address, bool]]
@@ -70,8 +72,9 @@ def __default__():
 
 
 @external
-def __init__( _weth: address):
+def __init__(_weth: address, _eth: address = DEFAULT_ETH_ADDRESS):
     WETH_ADDRESS = _weth
+    ETH_ADDRESS = _eth
 
 
 @external
