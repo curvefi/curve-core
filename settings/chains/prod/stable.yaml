@@ -1,0 +1,24 @@
+network_name: Stable 
+chain_id: 988
+is_testnet: False
+rollup_type: not_rollup
+dao:
+  emergency_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF" # deployer as admin until DAO ownership transfer
+  ownership_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+  parameter_admin: "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF"
+explorer_base_url: https://stablescan.xyz/
+
+# Frontend-specific inputs
+layer: 1
+logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/stable.png
+native_currency_symbol: gUSDT
+native_currency_coingecko_id: tether
+public_rpc_url: https://rpc.stable.xyz/
+native_token: "0x0000000000000000000000000000000000001000"
+wrapped_native_token: "0x779Ded0c9e1022225f8E0630b35a9b54bE713736"
+wrapper: "0xDEd1660192d4d82e7c0B628ba556861EdBB5CAda"
+reference_token_addresses:
+  usdc: ""
+  usdt: ""
+  weth: ""
+multicall3: "0xcA11bde05977b3631167028862bE2a173976CA11"
