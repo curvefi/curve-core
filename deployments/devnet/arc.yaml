@@ -19,7 +19,7 @@ config:
   native_currency_coingecko_id: usd-coin
   native_currency_symbol: USDC
   network_name: Arc Testnet
-  public_rpc_url: https://rpc.testnet.arc.network
+  public_rpc_url: https://rpc.drpc.testnet.arc.network
   reference_token_addresses:
     usdc: ''
     usdt: ''
