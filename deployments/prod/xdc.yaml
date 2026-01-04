@@ -18,7 +18,7 @@ config:
   native_currency_coingecko_id: xdce-crowd-sale
   native_currency_symbol: XDC
   network_name: XDC
-  public_rpc_url: https://rpc.xdcrpc.com
+  public_rpc_url: https://rpc.xdc.org
   reference_token_addresses:
     usdc: '0x2A8E898b6242355c290E1f4Fc966b8788729A4D4'
     usdt: '0xcdA5b77E2E2268D9E09c874c1b9A4c3F07b37555'
