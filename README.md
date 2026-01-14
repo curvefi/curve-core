@@ -6,24 +6,24 @@ A minimal version of all curve infrastructure for AMM in one place.
 
 ### AMM
 
-- Stableswap - pools for 2 tokens with similar value (1~1)
-- Twocrypto - pools for 2 different tokens
-- Tricrypto - pools for USD-pegged coins combined with any coins
+- Stableswap - pools for 2 tokens with similar value (1~1).
+- Twocrypto - pools for 2 different tokens.
+- Tricrypto - pools for USD-pegged coins combined with any coins.
 
 ### Helpers
 
-- Deposit and Stake Zap - for depositing and staking LPs in one tx
-- Meta Zap - for easy exchange between LP and underlying tokens
-- Router - router contract for executing complicated trades using different places
+- Deposit and Stake Zap - for depositing and staking LPs in one tx.
+- Meta Zap - for easy exchange between LP and underlying tokens.
+- Router - router contract for executing complicated trades using different places.
 
 ### Governance
 
-- Agent and relayer for governance from mainnet DAO
-- Vault for fee receiving from pools
+- Agent and relayer for governance from mainnet DAO.
+- Vault for fee receiving from pools.
 
 ### Gauge
 
-- Reward-only gauge for incentives
+- Reward-only gauge for incentives.
 
 ### Registries
 
