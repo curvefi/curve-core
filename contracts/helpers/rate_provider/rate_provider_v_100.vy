@@ -38,7 +38,7 @@ interface Metaregistry:
 ADDRESS_PROVIDER: public(immutable(AddressProvider))
 METAREGISTRY_ID: constant(uint256) = 7
 STABLESWAP_META_ABI: constant(String[64]) = "get_dy_underlying(int128,int128,uint256)"
-STABLESWA_ABI: constant(String[64]) = "get_dy(int128,int128,uint256)"
+STABLESWAP_ABI: constant(String[64]) = "get_dy(int128,int128,uint256)"
 CRYPTOSWAP_ABI: constant(String[64]) = "get_dy(uint256,uint256,uint256)"
 
 @external
@@ -103,7 +103,7 @@ def get_quotes(source_token: address, destination_token: address, amount_in: uin
             success, response = raw_call(
             pool,
             concat(
-                method_id(STABLESWA_ABI),
+                method_id(STABLESWAP_ABI),
                 convert(i, bytes32),
                 convert(j, bytes32),
                 convert(amount_in, bytes32),
