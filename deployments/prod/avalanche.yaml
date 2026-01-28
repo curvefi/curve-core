@@ -1,0 +1,180 @@
+# This deployment file is different from all others found under /deployments:
+# the avalanche network was deployed a long time ago, before the core deployment
+# framework existed, so this deployment file was populated manually with as
+# much information as possible to make curve-api-core function properly for
+# avalanche.
+#
+# Feel free to add more information to this file, following the structure of
+# standard deployment files, if needed.
+config:
+  chain_id: 43114
+  dao:
+    crv: null
+    crvusd: null
+    emergency_admin: null
+    ownership_admin: null
+    parameter_admin: null
+    vault: null
+  evm_version: shanghai
+  explorer_base_url: https://snowscan.xyz
+  file_name: avalanche
+  file_path: prod/avalanche.yaml
+  is_testnet: false
+  layer: 1
+  logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/avalanche.png
+  multicall2: null
+  multicall3: "0xcA11bde05977b3631167028862bE2a173976CA11"
+  native_currency_coingecko_id: avalanche-2
+  native_currency_symbol: AVAX
+  network_name: Avalanche
+  public_rpc_url: https://avalanche.drpc.org
+  reference_token_addresses:
+    usdc: "0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e"
+    usdt: "0x9702230a8ea53601f5cd2dc00fdbc13d4df4a8c7"
+    weth: "0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB"
+  rollup_type: not_rollup
+  wrapped_native_token: "0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7"
+contracts:
+  amm:
+    stableswap:
+      factory:
+        address: "0x1764ee18e8B3ccA4787249Ceb249356192594585"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: normal
+      implementation:
+        address: "0xe265FC390E9129b7E337Da23cD42E00C34Da2CE3"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: blueprint
+      meta_implementation:
+        address: "0xa7b9d886A9a374A1C86DC52d2BA585c5CDFdac26"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: blueprint
+    tricryptoswap:
+      factory:
+        address: "0x3d6cB2F6DcF47CDd9C13E4e3beAe9af041d8796a"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: normal
+      implementation:
+        address: ""
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: blueprint
+    twocryptoswap:
+      factory:
+        address: "0x98EE851a00abeE0d95D08cF4CA2BdCE32aeaAF7F"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: normal
+      implementation:
+        address: "0x04Fd6beC7D45EFA99a27D29FB94b55c56dD07223"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: blueprint
+    oldmain:
+      factory:
+        address: "0x8474DdbE98F5aA3179B3B3F5942D724aFcdec9f6"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: normal
+    oldstable:
+      factory:
+        address: "0xb17b674D9c5CB2e441F8e196a2f048A81355d031"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: normal
+    oldcrypto:
+      factory:
+        address: "0x90f421832199e93d01b64DaF378b183809EB0988"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: normal
+  gauge:
+    child_gauge:
+      factory:
+        address: "0x97aDC08FA1D849D2C48C5dcC1DaB568B169b0267"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: normal
+pools: null
+tokens: null

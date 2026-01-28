@@ -1,0 +1,181 @@
+# This deployment file is different from all others found under /deployments:
+# the fantom network was deployed a long time ago, before the core deployment
+# framework existed, so this deployment file was populated manually with as
+# much information as possible to make curve-api-core function properly for
+# fantom.
+#
+# Feel free to add more information to this file, following the structure of
+# standard deployment files, if needed.
+config:
+  chain_id: 250
+  dao:
+    crv: null
+    crvusd: null
+    emergency_admin: null
+    ownership_admin: null
+    parameter_admin: null
+    vault: null
+  evm_version: shanghai
+  explorer_base_url: https://explorer.fantom.network/
+  file_name: fantom
+  file_path: prod/fantom.yaml
+  is_testnet: false
+  layer: 1
+  logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/fantom.png
+  multicall2: null
+  multicall3: "0xcA11bde05977b3631167028862bE2a173976CA11"
+  native_currency_coingecko_id: fantom
+  native_currency_symbol: FTM
+  network_name: Fantom
+  public_rpc_url: https://fantom.drpc.org
+  reference_token_addresses:
+    usdc: "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75"
+    usdt: null
+    weth: "0x74b23882a30290451A17c44f4F05243b6b58C76d"
+  rollup_type: not_rollup
+  wrapped_native_token: "0x21be370d5312f44cb42ce377bc9b8a0cef1a4c83"
+contracts:
+  amm:
+    stableswap:
+      factory:
+        address: "0xe61Fb97Ef6eBFBa12B36Ffd7be785c1F5A2DE66b"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: normal
+      implementation:
+        address: "0x5702BDB1Ec244704E3cBBaAE11a0275aE5b07499"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: blueprint
+      meta_implementation:
+        address: "0x046207cB759F527b6c10C2D61DBaca45513685CC"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: blueprint
+    twocryptoswap:
+      factory:
+        address: "0x98EE851a00abeE0d95D08cF4CA2BdCE32aeaAF7F"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: normal
+      implementation:
+        address: "0x04Fd6beC7D45EFA99a27D29FB94b55c56dD07223"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: blueprint
+    oldmain:
+      factory:
+        address: "0x0f854EA9F38ceA4B1c2FC79047E9D0134419D5d6"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: normal
+    oldstable:
+      factory:
+        address: "0x686d67265703d1f124c45e33d47d794c566889ba"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: normal
+    oldcrypto:
+      factory:
+        address: "0x4fb93D7d320E8A263F22f62C2059dFC2A8bCbC4c"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: normal
+    oldcryptofacto:
+      factory:
+        address: "0xE5De15A9C9bBedb4F5EC13B131E61245f2983A69"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: normal
+    eywa:
+      factory:
+        address: "0x37f22a0b028f2152e6cacef210e0c4d3b875f367"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: normal
+  gauge:
+    child_gauge:
+      factory:
+        address: "0x004A476B5B76738E34c86C7144554B9d34402F13"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: normal
+pools: null
+tokens: null
