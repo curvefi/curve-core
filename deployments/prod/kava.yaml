@@ -75,7 +75,7 @@ contracts:
         deployment_type: blueprint
     tricryptoswap:
       factory:
-        address: ""
+        address: "0x3d6cB2F6DcF47CDd9C13E4e3beAe9af041d8796a"
         compiler_settings:
           compiler_version: null
           evm_version: null
@@ -87,7 +87,7 @@ contracts:
         deployment_timestamp: null
         deployment_type: normal
       implementation:
-        address: ""
+        address: "0x0c59d36b23f809f8b6C7cb4c8C590a0AC103baEf"
         compiler_settings:
           compiler_version: null
           evm_version: null
