@@ -125,7 +125,7 @@ contracts:
         deployment_type: blueprint
     oldmain:
       factory:
-        address: ""
+        address: "0xc1C49622b63B961ce1D352ecb7D8261Ab5556695"
         compiler_settings:
           compiler_version: null
           evm_version: null
@@ -138,7 +138,7 @@ contracts:
         deployment_type: normal
     oldstable:
       factory:
-        address: ""
+        address: "0x40bc62805471eF53DdD5C5cF99ed3d9e5aa81b48"
         compiler_settings:
           compiler_version: null
           evm_version: null
