@@ -1,0 +1,80 @@
+# This deployment file is different from all others found under /deployments:
+# the moonbeam network was deployed a long time ago, before the core deployment
+# framework existed, so this deployment file was populated manually with as
+# much information as possible to make curve-api-core function properly for
+# moonbeam.
+#
+# Feel free to add more information to this file, following the structure of
+# standard deployment files, if needed.
+config:
+  chain_id: 1284
+  dao:
+    crv: null
+    crvusd: null
+    emergency_admin: null
+    ownership_admin: null
+    parameter_admin: null
+    vault: null
+  evm_version: shanghai
+  explorer_base_url: https://moonbeam.moonscan.io/
+  file_name: moonbeam
+  file_path: prod/moonbeam.yaml
+  is_testnet: false
+  layer: 1
+  logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/moonbeam.png
+  multicall2: null
+  multicall3: "0xcA11bde05977b3631167028862bE2a173976CA11"
+  native_currency_coingecko_id: moonbeam
+  native_currency_symbol: GLMR
+  network_name: Moonbeam
+  public_rpc_url: https://moonbeam-rpc.publicnode.com
+  reference_token_addresses:
+    usdc: ""
+    usdt: ""
+    weth: ""
+  rollup_type: not_rollup
+  wrapped_native_token: "0xAcc15dC74880C9944775448304B263D191c6077F"
+contracts:
+  amm:
+    oldmain:
+      factory:
+        address: "0xC2b1DF84112619D190193E48148000e3990Bf627"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: normal
+    oldstable:
+      factory:
+        address: "0x4244eB811D6e0Ef302326675207A95113dB4E1F8"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: normal
+  gauge:
+    child_gauge:
+      factory:
+        address: "0xe35A879E5EfB4F1Bb7F70dCF3250f2e19f096bd8"
+        compiler_settings:
+          compiler_version: null
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
+        contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: normal
+pools: null
+tokens: null
