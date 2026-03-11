@@ -123,35 +123,9 @@ contracts:
         contract_version: null
         deployment_timestamp: null
         deployment_type: blueprint
-    oldmain:
-      factory:
-        address: ""
-        compiler_settings:
-          compiler_version: null
-          evm_version: null
-          optimisation_level: null
-        constructor_args_encoded: null
-        contract_github_url: null
-        contract_path: null
-        contract_version: null
-        deployment_timestamp: null
-        deployment_type: normal
     oldstable:
       factory:
         address: "0x5277A0226d10392295E8D383E9724D6E416d6e6C"
-        compiler_settings:
-          compiler_version: null
-          evm_version: null
-          optimisation_level: null
-        constructor_args_encoded: null
-        contract_github_url: null
-        contract_path: null
-        contract_version: null
-        deployment_timestamp: null
-        deployment_type: normal
-    oldcrypto:
-      factory:
-        address: ""
         compiler_settings:
           compiler_version: null
           evm_version: null
