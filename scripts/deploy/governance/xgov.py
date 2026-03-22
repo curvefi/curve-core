@@ -85,7 +85,7 @@ def deploy_dao_vault(chain_settings: ChainConfig, owner: str):
     return vault
 
 
-def transfer_ownership(chain_settings):
+def transfer_ownership(chain_settings: ChainConfig) -> None:
 
     deployment_file = get_deployment_obj(chain_settings)
     deployment_config = deployment_file.get_deployment_config()
