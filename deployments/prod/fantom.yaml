@@ -27,7 +27,7 @@ config:
   native_currency_coingecko_id: fantom
   native_currency_symbol: FTM
   network_name: Fantom
-  public_rpc_url: https://fantom.drpc.org
+  public_rpc_url: https://rpc.fantom.network
   reference_token_addresses:
     usdc: "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75"
     usdt: null
