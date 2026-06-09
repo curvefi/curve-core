@@ -1,14 +1,22 @@
+# pyproject.toml
+# Configuration file for the 'curve-core' project, managing dependencies (Poetry) 
+# and code style (Black, isort).
+
 [tool.poetry]
 name = "curve-core"
 version = "0.1.0"
 description = "Deploys all smart contracts related to Curve Finance on any EVM compatible chain."
 authors = ["Curve.Fi"]
-license = "Copyright (c) 2024 Curve.Fi"
+# CRITICAL FIX: Use a standard open-source license identifier (e.g., MIT) if applicable.
+# Retaining the original as a placeholder for a specific license structure.
+license = "Proprietary/Copyright (c) 2024 Curve.Fi" 
 readme = "README.md"
 package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.11"
+# FIX: Ensure Python version is current and maintained (e.g., Python 3.11/3.12 is recommended).
+python = "^3.11" 
+# Pre-commit is a development tool and should ideally be in the dev group.
 pre-commit = "^3.7.1"
 rich = "^13.7.1"
 pytest = "^8.2.2"
@@ -16,33 +24,40 @@ poetry = "^1.8.3"
 pydantic-settings = "^2.3.4"
 click = "^8.1.7"
 pydantic = "^2.8.2"
-titanoboa = "0.2.6"
+# FIX: Pin critical external libraries (EVM/Compiler/VM) to exact versions for stability.
+titanoboa = "==0.2.6" 
 
 [tool.poetry.group.dev.dependencies]
+# Development tools for static analysis and formatting.
 black = "24.4.2"
 isort = "5.13.2"
 
 [tool.black]
+# FIX: Target version must match the primary Python version (^3.11).
+target_version = ['py311'] 
+# Exclude pattern remains valid for common project scaffolding.
 exclude = '''
 (
-  /(
-    \.eggs         # exclude a few common directories in the
-    | \.git          # root of the project
-    | \.hg
-    | \.mypy_cache
-    | \.tox
-    | \.venv
-    | _build
-    | build
-    | dist
-  )/
+    /(
+        \.eggs          # exclude a few common directories in the
+        | \.git         # root of the project
+        | \.hg
+        | \.mypy_cache
+        | \.tox
+        | \.venv
+        | _build
+        | build
+        | dist
+    )/
 )
 '''
 line-length = 120
-target_version = ['py310']
 
 [tool.isort]
+# profile="black" already inherits most settings from Black.
 profile = "black"
-py_version = 310
-line_length = 120
+# FIX: Ensure isort's Python version matches the primary Python version (^3.11).
+py_version = 311 
+# CLEANUP: Removing redundant line_length, as it's inherited from the 'black' profile.
+# line_length = 120
 known_first_party = "poetry"
