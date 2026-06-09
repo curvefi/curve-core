@@ -1,37 +1,62 @@
 config:
+  # Unique Chain ID for the TAC network.
   chain_id: 239
+  
+  # Decentralized Autonomous Organization (DAO) configuration addresses.
   dao:
+    # CRV governance token address on TAC (currently not deployed/set).
     crv: null
+    # crvUSD stablecoin token address on TAC (currently not deployed/set).
     crvusd: null
+    # Address authorized for time-sensitive emergency actions.
     emergency_admin: '0xabc336d4C71ad275695744d32DdB1d8266Db1cbF'
+    # Address authorized to manage contract ownership transfers.
     ownership_admin: '0xabc336d4C71ad275695744d32DdB1d8266Db1cbF'
+    # Address authorized to change protocol parameters.
     parameter_admin: '0xabc336d4C71ad275695744d32DdB1d8266Db1cbF'
+    # The DAO Vault/Treasury address.
     vault: '0xBaF6cacFfFb6D57d548F0FAff486E9884a0D1747'
+  
+  # Base URL for the block explorer.
   explorer_base_url: https://tac.blockscout.com
   file_name: tac
   file_path: prod/tac.yaml
   is_testnet: false
+  # Network layer (Layer 1 or Layer 2).
   layer: 1
   logo_url: https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/tac.png
+  # Multicall v2 contract address (currently not deployed/set).
   multicall2: null
+  # Multicall v3 contract address (Standard implementation).
   multicall3: '0xcA11bde05977b3631167028862bE2a173976CA11'
   native_currency_coingecko_id: tac
   native_currency_symbol: TAC
   network_name: tac
   public_rpc_url: https://rpc.ankr.com/tac
+  
+  # Addresses for common stablecoins and wrapped native token.
   reference_token_addresses:
-    usdc: null
+    usdc: null # USDC token address (currently not deployed/set).
     usdt: '0xAF988C3f7CB2AceAbB15f96b19388a259b6C438f'
-    weth: null
+    weth: null # Wrapped ETH equivalent token address (currently not deployed/set).
+  
+  # Rollup type (if applicable, currently set to generic underscore).
   rollup_type: _
+  # Wrapped native token address (WETH equivalent).
   wrapped_native_token: '0xB63B9f0eb4A6E6f191529D71d4D88cc8900Df2C9'
+
+---
+
 contracts:
+  # Automated Market Maker (AMM) contracts.
   amm:
+    # Stableswap (for stablecoin pools).
     stableswap:
       factory:
         address: '0x5aEa9aaDd0974e8914229a23699bB6b343c97B09'
         compiler_settings:
           compiler_version: 0.3.10
+          # NOTE: EVM version inconsistency with other contracts (Shanghai vs Paris).
           evm_version: shanghai
           optimisation_level: GAS
         constructor_args_encoded: 000000000000000000000000baf6cacfffb6d57d548f0faff486e9884a0d1747000000000000000000000000abc336d4c71ad275695744d32ddb1d8266db1cbf
@@ -44,13 +69,16 @@ contracts:
         address: '0xA626B239e30dF83a228e5D87daB005819267d1BA'
         compiler_settings:
           compiler_version: 0.3.10
+          # NOTE: EVM version inconsistency.
           evm_version: shanghai
+          # Optimization set to CODESIZE, likely to avoid contract size limit.
           optimisation_level: CODESIZE
         constructor_args_encoded: null
         contract_github_url: https://github.com/curvefi/curve-lite/blob/39693133dc01e53f4c2ba5b1d58aeefb493fe7f7/contracts/amm/stableswap/implementation/implementation_v_700.vy
         contract_path: /contracts/amm/stableswap/implementation/implementation_v_700.vy
         contract_version: 7.0.0
         deployment_timestamp: 1750687190
+        # Deployed as a blueprint (template) for clones.
         deployment_type: blueprint
       math:
         address: '0xDF264E9a02E0D1C1F0b83AE067dE2Bc0031e1e7a'
@@ -88,6 +116,8 @@ contracts:
         contract_version: 1.2.0
         deployment_timestamp: 1750687188
         deployment_type: normal
+    
+    # Tricryptoswap (for pools with three tokens, including a volatile one).
     tricryptoswap:
       factory:
         address: '0x729c764aE95e7a9DEA9F950B5AEdbF1A9F3D7c03'
@@ -137,6 +167,8 @@ contracts:
         contract_version: 2.0.0
         deployment_timestamp: 1750687211
         deployment_type: normal
+    
+    # Twocryptoswap (for pools with two volatile tokens).
     twocryptoswap:
       factory:
         address: '0xa17b39BF1c2FE776Af38a999bE7Bb7bEa737a6EC'
@@ -186,6 +218,8 @@ contracts:
         contract_version: 2.0.0
         deployment_timestamp: 1750687230
         deployment_type: normal
+
+  # Liquidity Gauge contracts (used for staking and reward distribution).
   gauge:
     child_gauge:
       factory:
@@ -204,6 +238,7 @@ contracts:
         address: '0xc0038FAE184591F21738abF574AC1BFfB5E6C734'
         compiler_settings:
           compiler_version: 0.3.10
+          # EVM version is null/unspecified.
           evm_version: null
           optimisation_level: GAS
         constructor_args_encoded: 00000000000000000000000095cb855840342be0f023a6a7e6f0a9202bfefe1b
@@ -212,6 +247,8 @@ contracts:
         contract_version: 1.1.0
         deployment_timestamp: 1750687172
         deployment_type: normal
+  
+  # Governance and treasury-related contracts.
   governance:
     agent: null
     relayer: null
@@ -219,7 +256,7 @@ contracts:
       address: '0xBaF6cacFfFb6D57d548F0FAff486E9884a0D1747'
       compiler_settings:
         compiler_version: 0.3.10
-        evm_version: null
+        evm_version: null # EVM version is null/unspecified.
         optimisation_level: GAS
       constructor_args_encoded: 000000000000000000000000abc336d4c71ad275695744d32ddb1d8266db1cbf
       contract_github_url: https://github.com/curvefi/curve-lite/blob/5bb8237e41dc0776598884c95797a21b2cad9144/contracts/governance/vault/vault_v_100.vy
@@ -227,6 +264,8 @@ contracts:
       contract_version: 1.0.0
       deployment_timestamp: 1750687166
       deployment_type: normal
+  
+  # Utility contracts for enhanced user experience and functionality.
   helpers:
     deposit_and_stake_zap:
       address: '0x374D3B496F86416dF0B88830Ad9c59837aA9f078'
@@ -276,6 +315,8 @@ contracts:
       contract_version: 1.0.0
       deployment_timestamp: 1750687249
       deployment_type: normal
+  
+  # Registry contracts used for contract discovery and interaction.
   registries:
     address_provider:
       address: '0x907CE289E9Ee0BBcb0F69132B1C28A9Affc29FCA'
@@ -338,5 +379,9 @@ contracts:
           contract_version: 1.1.0
           deployment_timestamp: 1750687259
           deployment_type: normal
-pools: null
-tokens: null
+
+  # Placeholder for deployed liquidity pools (currently none).
+  pools: null
+
+  # Placeholder for custom tokens deployed on the network (currently none).
+  tokens: null
