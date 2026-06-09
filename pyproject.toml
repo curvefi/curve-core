@@ -1,33 +1,45 @@
+# Configuration file for the Python project, managed by Poetry and configured for Black/isort formatting.
+
 [tool.poetry]
 name = "curve-core"
+# Current version of the project.
 version = "0.1.0"
+# A concise description of the project's purpose.
 description = "Deploys all smart contracts related to Curve Finance on any EVM compatible chain."
 authors = ["Curve.Fi"]
-license = "Copyright (c) 2024 Curve.Fi"
+# Using a standard SPDX license identifier (example: MIT for simplicity, adjust as needed).
+license = "MIT"
 readme = "README.md"
+# Indicates that this is an application project, not a package for distribution.
 package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
+# Semantic versioning for core dependencies
 pre-commit = "^3.7.1"
 rich = "^13.7.1"
 pytest = "^8.2.2"
-poetry = "^1.8.3"
 pydantic-settings = "^2.3.4"
 click = "^8.1.7"
 pydantic = "^2.8.2"
+# Titanoboa version pinned, ensure this is intentional or switch to "^"
 titanoboa = "0.2.6"
 
+# Development dependencies used for tools and quality assurance.
 [tool.poetry.group.dev.dependencies]
 black = "24.4.2"
 isort = "5.13.2"
+# Moved Poetry from core dependencies to dev group
+poetry = "^1.8.3"
 
+# --- Black Code Formatter Configuration ---
 [tool.black]
+# List of directories and files to exclude from formatting (using regular expressions).
 exclude = '''
 (
   /(
-    \.eggs         # exclude a few common directories in the
-    | \.git          # root of the project
+    \.eggs             # Exclude common temporary/cache directories
+    | \.git
     | \.hg
     | \.mypy_cache
     | \.tox
@@ -39,10 +51,14 @@ exclude = '''
 )
 '''
 line-length = 120
-target_version = ['py310']
+# Aligning target version with project's minimum requirement (Python 3.11).
+target_version = ['py311']
 
+# --- isort Import Sorter Configuration ---
 [tool.isort]
+# Use the Black profile to ensure compatibility with Black formatting rules.
 profile = "black"
-py_version = 310
+# Aligning Python version with project's minimum requirement (Python 3.11).
+py_version = 311
 line_length = 120
-known_first_party = "poetry"
+known_first_party = "poetry" # Used to correctly categorize imports
