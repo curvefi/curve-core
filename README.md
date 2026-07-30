@@ -118,3 +118,31 @@ python manage.py deploy test_pools {chain_name}
 ```
 to deploy test tokens and pools + add liquidity and permorm a swap in test pool. WARNING!: these are test tokens, don't
 use mocks in production.
+
+
+## Deployment status and drift
+
+To see what is deployed and what would change if the deployer ran again:
+
+```
+python manage.py status                  # every chain, every check
+python manage.py status --chain sonic    # one chain
+python manage.py status --onchain        # also verify each address has bytecode
+python manage.py status --json out.json  # machine-readable
+```
+
+Read-only — it never sends a transaction and never needs a private key, and `manage.py`
+skips the boa connection for this command. Exits `1` when anything is reported, so it can
+be used as a CI gate.
+
+Each check is derived from the deployer's own code rather than reimplemented, so the report
+cannot drift from what `deploy all` actually does:
+
+| Check | Reports | Derived from |
+| --- | --- | --- |
+| `PENDING` | A newer `_v_NNN.vy` sits in [contracts](/contracts) than the version recorded for a chain. `deploy all` applies these **automatically** — adding a contract file is enough to change what every chain gets, so run this before merging one. | `fetch_latest_contract()`, `version_a_gt_version_b()` |
+| `SCHEMA` | Keys in a deployment file that no model declares. Pydantic ignores them and the deployer rewrites files through `model_dump()`, so they are deleted the next time that chain is touched. | the models' own `model_fields` |
+| `REQUIRED` | Files that fail validation — the deployer cannot read or update that chain at all. | `DeploymentConfig.model_validate()` |
+| `COVERAGE` | Chain configs with no deployment, and deployments with no chain config. | |
+| `INTEGRITY` | Governance roles collapsed onto a single address. | |
+| `ONCHAIN` | (`--onchain`) Recorded addresses with no bytecode — rows that were never actually deployed. | |
