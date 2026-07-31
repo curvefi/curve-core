@@ -125,10 +125,10 @@ use mocks in production.
 To see what is deployed and what would change if the deployer ran again:
 
 ```
-python manage.py status                  # every chain, every check
-python manage.py status --chain sonic    # one chain
-python manage.py status --onchain        # also verify each address has bytecode
-python manage.py status --json out.json  # machine-readable
+python manage.py status                    # every chain, every offline check
+python manage.py status --summary          # one-row-per-chain matrix
+python manage.py status --chain prod/sonic # one chain
+python manage.py status --json out.json    # machine-readable
 ```
 
 Read-only — it never sends a transaction and never needs a private key, and `manage.py`
@@ -141,8 +141,25 @@ cannot drift from what `deploy all` actually does:
 | Check | Reports | Derived from |
 | --- | --- | --- |
 | `PENDING` | A newer `_v_NNN.vy` sits in [contracts](/contracts) than the version recorded for a chain. `deploy all` applies these **automatically** — adding a contract file is enough to change what every chain gets, so run this before merging one. | `fetch_latest_contract()`, `version_a_gt_version_b()` |
+| `CONFIG` | A [settings/chains](/settings/chains) file that `ChainConfig` rejects. `deploy all` cannot start on these, and since the config is copied into the deployment file it is usually the root cause of the matching `REQUIRED` finding. | `get_chain_settings()` |
+| `CONTRACTS` | Version constants the blueprint path cannot parse, contracts declaring none at all, and `abi/` entries that no longer match a contract path. | the regex in `deployment_file.py` |
 | `SCHEMA` | Keys in a deployment file that no model declares. Pydantic ignores them and the deployer rewrites files through `model_dump()`, so they are deleted the next time that chain is touched. | the models' own `model_fields` |
 | `REQUIRED` | Files that fail validation — the deployer cannot read or update that chain at all. | `DeploymentConfig.model_validate()` |
-| `COVERAGE` | Chain configs with no deployment, and deployments with no chain config. | |
+| `COVERAGE` | Chain configs with no deployment, deployments with no chain config, and `file_name` collisions (that field is curve-api-core's blockchain id, so a collision means one file shadows the other). | |
 | `INTEGRITY` | Governance roles collapsed onto a single address. | |
-| `ONCHAIN` | (`--onchain`) Recorded addresses with no bytecode — rows that were never actually deployed. | |
+
+### On-chain checks
+
+Each needs working RPCs, so each is behind its own flag:
+
+```
+python manage.py status --onchain   # every recorded address has bytecode
+python manage.py status --wiring    # factory pointers and ownership match the file
+python manage.py status --bytecode  # recompile and compare against deployed code
+```
+
+`--bytecode` is the only check that proves `contract_path` / `contract_version` /
+`evm_version` describe what is really on chain. Normal contracts must match by prefix (the
+tail is immutables and constructor args); blueprints must match `blueprint_bytecode` minus
+the 10-byte EIP-5202 wrapper that `deploy_via_create2` prepends. It is slow — compilation
+is cached per source, but it recompiles every distinct contract.
