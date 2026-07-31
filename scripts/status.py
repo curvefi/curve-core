@@ -51,6 +51,7 @@ import re
 import sys
 import textwrap
 import types
+import urllib.error
 import urllib.request
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -145,16 +146,23 @@ def plural(count, noun):
     return f"{count} {noun}" if count == 1 else f"{count} {noun}s"
 
 
-def emit(console, text, indent=0, style="", bullet=""):
+def emit(console, text, indent=0, style="", bullet="", bullet_style=""):
     """Print `text` wrapped to the terminal with every continuation line aligned under the
     first. rich.Padding would do the indent but pads each wrapped line out to the block
-    width, leaving trailing whitespace in redirected output - so wrap here instead."""
+    width, leaving trailing whitespace in redirected output - so wrap here instead.
+
+    `bullet_style` colours the bullet independently of the body, so --brief can tag a line
+    with its kind without colouring the whole summary."""
     body_indent = indent + len(bullet)
     width = max(40, console.width - body_indent)
     lines = textwrap.wrap(text, width=width) or [""]
     for number, line in enumerate(lines):
-        prefix = " " * indent + (bullet if number == 0 else " " * len(bullet))
-        console.print(f"{prefix}[{style}]{escape(line)}[/]" if style else f"{prefix}{escape(line)}")
+        pad = " " * indent
+        if number == 0 and bullet:
+            pad += f"[{bullet_style}]{escape(bullet)}[/]" if bullet_style else bullet
+        else:
+            pad += " " * len(bullet)
+        console.print(f"{pad}[{style}]{escape(line)}[/]" if style else f"{pad}{escape(line)}")
 
 
 class Finding(NamedTuple):
@@ -268,13 +276,13 @@ def _xgov_plan(raw, config_path):
 def check_pending(deployments, configs=None, blocked=()):
     """What the next `deploy all` would upgrade, using the deployer's own resolution.
 
-    `blocked` is the set of chains that cannot be deployed at all right now - no chain
-    config, or one ChainConfig rejects. They are still listed (the upgrade is real and
-    will apply the moment the blocker is cleared) but called out, because saying they
-    upgrade "automatically" is false for them today.
+    `blocked` maps chain -> why `deploy all` cannot run on it today ("rejected": its
+    settings/chains file exists but ChainConfig refuses it; "missing": there is no such
+    file). They are still listed - the upgrade is real and lands the moment the blocker
+    clears - but called out, because saying they upgrade "automatically" is false today.
     """
     configs = configs or {}
-    blocked = set(blocked)
+    blocked = dict(blocked)
     grouped, malformed, pinned_drift = defaultdict(list), [], []
     for chain, (_, raw) in deployments.items():
         xgov_runs, pinned_agent = _xgov_plan(raw, configs.get(chain))
@@ -322,21 +330,53 @@ def check_pending(deployments, configs=None, blocked=()):
             return f"{plural(len(chains), 'chain')}: {prod} prod, {len(chains) - prod} devnet"
         return f"{plural(len(chains), 'chain')}{'' if prod else ', all devnet'}"
 
-    def note_for(slot, chains):
-        stuck = sorted(blocked & set(chains))
-        if not stuck:
-            return f"slot {slot}"
-        return (
-            f"slot {slot} - but {len(stuck)} of these cannot be deployed at all right now "
-            f"(see CONFIG/COVERAGE): {', '.join(stuck)}"
-        )
+    # "cannot be deployed at all right now" left the reader to work out what was blocked,
+    # why, and what it meant for this row. Say all three: the command that will not run, the
+    # cause and where it is fixed, and the version these chains keep in the meantime.
+    CAUSES = (
+        (
+            "rejected",
+            "its settings/chains file is rejected by ChainConfig (see CONFIG)",
+            "their settings/chains files are rejected by ChainConfig (see CONFIG)",
+        ),
+        (
+            "missing",
+            "it has no settings/chains file at all (see COVERAGE)",
+            "they have no settings/chains file at all (see COVERAGE)",
+        ),
+    )
+
+    def chain_lines(chains, old):
+        """One labelled line per group, each chain named exactly once.
+
+        The affected chains used to be printed as a bare unlabelled list after the blocked
+        ones had already been called out by name, so the blocked chains appeared twice and
+        the list read as a continuation of that sentence rather than as the full set.
+        """
+        stuck = set(chains) & set(blocked)
+        lines = []
+        for cause, one, many in CAUSES:
+            members = sorted(c for c in stuck if blocked[c] == cause)
+            if not members:
+                continue
+            single = len(members) == 1
+            lines.append(
+                f"{len(members)} of these cannot run `deploy all` today and "
+                f"{'stays' if single else 'stay'} on {old} until that is fixed: "
+                f"{one if single else many} - {', '.join(members)}"
+            )
+        ready = sorted(set(chains) - stuck)
+        if ready:
+            lead = f"the other {len(ready)}" if stuck else f"all {len(ready)}"
+            lines.append(f"{lead} upgrade on the next run: {' '.join(ready)}")
+        return tuple(lines)
 
     findings = [
         Finding(
             "PENDING",
             f"{fname}  {old} -> {new}  ({scale(chains)})",
-            note_for(slot, chains),
-            tuple(sorted(chains)),
+            f"slot {slot}",
+            details=chain_lines(chains, old),
             subjects=tuple(sorted(chains)),
         )
         for (slot, old, new, fname), chains in sorted(grouped.items(), key=lambda kv: -len(kv[1]))
@@ -542,6 +582,43 @@ def check_contracts():
             unparseable.append(f"{rel}: declares {declared.group(1)!r}")
         elif normalise_version(declared.group(1)) != implied:
             mismatched.append(f"{rel}: declares {declared.group(1)!r}, filename implies {implied!r}")
+
+    # fetch_latest_contract sorts a whole folder on the _v_NNN digits alone, so two unrelated
+    # contracts sharing a folder compete for the same slot on a number that means nothing
+    # across them. Whichever happens to be higher gets deployed. That is how fxswap's
+    # stableswap_math landed next to twocryptoswap's math: it loses 011 < 210 today, but the
+    # next version of it wins the folder and every chain silently gets the wrong contract -
+    # reported by PENDING as an ordinary upgrade, because PENDING compares versions, not
+    # identities. Nothing about the numbers being safe today is enforced anywhere.
+    shared = []
+    for folder in sorted({f.parent for f in contracts_dir.rglob("*_v_*.vy")}):
+        by_stem = defaultdict(list)
+        for source in folder.glob("*_v_*.vy"):
+            if re.search(r"_v_(\d+)\.vy$", source.name):
+                by_stem[source.name.rsplit("_v_", 1)[0]].append(source)
+        if len(by_stem) < 2:
+            continue
+        try:
+            winner = fetch_latest_contract(folder).name
+        except (FileNotFoundError, ValueError):
+            continue
+        losers = sorted(s.name for group in by_stem.values() for s in group if s.name != winner)
+        shared.append(
+            f"{folder.relative_to(BASE_DIR).as_posix()}/: {len(by_stem)} unrelated contracts "
+            f"share this slot, {winner} wins it today over {', '.join(losers)}"
+        )
+    if shared:
+        findings.append(
+            Finding(
+                "CONTRACTS",
+                f"{plural(len(shared), 'folder')} holding more than one contract",
+                "fetch_latest_contract picks the highest _v_NNN in a folder regardless of which "
+                "contract it belongs to, so adding a higher-numbered version of the other one "
+                "silently swaps what every chain deploys into that slot",
+                (),
+                tuple(shared),
+            )
+        )
 
     # fetch_latest_contract only ever considers files matching *_v_NNN.vy, so anything else
     # in contracts/ is unreachable: the deployer cannot select it no matter what.
@@ -820,8 +897,10 @@ def check_integrity(deployments):
         findings.append(
             Finding(
                 "INTEGRITY",
-                f"{plural(len(chains), 'chain')}: one address holds every admin role",
-                f"{addr} - {note}",
+                # The address belongs in the summary, not just the note: it is the only
+                # thing telling these rows apart, and --brief and --json show summaries.
+                f"{plural(len(chains), 'chain')}: one address holds every admin role - {addr}",
+                note,
                 tuple(chains),
                 subjects=tuple(chains),
             )
@@ -847,40 +926,49 @@ def check_onchain(deployments, workers=12):
             # Must go through _rpc_call: a hand-rolled .get("result") turns an in-band
             # {"error": ...} (rate limit, unsupported method) into None, which the caller
             # cannot tell from "no bytecode" - i.e. it accuses a live chain of being a ghost.
-            return chain, slot, addr, _rpc_call(rpc, "eth_getCode", [addr, "latest"])
+            return chain, slot, addr, _rpc_call(rpc, "eth_getCode", [addr, "latest"]), None
         except Exception as exc:
-            return chain, slot, addr, f"ERR {type(exc).__name__}"
+            return chain, slot, addr, None, _error_label(exc)
 
-    ghosts, errors, probed = defaultdict(list), Counter(), Counter()
+    ghosts, errors, probed = defaultdict(list), defaultdict(Counter), Counter()
     with ThreadPoolExecutor(max_workers=workers) as pool:
         for future in as_completed([pool.submit(probe, job) for job in jobs]):
-            chain, slot, addr, code = future.result()
+            chain, slot, addr, code, failure = future.result()
             probed[chain] += 1
-            if isinstance(code, str) and code.startswith("ERR"):
-                errors[chain] += 1
+            if failure:
+                errors[chain][failure] += 1
             elif code in (None, "0x"):
                 ghosts[chain].append(f"{slot} {addr}")
 
     findings = [
         Finding(
             "ONCHAIN",
-            f"{chain}: {len(rows)}/{probed[chain]} recorded address(es) have NO bytecode",
+            f"{chain}: {len(rows)}/{probed[chain]} recorded "
+            f"{'address has' if len(rows) == 1 else 'addresses have'} NO bytecode",
             "recorded but never deployed",
             tuple(sorted(rows)),
             subjects=(chain,),
         )
         for chain, rows in sorted(ghosts.items())
     ]
-    # A dead public RPC is infrastructure noise, not a deployment finding.
+    # A dead public RPC is infrastructure noise, not a deployment finding. Name the reason:
+    # every probe failing usually means back off and re-run, some probes failing usually
+    # means the endpoint is fine and those addresses are the problem.
     findings += [
         Finding(
             "ONCHAIN",
-            f"{chain}: unverified, RPC failed on {count}/{probed[chain]} probes",
-            "public_rpc_url is dead or rate-limiting - no conclusion drawn",
+            f"{chain}: unverified, RPC failed on {sum(labels.values())}/{probed[chain]} "
+            f"probes ({_dominant(labels)})",
+            (
+                "every probe failed - public_rpc_url is dead, or rate-limited by an earlier "
+                "run; re-run after a pause before believing it"
+                if sum(labels.values()) == probed[chain]
+                else "some probes failed - no conclusion drawn for those addresses"
+            ),
             subjects=(chain,),
             unverified=True,
         )
-        for chain, count in sorted(errors.items())
+        for chain, labels in sorted(errors.items())
     ]
     return findings
 
@@ -904,6 +992,39 @@ def _rpc_call(rpc, method, params, timeout=25):
     if not isinstance(payload, dict) or "result" not in payload:
         raise RpcError("response contained no result")
     return payload["result"]
+
+
+def _error_label(exc):
+    """A short, aggregatable reason a probe failed.
+
+    "RPC failed on 24/24 probes" cannot be acted on: rate-limiting, a dead endpoint and a
+    method the node does not implement all read the same, and only the first is worth
+    re-running later. The exception type alone does not separate them either - HTTP 429 and
+    HTTP 503 are both HTTPError - so keep the status code, which is the part that says
+    whether to back off or fix the URL.
+    """
+    if isinstance(exc, urllib.error.HTTPError):
+        return f"HTTP {exc.code}"
+    if isinstance(exc, urllib.error.URLError):
+        reason = getattr(exc, "reason", None)
+        if isinstance(reason, TimeoutError):
+            return "timeout"
+        return f"unreachable ({type(reason).__name__})" if isinstance(reason, Exception) else "unreachable"
+    if isinstance(exc, TimeoutError):
+        return "timeout"
+    if isinstance(exc, RpcError):
+        # The node's own message is the actionable part ("rate limit exceeded", "method not
+        # found"), but it varies enough between providers to fragment a Counter, so trim it.
+        return f"RPC error: {str(exc)[:40]}"
+    return type(exc).__name__
+
+
+def _dominant(labels):
+    """`labels` -> "reason" or "reason and N other kinds", for a one-line finding."""
+    if not labels:
+        return ""
+    (top, _), rest = labels.most_common(1)[0], len(labels) - 1
+    return f"{top} and {plural(rest, 'other kind')}" if rest else top
 
 
 def _eth_call(rpc, to, signature, argument=None):
@@ -999,20 +1120,20 @@ def check_bytecode(deployments, workers=8):
     def probe(job):
         chain, slot, row, rpc = job
         try:
-            return chain, slot, row, _rpc_call(rpc, "eth_getCode", [norm(row["address"]), "latest"])
+            return chain, slot, row, _rpc_call(rpc, "eth_getCode", [norm(row["address"]), "latest"]), None
         except Exception as exc:
-            return chain, slot, row, f"ERR {type(exc).__name__}"
+            return chain, slot, row, None, _error_label(exc)
 
-    mismatched, uncompilable, unreachable = defaultdict(list), [], Counter()
+    mismatched, uncompilable, unreachable = defaultdict(list), [], defaultdict(Counter)
     with ThreadPoolExecutor(max_workers=workers) as pool:
         for future in as_completed([pool.submit(probe, job) for job in jobs]):
-            chain, slot, row, code = future.result()
+            chain, slot, row, code, failure = future.result()
             kind, want = expected[(chain, slot)]
             if kind == "error":
                 uncompilable.append(f"{chain} {slot}: {want}")
                 continue
-            if not isinstance(code, str) or code.startswith("ERR"):
-                unreachable[chain] += 1
+            if failure or not isinstance(code, str):
+                unreachable[chain][failure or "no result"] += 1
                 continue
             got = code[2:]
             if not got:
@@ -1024,7 +1145,8 @@ def check_bytecode(deployments, workers=8):
     findings = [
         Finding(
             "BYTECODE",
-            f"{chain}: {plural(len(slots), 'contract')} do not match their recorded source",
+            f"{chain}: {plural(len(slots), 'contract')} "
+            f"{'does not match its' if len(slots) == 1 else 'do not match their'} recorded source",
             "recompiling contract_path at contract_version does not reproduce the on-chain code",
             tuple(sorted(slots)),
             subjects=(chain,),
@@ -1071,12 +1193,12 @@ def check_bytecode(deployments, workers=8):
     findings += [
         Finding(
             "BYTECODE",
-            f"{chain}: unverified, RPC failed on {plural(count, 'probe')}",
-            "public_rpc_url is dead or rate-limiting - no conclusion drawn",
+            f"{chain}: unverified, RPC failed on {plural(sum(labels.values()), 'probe')} " f"({_dominant(labels)})",
+            "no conclusion drawn - back off and re-run if this is a rate limit",
             subjects=(chain,),
             unverified=True,
         )
-        for chain, count in sorted(unreachable.items())
+        for chain, labels in sorted(unreachable.items())
     ]
     return findings
 
@@ -1098,11 +1220,16 @@ def check_wiring(deployments, workers=8):
         chain, raw = item
         rpc = (raw.get("config") or {}).get("public_rpc_url")
         if not rpc:
-            return chain, [], [], 0
+            # Five values, like every other exit: the caller unpacks five, so the old
+            # four-tuple here was a ValueError waiting for the first chain config without a
+            # public_rpc_url. Every chain has one today, which is the only reason it has not
+            # fired.
+            return chain, [], [], Counter(), []
         wiring, ownership, unresolved, answered = [], [], [], 0
         # Count failed calls rather than swallowing them: a dead RPC must report
-        # "unverified", never a clean bill of health.
-        failures = 0
+        # "unverified", never a clean bill of health. Keyed by reason so the finding can say
+        # whether to back off and re-run or go fix the endpoint.
+        failures = Counter()
         amm = ((raw.get("contracts") or {}).get("amm")) or {}
         for group, slots in amm.items():
             if not isinstance(slots, dict) or not (slots.get("factory") or {}).get("address"):
@@ -1114,24 +1241,24 @@ def check_wiring(deployments, workers=8):
                     continue
                 try:
                     live = _as_address(_eth_call(rpc, factory, signature))
-                except Exception:
-                    failures += 1
+                except Exception as exc:
+                    failures[_error_label(exc)] += 1
                     continue
                 # A codeless factory answers "0x", so _as_address gives None. That is not
                 # agreement - it is nothing to compare, and must count as unverified.
                 if live is None:
-                    failures += 1
+                    failures["empty response"] += 1
                 elif live != recorded:
                     wiring.append(f"{group}.factory {signature[:-2]} -> {live}, recorded {slot} {recorded}")
             implementation = norm(((slots.get("implementation") or {}).get("address")) or "")
             if implementation:
                 try:
                     live = _as_address(_eth_call(rpc, factory, "pool_implementations(uint256)", 0))
-                except Exception:
-                    live, failures = None, failures + 1
+                except Exception as exc:
+                    failures[_error_label(exc)] += 1
                 else:
                     if live is None:
-                        failures += 1
+                        failures["empty response"] += 1
                     elif live != implementation:
                         wiring.append(f"{group}.factory pool_implementations(0) -> {live}, recorded {implementation}")
 
@@ -1178,8 +1305,10 @@ def check_wiring(deployments, workers=8):
                 findings.append(
                     Finding(
                         "WIRING",
-                        f"{chain}: unverified, {plural(failures, 'call')} failed or returned nothing",
-                        "RPC dead, rate-limiting, or the target has no code - no conclusion drawn",
+                        f"{chain}: unverified, {plural(sum(failures.values()), 'call')} failed or "
+                        f"returned nothing ({_dominant(failures)})",
+                        "no conclusion drawn - an HTTP status points at the endpoint, "
+                        "'empty response' at a target with no code",
                         subjects=(chain,),
                         unverified=True,
                     )
@@ -1310,9 +1439,13 @@ def render_summary(console, deployments, configs, findings, all_deployments=None
 @click.option("--wiring", is_flag=True, help="check factory pointers and ownership on chain")
 @click.option("--bytecode", is_flag=True, help="recompile and compare against deployed code (slow)")
 @click.option("--summary", is_flag=True, help="one-row-per-chain table instead of full findings")
+@click.option("--brief", is_flag=True, help="one line per finding, no explanations")
 @click.option("--json", "json_path", metavar="PATH", default=None, help="write findings as JSON")
-def status_command(chain, only, onchain, wiring, bytecode, summary, json_path):
+def status_command(chain, only, onchain, wiring, bytecode, summary, brief, json_path):
     """Report what is deployed and what the next deploy would change."""
+    if summary and brief:
+        # Both replace the findings list with something else; there is no sensible merge.
+        raise click.UsageError("--summary and --brief are alternative renderings, pick one")
     everything = load_deployments()
     deployments = load_deployments(chain)
     if not deployments:
@@ -1333,10 +1466,11 @@ def status_command(chain, only, onchain, wiring, bytecode, summary, json_path):
 
     # Run CONFIG first so REQUIRED can attribute inherited failures to it.
     broken_configs = config_errors(configs, selected)
-    # Chains `deploy all` cannot run on today: no chain config at all, or one that
-    # ChainConfig rejects. PENDING uses this so it stops promising them an "automatic"
-    # upgrade it cannot actually deliver.
-    blocked = set(broken_configs) | (set(everything) - set(configs))
+    # Chains `deploy all` cannot run on today, mapped to why. The two causes are disjoint -
+    # config_errors only sees chains that have a config - and they are fixed in different
+    # places, so PENDING names the cause rather than pointing at both sections at once.
+    blocked = {chain: "rejected" for chain in broken_configs}
+    blocked.update({chain: "missing" for chain in set(everything) - set(configs)})
 
     runners = {
         "pending": lambda: check_pending(deployments, configs, blocked),
@@ -1380,7 +1514,28 @@ def status_command(chain, only, onchain, wiring, bytecode, summary, json_path):
             emit(console, f"only the {only} check ran - other columns are not shown", indent=2, style="yellow")
         render_summary(console, deployments, configs, findings, everything)
 
-    for kind in KIND_ORDER if not summary else ():
+    if brief:
+        # "Could not check" is not a result, so it is the first thing to drop - but it is
+        # dropped out loud, because a shorter report that quietly hides what it skipped is
+        # exactly the failure this tool exists to catch elsewhere.
+        skipped = 0
+        for kind in KIND_ORDER:
+            for row in by_kind.get(kind, ()):
+                if row.unverified:
+                    skipped += 1
+                    continue
+                emit(console, row.summary, bullet=f"{kind:<10}", bullet_style=KIND_STYLE[kind])
+        console.print("")
+        if skipped:
+            emit(
+                console,
+                f"{plural(skipped, 'finding')} hidden: the check could not run "
+                f"(dead RPC, no code) - drop --brief to see them",
+                style="dim italic",
+            )
+            console.print("")
+
+    for kind in KIND_ORDER if not (summary or brief) else ():
         rows = by_kind.get(kind)
         if not rows:
             continue
