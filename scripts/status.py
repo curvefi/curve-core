@@ -1195,6 +1195,7 @@ def check_wiring(deployments, workers=8):
                         (),
                         tuple(sorted(unresolved)),
                         subjects=(chain,),
+                        unverified=True,
                     )
                 )
             if wiring:
