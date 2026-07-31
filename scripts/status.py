@@ -24,12 +24,14 @@ reimplemented, so the report cannot drift from what `deploy all` actually does:
              constant, and abi/ entries that no longer match a contract path.
   SCHEMA     Walks each YAML against the pydantic models' own `model_fields`. Undeclared
              keys are ignored by pydantic and dropped when the deployer rewrites the file
-             through model_dump().
+             through model_dump(). Also reports the reverse: config keys curve-api-core
+             reads that no deployment writes.
   REQUIRED   Runs DeploymentConfig.model_validate() and reports pydantic's own errors -
              a file that fails here cannot be read or updated by the deployer at all.
   COVERAGE   Chain configs with no deployment, deployments with no chain config, and
              file_name collisions (that field is curve-api-core's blockchain id).
-  INTEGRITY  Governance roles collapsed onto a single address.
+  INTEGRITY  Admin roles that are null, shared between roles, or collapsed onto one
+             address.
 
 On-chain checks, each behind its own flag because they need working RPCs:
 
@@ -66,6 +68,7 @@ from rich.console import Console
 from rich.markup import escape
 from rich.table import Table
 
+from scripts.deploy.deployment_file import BLUEPRINT_VERSION_PATTERN
 from scripts.deploy.models import DeploymentConfig
 from scripts.deploy.utils import (
     fetch_latest_contract,
@@ -128,10 +131,10 @@ CHECK_BLURB = {
     "PENDING": "the next `deploy all` applies these automatically, no flag needed",
     "CONFIG": "settings/chains inputs that ChainConfig rejects - `deploy all` cannot start on these",
     "CONTRACTS": "contract files the deployer would choke on, or whose ABI has drifted",
-    "SCHEMA": "no model declares these, so model_dump() drops them next time the chain is touched",
+    "SCHEMA": "keys the models and curve-api-core disagree about - dropped on round-trip, or expected and never written",
     "REQUIRED": "model_validate() raises - the deployer cannot read or update these chains",
     "COVERAGE": "deployments and chain configs that do not line up",
-    "INTEGRITY": "governance roles collapsed onto one address",
+    "INTEGRITY": "admin roles that are missing, shared, or collapsed onto one address",
     "ONCHAIN": "recorded addresses checked against chain state",
     "WIRING": "on-chain wiring and ownership vs what the deployment file records",
     "BYTECODE": "recompiled source vs the code actually deployed",
@@ -165,6 +168,7 @@ class Finding(NamedTuple):
     items: tuple = ()  # short tokens (chain names) - rendered space-joined and wrapped
     details: tuple = ()  # full sentences - rendered one per line
     subjects: tuple = ()  # deployment keys this concerns, for the --summary rollup
+    unverified: bool = False  # "could not check", not "found a problem" - shown as ? not a count
 
 
 # --------------------------------------------------------------------------------------
@@ -204,14 +208,18 @@ def chain_configs() -> dict[str, Path]:
 
 
 def contract_rows(raw: dict):
-    """Yield (dotted_slot, row) for every contract entry, valid or not."""
+    """Yield (dotted_slot, row) for every contract entry, valid or not.
+
+    Keeps descending after a hit: registry_handlers sits *inside* the metaregistry row,
+    which has an address of its own, so returning early hides the three handler rows on
+    every chain from every check that walks contracts.
+    """
 
     def walk(node, trail):
         if not isinstance(node, dict):
             return
         if "address" in node:
             yield ".".join(trail), node
-            return
         for key, value in node.items():
             yield from walk(value, trail + [key])
 
@@ -227,14 +235,65 @@ def norm(addr):
 # --------------------------------------------------------------------------------------
 
 
-def check_pending(deployments):
-    """What the next `deploy all` would upgrade, using the deployer's own resolution."""
-    grouped, malformed = defaultdict(list), []
+# scripts/deploy/governance/xgov.py pins the agent to v_100 on these rollups (the 0.4.0
+# agent is not deployable there), and deploy_contract's pinned branch skips the version
+# comparison entirely - so "latest wins" does not hold for that slot.
+XGOV_PINNED_ROLLUPS = frozenset({"arb_orbit", "op_stack", "polygon_cdk"})
+PINNED_AGENT_VERSION = "1.0.0"
+XGOV_SLOTS = ("governance.agent", "governance.relayer")
+
+
+def _xgov_plan(raw, config_path):
+    """(xgov_runs, pinned_agent_version) for a chain, mirroring run_deploy_all + xgov.py.
+
+    run_deploy_all skips xgov entirely when the chain config presets all three DAO admins,
+    so nothing under governance.* is touched on those chains no matter what sits in
+    contracts/. Read the *chain config*, not the deployment file: once xgov has run it
+    writes the agent addresses back into the deployment's dao block, which then looks
+    identical to a preset.
+    """
+    source = raw
+    if config_path is not None:
+        try:
+            source = {"config": yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}}
+        except OSError:
+            source = raw
+    config = source.get("config") or {}
+    dao = config.get("dao") or {}
+    presets_all_admins = all(dao.get(role) for role in ("ownership_admin", "parameter_admin", "emergency_admin"))
+    pinned = PINNED_AGENT_VERSION if config.get("rollup_type") in XGOV_PINNED_ROLLUPS else None
+    return (not presets_all_admins), pinned
+
+
+def check_pending(deployments, configs=None, blocked=()):
+    """What the next `deploy all` would upgrade, using the deployer's own resolution.
+
+    `blocked` is the set of chains that cannot be deployed at all right now - no chain
+    config, or one ChainConfig rejects. They are still listed (the upgrade is real and
+    will apply the moment the blocker is cleared) but called out, because saying they
+    upgrade "automatically" is false for them today.
+    """
+    configs = configs or {}
+    blocked = set(blocked)
+    grouped, malformed, pinned_drift = defaultdict(list), [], []
     for chain, (_, raw) in deployments.items():
+        xgov_runs, pinned_agent = _xgov_plan(raw, configs.get(chain))
         for slot, row in contract_rows(raw):
             contract_path, recorded = row.get("contract_path"), row.get("contract_version")
             if not contract_path or not recorded:
                 continue
+
+            if slot.startswith(XGOV_SLOTS):
+                if not xgov_runs:
+                    continue  # deploy_all never reaches xgov on this chain
+                if slot == "governance.agent" and pinned_agent:
+                    # The pinned branch takes the named file regardless of what is newer,
+                    # and regardless of what is already deployed. Report only the case that
+                    # actually changes state: a record that disagrees with the pin.
+                    if normalise_version(str(recorded)) != pinned_agent:
+                        pinned_drift.append((chain, recorded))
+                    continue
+
             folder = BASE_DIR / Path(str(contract_path).lstrip("/")).parent
             if not folder.is_dir():
                 continue
@@ -246,9 +305,10 @@ def check_pending(deployments):
             try:
                 newer = version_a_gt_version_b(available, str(recorded))
             except ValueError:
-                # version_a_gt_version_b int-casts each dotted part, so a non-numeric
-                # recorded version (e.g. the "v3.0.0" style newer contracts declare)
-                # breaks the deployer itself on the next run, not just this report.
+                # version_a_gt_version_b int-casts each dotted part, so a recorded version
+                # that is not plain digits-and-dots (e.g. "1.0.0rc1") breaks the deployer
+                # itself on the next run, not just this report. A leading "v" no longer
+                # lands here - normalise_version handles that form.
                 malformed.append((chain, slot, recorded))
                 continue
             if newer:
@@ -262,16 +322,36 @@ def check_pending(deployments):
             return f"{plural(len(chains), 'chain')}: {prod} prod, {len(chains) - prod} devnet"
         return f"{plural(len(chains), 'chain')}{'' if prod else ', all devnet'}"
 
+    def note_for(slot, chains):
+        stuck = sorted(blocked & set(chains))
+        if not stuck:
+            return f"slot {slot}"
+        return (
+            f"slot {slot} - but {len(stuck)} of these cannot be deployed at all right now "
+            f"(see CONFIG/COVERAGE): {', '.join(stuck)}"
+        )
+
     findings = [
         Finding(
             "PENDING",
             f"{fname}  {old} -> {new}  ({scale(chains)})",
-            f"slot {slot}",
+            note_for(slot, chains),
             tuple(sorted(chains)),
             subjects=tuple(sorted(chains)),
         )
         for (slot, old, new, fname), chains in sorted(grouped.items(), key=lambda kv: -len(kv[1]))
     ]
+    for chain, recorded in sorted(pinned_drift):
+        findings.append(
+            Finding(
+                "PENDING",
+                f"{chain}: governance.agent would be re-recorded {recorded} -> {PINNED_AGENT_VERSION}",
+                f"xgov.py pins the agent to v_100 on {'/'.join(sorted(XGOV_PINNED_ROLLUPS))}, so a "
+                f"re-run overwrites this record with the older version - a downgrade the "
+                f"latest-wins rule never surfaces",
+                subjects=(chain,),
+            )
+        )
     for chain, slot, recorded in malformed:
         findings.append(
             Finding(
@@ -334,12 +414,48 @@ def _undeclared(raw, model: type[BaseModel], trail=()):
     return out
 
 
+# config.* keys curve-api-core reads out of these files (constants/configs/configs.js).
+# It derives its entire chain list from deployments/, so a key it reads that nothing here
+# writes is served as undefined for every chain - invisible from inside this repo, because
+# walking the models only ever finds keys that ARE present.
+API_CONSUMED_CONFIG_KEYS = (
+    "file_name",
+    "network_name",
+    "chain_id",
+    "explorer_base_url",
+    "multicall2",
+    "multicall3",
+    "native_currency_symbol",
+    "native_currency_coingecko_id",
+    "platform_coingecko_id",
+    "public_rpc_url",
+)
+
+
 def check_schema(deployments):
     unknown = defaultdict(set)
     for chain, (_, raw) in deployments.items():
         for key in _undeclared(raw, DeploymentConfig):
             unknown[key].add(chain)
-    return [
+
+    # The reverse direction: fields the consumer expects and nobody produces.
+    written = {key for _, (_, raw) in deployments.items() for key in (raw.get("config") or {})}
+    absent = [key for key in API_CONSUMED_CONFIG_KEYS if key not in written]
+    extra = (
+        [
+            Finding(
+                "SCHEMA",
+                f"config.{key} is read by curve-api-core but written by no chain",
+                "served as undefined for every chain; walking the models cannot catch this, "
+                "since it only sees keys that are present",
+            )
+            for key in absent
+        ]
+        if deployments
+        else []
+    )
+
+    return extra + [
         Finding(
             "SCHEMA",
             f"{key}  ({plural(len(chains), 'chain')})",
@@ -351,40 +467,55 @@ def check_schema(deployments):
     ]
 
 
-def check_config(configs, selected=None):
-    """Validate the deploy *inputs*. REQUIRED covers deployment files, but a chain config
-    that ChainConfig rejects fails at get_chain_settings() before a deploy even starts -
-    and since the config is copied into the deployment file, it is usually the root cause
-    of the matching REQUIRED finding."""
-    findings = []
+def config_errors(configs, selected=None):
+    """{chain: [pydantic error, ...]} for every chain config that fails to load.
+
+    Shared by CONFIG (which reports them) and REQUIRED (which needs the exact fields to
+    decide whether a deployment error really is inherited from its config).
+    """
+    out = {}
     for key, path in sorted(configs.items()):
         if selected and key not in selected:
             continue
         try:
             get_chain_settings(path.relative_to(BASE_DIR / "settings" / "chains").as_posix())
         except ValidationError as exc:
-            findings.append(
-                Finding(
-                    "CONFIG",
-                    f"{key}  ({plural(len(exc.errors()), 'error')})",
-                    path.relative_to(BASE_DIR).as_posix(),
-                    (),
-                    _summarise_errors(exc.errors()),
-                    subjects=(key,),
-                )
-            )
+            out[key] = exc.errors()
         except Exception as exc:  # unreadable yaml, missing file, ...
-            findings.append(
-                Finding("CONFIG", f"{key}: cannot be loaded", f"{type(exc).__name__}: {exc}", subjects=(key,))
+            out[key] = [{"loc": (), "type": "unloadable", "msg": f"{type(exc).__name__}: {exc}"}]
+    return out
+
+
+def check_config(configs, selected=None):
+    """Validate the deploy *inputs*. REQUIRED covers deployment files, but a chain config
+    that ChainConfig rejects fails at get_chain_settings() before a deploy even starts -
+    and since the config is copied into the deployment file, it is often the root cause
+    of the matching REQUIRED finding."""
+    findings = []
+    for key, errors in config_errors(configs, selected).items():
+        path = configs[key].relative_to(BASE_DIR).as_posix()
+        if errors and errors[0]["type"] == "unloadable":
+            findings.append(Finding("CONFIG", f"{key}: cannot be loaded", errors[0]["msg"], subjects=(key,)))
+            continue
+        findings.append(
+            Finding(
+                "CONFIG",
+                f"{key}  ({plural(len(errors), 'error')})",
+                path,
+                (),
+                _summarise_errors(errors),
+                subjects=(key,),
             )
+        )
     return findings
 
 
-# Mirrors the blueprint branch of scripts/deploy/deployment_file.py - a version constant
-# that does not match this is a ValueError at deploy time, not a cosmetic problem.
-# The optional "v" tracks that regex: upstream declares "v2.1.0", this repo records
-# "2.1.0", and the deployer now accepts either.
-BLUEPRINT_VERSION_RE = re.compile(r'version:\s*public\(constant\(String\[8\]\)\)\s*=\s*"v?([\d.]+)"')
+# The deployer's own pattern, imported rather than mirrored. A local copy had drifted to
+# \s* where the deployer uses literal spaces, so it would have passed contracts the
+# blueprint path then rejected - the exact false negative this check exists to prevent.
+# ANY_VERSION_RE is deliberately loose: it only has to find the line so we can report what
+# was declared, including forms the deployer refuses.
+BLUEPRINT_VERSION_RE = BLUEPRINT_VERSION_PATTERN
 ANY_VERSION_RE = re.compile(r'version:\s*public\(constant\(String\[8\]\)\)\s*=\s*"([^"]+)"')
 
 
@@ -412,6 +543,22 @@ def check_contracts():
         elif normalise_version(declared.group(1)) != implied:
             mismatched.append(f"{rel}: declares {declared.group(1)!r}, filename implies {implied!r}")
 
+    # fetch_latest_contract only ever considers files matching *_v_NNN.vy, so anything else
+    # in contracts/ is unreachable: the deployer cannot select it no matter what.
+    unreachable = sorted(
+        f.relative_to(BASE_DIR).as_posix() for f in contracts_dir.rglob("*.vy") if not re.search(r"_v_\d+\.vy$", f.name)
+    )
+    if unreachable:
+        findings.append(
+            Finding(
+                "CONTRACTS",
+                f"{plural(len(unreachable), 'contract')} the deployer can never select",
+                "fetch_latest_contract only matches *_v_NNN.vy, so these are invisible to it "
+                "and cannot be deployed until renamed",
+                (),
+                tuple(unreachable),
+            )
+        )
     if unparseable:
         findings.append(
             Finding(
@@ -528,8 +675,17 @@ def check_required(deployments, broken_configs=()):
         except ValidationError as exc:
             errors = exc.errors()
             note = path.relative_to(BASE_DIR).as_posix()
-            if chain in broken_configs:
+            # Only claim inheritance for the fields that genuinely appear in both. Chain
+            # co-occurrence is not enough: neon and taiko fail CONFIG on is_testnet /
+            # reference_token_addresses but fail here on native_currency_coingecko_id,
+            # which is a separate mistake and was previously mislabelled as inherited.
+            from_config = {".".join(str(p) for p in e["loc"]) for e in broken_configs.get(chain, ())}
+            here = {".".join(str(p) for p in e["loc"][1:]) for e in errors if e["loc"][:1] == ("config",)}
+            shared = from_config & here
+            if shared and shared == here:
                 note += "  (inherited from the CONFIG finding above, not a separate mistake)"
+            elif shared:
+                note += f"  ({', '.join(sorted(shared))} inherited from CONFIG; the rest are not)"
             findings.append(
                 Finding(
                     "REQUIRED",
@@ -582,7 +738,15 @@ def check_coverage(deployments, configs, selected=None):
         raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         by_name[(raw.get("config") or {}).get("file_name") or path.stem].append(path.relative_to(BASE_DIR).as_posix())
     clashes = {name: paths for name, paths in by_name.items() if len(paths) > 1}
-    if clashes and not selected:
+    if selected:
+        # Under --chain, report only the collision the selected chain is part of - it is
+        # about that chain, so suppressing it entirely hid the finding that mattered most.
+        clashes = {
+            name: paths
+            for name, paths in clashes.items()
+            if any(f"{Path(p).parent.name}/{Path(p).stem}" in selected for p in paths)
+        }
+    if clashes:
         findings.append(
             Finding(
                 "COVERAGE",
@@ -596,12 +760,20 @@ def check_coverage(deployments, configs, selected=None):
     return findings
 
 
+ADMIN_ROLES = ("ownership_admin", "parameter_admin", "emergency_admin")
+
+
 def check_integrity(deployments):
     by_addr = defaultdict(list)
-    partial = []
+    partial, ungoverned = [], []
     for chain, (_, raw) in sorted(deployments.items()):
         dao = (raw.get("config") or {}).get("dao") or {}
         admins = {k: norm(v) for k, v in dao.items() if k.endswith("_admin") and norm(v)}
+        if not admins and any(role in dao for role in ADMIN_ROLES):
+            # Every admin recorded as null. Not "no finding" - it means the file names no
+            # governance at all for a chain that has contracts deployed on it.
+            ungoverned.append(chain)
+            continue
         if len(admins) < 2:
             continue
         if len(set(admins.values())) == 1:
@@ -616,6 +788,18 @@ def check_integrity(deployments):
             partial.append(f"{chain}: {', '.join(roles)} all = {address}")
 
     findings = []
+    if ungoverned:
+        findings.append(
+            Finding(
+                "INTEGRITY",
+                f"{plural(len(ungoverned), 'chain')} with no admin recorded at all",
+                "every admin role is null, so the deployment file names nobody who can "
+                "administer these contracts - and update_address_provider writes those "
+                "nulls into ids 21/22/23",
+                tuple(ungoverned),
+                subjects=tuple(ungoverned),
+            )
+        )
     if partial:
         findings.append(
             Finding(
@@ -659,13 +843,11 @@ def check_onchain(deployments, workers=12):
 
     def probe(job):
         chain, slot, addr, rpc = job
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "eth_getCode", "params": [addr, "latest"]}).encode()
-        request = urllib.request.Request(
-            rpc, data=body, headers={"content-type": "application/json", "User-Agent": "Mozilla/5.0"}
-        )
         try:
-            with urllib.request.urlopen(request, timeout=20) as response:
-                return chain, slot, addr, json.load(response).get("result")
+            # Must go through _rpc_call: a hand-rolled .get("result") turns an in-band
+            # {"error": ...} (rate limit, unsupported method) into None, which the caller
+            # cannot tell from "no bytecode" - i.e. it accuses a live chain of being a ghost.
+            return chain, slot, addr, _rpc_call(rpc, "eth_getCode", [addr, "latest"])
         except Exception as exc:
             return chain, slot, addr, f"ERR {type(exc).__name__}"
 
@@ -696,10 +878,15 @@ def check_onchain(deployments, workers=12):
             f"{chain}: unverified, RPC failed on {count}/{probed[chain]} probes",
             "public_rpc_url is dead or rate-limiting - no conclusion drawn",
             subjects=(chain,),
+            unverified=True,
         )
         for chain, count in sorted(errors.items())
     ]
     return findings
+
+
+class RpcError(RuntimeError):
+    """A JSON-RPC call that answered, but with an error object instead of a result."""
 
 
 def _rpc_call(rpc, method, params, timeout=25):
@@ -708,7 +895,15 @@ def _rpc_call(rpc, method, params, timeout=25):
         rpc, data=body, headers={"content-type": "application/json", "User-Agent": "Mozilla/5.0"}
     )
     with urllib.request.urlopen(request, timeout=timeout) as response:
-        return json.load(response).get("result")
+        payload = json.load(response)
+    # A rate-limited or unsupported call answers HTTP 200 with {"error": ...}. Returning
+    # .get("result") would hand back None, which eth_getCode callers cannot tell apart
+    # from "no bytecode" - i.e. it would accuse a live chain of being a ghost.
+    if isinstance(payload, dict) and payload.get("error") is not None:
+        raise RpcError(str(payload["error"])[:120])
+    if not isinstance(payload, dict) or "result" not in payload:
+        raise RpcError("response contained no result")
+    return payload["result"]
 
 
 def _eth_call(rpc, to, signature, argument=None):
@@ -725,9 +920,11 @@ def _as_address(result):
 # Deployed code is not the compiler's runtime output verbatim:
 #  - normal contracts append immutables and constructor args after the runtime code, so the
 #    on-chain code starts with it;
-#  - blueprints are deployed via the EIP-5202 wrapper in deployment_utils.deploy_via_create2
-#    (b"\x61" + len + b"\x3d\x81\x60\x0a\x3d\x39\xf3" + preamble), 10 bytes that run at
-#    creation and are not part of the stored code.
+#  - blueprints go through boa's deploy_as_blueprint (deployment_utils.deploy_contract),
+#    which prepends the EIP-5202 deploy wrapper - b"\x61" + len +
+#    b"\x3d\x81\x60\x0a\x3d\x39\xf3" - 10 bytes that run at creation and are not part of
+#    the stored code. (deployment_utils.deploy_via_create2 builds the same wrapper by hand,
+#    but nothing calls it; do not read it as the path in use.)
 BLUEPRINT_WRAPPER_BYTES = 10
 
 
@@ -743,6 +940,10 @@ def check_bytecode(deployments, workers=8):
     def compile_row(row):
         settings = row.get("compiler_settings") or {}
         version, evm = settings.get("compiler_version"), settings.get("evm_version")
+        if not version:
+            # Hand-written catalog rows record nothing about how they were built, so there
+            # is no source to recompile. Say so rather than crashing on a null path below.
+            raise ValueError("no compiler_version recorded - cannot recompile")
         source = BASE_DIR / Path(str(row["contract_path"]).lstrip("/"))
         key = (str(source), version, evm)
         if key not in compiled:
@@ -765,13 +966,21 @@ def check_bytecode(deployments, workers=8):
         return compiled[key]
 
     jobs = []
+    # Rows carrying an address but no provenance (the hand-written catalog chains) cannot
+    # be recompiled. They used to be filtered out here and never mentioned, so a chain
+    # could report "nothing to report" having had most of its rows silently skipped.
+    unprovenanced = defaultdict(list)
     for chain, (_, raw) in deployments.items():
         rpc = (raw.get("config") or {}).get("public_rpc_url")
         if not rpc:
             continue
         for slot, row in contract_rows(raw):
-            if row.get("contract_path") and norm(row.get("address")):
-                jobs.append((chain, slot, row, rpc))
+            if not norm(row.get("address")):
+                continue
+            if not row.get("contract_path") or not (row.get("compiler_settings") or {}).get("compiler_version"):
+                unprovenanced[chain].append(slot)
+                continue
+            jobs.append((chain, slot, row, rpc))
 
     # Compile serially (cached, CPU-bound, and vvm shells out) but fetch code concurrently.
     expected = {}
@@ -833,14 +1042,30 @@ def check_bytecode(deployments, workers=8):
                 tuple(f"python -c \"import vvm; vvm.install_vyper('{v}')\"" for v in sorted(missing_compilers)),
             )
         )
+    findings += [
+        Finding(
+            "BYTECODE",
+            f"{chain}: {plural(len(slots), 'row')} skipped, no contract_path/compiler_version to rebuild from",
+            "hand-written catalog rows record nothing about how they were built, so nothing "
+            "about them can be verified against chain",
+            tuple(sorted(slots)),
+            subjects=(chain,),
+            unverified=True,
+        )
+        for chain, slots in sorted(unprovenanced.items())
+    ]
     if other := [line for line in uncompilable if "no local vyper" not in line]:
+        shown = sorted(other)[:10]
         findings.append(
             Finding(
                 "BYTECODE",
                 f"{plural(len(other), 'contract')} could not be recompiled to compare",
-                "",
+                # Say what was truncated: a silently shortened list reads as the whole set,
+                # which would understate how much of a chain went unchecked.
+                "" if len(other) == len(shown) else f"showing {len(shown)} of {len(other)}",
                 (),
-                tuple(sorted(other)[:10]),
+                tuple(shown),
+                unverified=True,
             )
         )
     findings += [
@@ -849,6 +1074,7 @@ def check_bytecode(deployments, workers=8):
             f"{chain}: unverified, RPC failed on {plural(count, 'probe')}",
             "public_rpc_url is dead or rate-limiting - no conclusion drawn",
             subjects=(chain,),
+            unverified=True,
         )
         for chain, count in sorted(unreachable.items())
     ]
@@ -873,7 +1099,7 @@ def check_wiring(deployments, workers=8):
         rpc = (raw.get("config") or {}).get("public_rpc_url")
         if not rpc:
             return chain, [], [], 0
-        wiring, ownership = [], []
+        wiring, ownership, unresolved, answered = [], [], [], 0
         # Count failed calls rather than swallowing them: a dead RPC must report
         # "unverified", never a clean bill of health.
         failures = 0
@@ -891,7 +1117,11 @@ def check_wiring(deployments, workers=8):
                 except Exception:
                     failures += 1
                     continue
-                if live and live != recorded:
+                # A codeless factory answers "0x", so _as_address gives None. That is not
+                # agreement - it is nothing to compare, and must count as unverified.
+                if live is None:
+                    failures += 1
+                elif live != recorded:
                     wiring.append(f"{group}.factory {signature[:-2]} -> {live}, recorded {slot} {recorded}")
             implementation = norm(((slots.get("implementation") or {}).get("address")) or "")
             if implementation:
@@ -899,42 +1129,71 @@ def check_wiring(deployments, workers=8):
                     live = _as_address(_eth_call(rpc, factory, "pool_implementations(uint256)", 0))
                 except Exception:
                     live, failures = None, failures + 1
-                if live and live != implementation:
-                    wiring.append(f"{group}.factory pool_implementations(0) -> {live}, recorded {implementation}")
+                else:
+                    if live is None:
+                        failures += 1
+                    elif live != implementation:
+                        wiring.append(f"{group}.factory pool_implementations(0) -> {live}, recorded {implementation}")
 
         owner = norm(((raw.get("config") or {}).get("dao") or {}).get("ownership_admin") or "")
         if owner:
             for slot, row in contract_rows(raw):
                 if row.get("deployment_type") == "blueprint" or not norm(row.get("address")):
                     continue
-                # admin() first, owner() as fallback; a contract exposing neither is not a
-                # finding, but a transport failure on both is counted as unverified.
-                answered = False
+                # admin() first, owner() as fallback. Three outcomes, and they must stay
+                # distinct: an answer to compare, a transport failure, or no usable answer
+                # at all (the contract exposes neither getter, or has no code) - the last
+                # of which previously passed as if the ownership had been confirmed.
+                resolved = None
                 for signature in ("admin()", "owner()"):
                     try:
                         live = _as_address(_eth_call(rpc, norm(row["address"]), signature))
                     except Exception:
                         continue
-                    answered = True
-                    if live is None:
-                        continue
-                    if live != owner and int(live, 16) != 0:
-                        ownership.append(f"{slot} {signature[:-2]}={live}")
-                    break
-                if not answered:
-                    failures += 1
-        return chain, wiring, ownership, failures
+                    if live is not None:
+                        resolved = live
+                        break
+                if resolved is None:
+                    unresolved.append(slot)
+                else:
+                    answered += 1
+                    if resolved != owner:
+                        # A zero owner is not "unowned, therefore fine" - it is a contract
+                        # nobody can administer, which is worth saying out loud.
+                        label = " (zero address - unownable)" if int(resolved, 16) == 0 else ""
+                        ownership.append(f"{slot} owner={resolved}{label}")
+        # Plenty of these contracts (zaps, math, views, handlers) expose no owner at all,
+        # so a single unresolved row means nothing. Only when *none* resolved is ownership
+        # genuinely unverifiable - a codeless chain or a dead endpoint - and that is the
+        # case the silent-pass bug used to hide.
+        if answered:
+            unresolved = []
+        return chain, wiring, ownership, failures, unresolved
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = [pool.submit(inspect, (chain, raw)) for chain, (_, raw) in deployments.items()]
         for future in as_completed(futures):
-            chain, wiring, ownership, failures = future.result()
+            chain, wiring, ownership, failures, unresolved = future.result()
             if failures:
                 findings.append(
                     Finding(
                         "WIRING",
-                        f"{chain}: unverified, {plural(failures, 'call')} failed",
-                        "public_rpc_url is dead or rate-limiting - no conclusion drawn",
+                        f"{chain}: unverified, {plural(failures, 'call')} failed or returned nothing",
+                        "RPC dead, rate-limiting, or the target has no code - no conclusion drawn",
+                        subjects=(chain,),
+                        unverified=True,
+                    )
+                )
+            if unresolved:
+                findings.append(
+                    Finding(
+                        "WIRING",
+                        f"{chain}: ownership unverifiable - no contract answered admin() or owner()",
+                        f"all {len(unresolved)} probed contracts returned nothing, so the chain is "
+                        f"codeless or the endpoint is not answering; this is not evidence that "
+                        f"ownership is correct",
+                        (),
+                        tuple(sorted(unresolved)),
                         subjects=(chain,),
                     )
                 )
@@ -966,17 +1225,31 @@ def check_wiring(deployments, workers=8):
 # --------------------------------------------------------------------------------------
 
 
-def render_summary(console, deployments, configs, findings):
-    """One row per deployment: how big it is, when it last moved, what is wrong with it."""
+def render_summary(console, deployments, configs, findings, all_deployments=None):
+    """One row per deployment: how big it is, when it last moved, what is wrong with it.
+
+    `all_deployments` is the unfiltered set: under --chain the table shows one row, but
+    "not deployed" must still be judged against every deployment, or every other chain in
+    the repo gets listed as undeployed.
+    """
+    all_deployments = deployments if all_deployments is None else all_deployments
     by_subject = defaultdict(Counter)
+    could_not_check = defaultdict(set)
     for finding in findings:
         for subject in finding.subjects:
-            by_subject[subject][finding.kind] += 1
+            if finding.unverified:
+                could_not_check[subject].add(finding.kind)
+            else:
+                by_subject[subject][finding.kind] += 1
 
     # One narrow column per check that actually fired, so the table stays a scannable
     # matrix rather than a paragraph of labels per row. Checks with no chain attribution
     # (CONTRACTS is repo-wide) never appear here.
-    present = [k for k in KIND_ORDER if any(k in counts for counts in by_subject.values())]
+    present = [
+        k
+        for k in KIND_ORDER
+        if any(k in counts for counts in by_subject.values()) or any(k in kinds for kinds in could_not_check.values())
+    ]
 
     table = Table(box=box.SIMPLE_HEAD, pad_edge=False, header_style="bold")
     table.add_column("chain", no_wrap=True)
@@ -994,21 +1267,35 @@ def render_summary(console, deployments, configs, findings):
         missing_config |= no_config
 
         counts = by_subject.get(key, Counter())
+        skipped = could_not_check.get(key, set())
+
+        def cell(kind, counts=counts, skipped=skipped):
+            # "?" is not a smaller number than 1 - it means the check could not run here,
+            # which a count would silently misrepresent as a clean or dirty result.
+            if counts.get(kind):
+                return str(counts[kind])
+            return "[yellow]?[/]" if kind in skipped else "[dim].[/]"
+
         table.add_row(
             f"{key}[red]*[/]" if no_config else key,
             str(len(rows)),
             last,
-            *[str(counts[k]) if counts.get(k) else "[dim].[/]" for k in present],
+            *[cell(k) for k in present],
         )
 
     # Chain configs that never produced a deployment have no row above; list them so the
     # table is a complete picture of the repo rather than of deployments only.
     console.print(table)
     legend = ["n = contract rows recorded"]
+    if could_not_check:
+        legend.append("? = check could not run for that chain (dead RPC, no code) - not a result")
     if missing_config:
         # emit() escapes markup, so keep the legend plain text.
         legend.append("* = no settings/chains config, cannot be re-run")
-    if undeployed := sorted(set(configs) - set(deployments)):
+    undeployed = sorted(set(configs) - set(all_deployments))
+    if len(deployments) < len(all_deployments):
+        undeployed = [key for key in undeployed if key in deployments]  # scoped by --chain
+    if undeployed:
         legend.append(f"not deployed: {' '.join(undeployed)}")
     for line in legend:
         emit(console, line, indent=2, style="dim")
@@ -1044,10 +1331,14 @@ def status_command(chain, only, onchain, wiring, bytecode, summary, json_path):
     console.print(f"[bold]curve-core status[/]  [dim]{scope}, {len(configs)} chain configs[/]\n")
 
     # Run CONFIG first so REQUIRED can attribute inherited failures to it.
-    broken_configs = {f.subjects[0] for f in check_config(configs, selected) if f.subjects}
+    broken_configs = config_errors(configs, selected)
+    # Chains `deploy all` cannot run on today: no chain config at all, or one that
+    # ChainConfig rejects. PENDING uses this so it stops promising them an "automatic"
+    # upgrade it cannot actually deliver.
+    blocked = set(broken_configs) | (set(everything) - set(configs))
 
     runners = {
-        "pending": lambda: check_pending(deployments),
+        "pending": lambda: check_pending(deployments, configs, blocked),
         "config": lambda: check_config(configs, selected),
         "contracts": check_contracts,
         "schema": lambda: check_schema(deployments),
@@ -1065,12 +1356,18 @@ def status_command(chain, only, onchain, wiring, bytecode, summary, json_path):
         if chain and name in repo_wide and only != name:
             continue
         findings += runners[name]()
+    # Track which on-chain checks actually ran, so a silent section can be reported as
+    # "probed and clean" rather than being indistinguishable from "never ran".
+    ran = []
     if onchain:
         findings += check_onchain(deployments)
+        ran.append("ONCHAIN")
     if wiring:
         findings += check_wiring(deployments)
+        ran.append("WIRING")
     if bytecode:
         findings += check_bytecode(deployments)
+        ran.append("BYTECODE")
 
     by_kind = defaultdict(list)
     for finding in findings:
@@ -1080,7 +1377,7 @@ def status_command(chain, only, onchain, wiring, bytecode, summary, json_path):
         if only:
             # Otherwise the empty columns read as "those checks passed".
             emit(console, f"only the {only} check ran - other columns are not shown", indent=2, style="yellow")
-        render_summary(console, deployments, configs, findings)
+        render_summary(console, deployments, configs, findings, everything)
 
     for kind in KIND_ORDER if not summary else ():
         rows = by_kind.get(kind)
@@ -1104,6 +1401,19 @@ def status_command(chain, only, onchain, wiring, bytecode, summary, json_path):
                 emit(console, line, indent=6, style="dim")
             if row.items:
                 emit(console, " ".join(row.items), indent=6, style="dim")
+        console.print("")
+
+    # An on-chain check that finds nothing prints nothing, which reads exactly like one
+    # that was never enabled. Say which ones ran and came back clean.
+    for kind in ran:
+        if not by_kind.get(kind):
+            emit(
+                console,
+                f"{kind}: {plural(len(deployments), 'chain')} probed, nothing to report",
+                indent=0,
+                style="green",
+            )
+    if ran and any(not by_kind.get(kind) for kind in ran):
         console.print("")
 
     if json_path:

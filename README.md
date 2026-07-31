@@ -131,9 +131,9 @@ python manage.py status --chain prod/sonic # one chain
 python manage.py status --json out.json    # machine-readable
 ```
 
-Read-only — it never sends a transaction and never needs a private key, and `manage.py`
-skips the boa connection for this command. Exits `1` when anything is reported, so it can
-be used as a CI gate.
+Read-only — it never sends a transaction, and `manage.py` skips the boa connection for this
+command, so it runs on a fresh clone with no `settings/env` and no `DEPLOYER_EOA_PRIVATE_KEY`.
+Exits `1` when anything is reported, so it can be used as a CI gate.
 
 Each check is derived from the deployer's own code rather than reimplemented, so the report
 cannot drift from what `deploy all` actually does:
@@ -146,7 +146,7 @@ cannot drift from what `deploy all` actually does:
 | `SCHEMA` | Keys in a deployment file that no model declares. Pydantic ignores them and the deployer rewrites files through `model_dump()`, so they are deleted the next time that chain is touched. | the models' own `model_fields` |
 | `REQUIRED` | Files that fail validation — the deployer cannot read or update that chain at all. | `DeploymentConfig.model_validate()` |
 | `COVERAGE` | Chain configs with no deployment, deployments with no chain config, and `file_name` collisions (that field is curve-api-core's blockchain id, so a collision means one file shadows the other). | |
-| `INTEGRITY` | Governance roles collapsed onto a single address. | |
+| `INTEGRITY` | Admin roles that are null, shared between roles, or collapsed onto one address. | |
 
 ### On-chain checks
 

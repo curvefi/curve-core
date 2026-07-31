@@ -13,8 +13,11 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     DEV: bool = False
 
-    WEB3_PROVIDER_URL: str
-    DEPLOYER_EOA_PRIVATE_KEY: str
+    # Empty defaults so read-only commands (`manage.py status`) work on a fresh clone with
+    # no settings/env. manage.py checks these are populated before any command that needs
+    # to reach a chain, so a deploy still fails loudly rather than connecting to "".
+    WEB3_PROVIDER_URL: str = ""
+    DEPLOYER_EOA_PRIVATE_KEY: str = ""
 
 
 class RollupType(StrEnum):
