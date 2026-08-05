@@ -13,9 +13,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     DEV: bool = False
 
-    # Empty defaults so read-only commands (`manage.py status`) work on a fresh clone with
-    # no settings/env. manage.py checks these are populated before any command that needs
-    # to reach a chain, so a deploy still fails loudly rather than connecting to "".
+    # Empty so `status` runs without settings/env; manage.py checks before any chain command.
     WEB3_PROVIDER_URL: str = ""
     DEPLOYER_EOA_PRIVATE_KEY: str = ""
 
@@ -32,10 +30,7 @@ class RollupType(StrEnum):
 class CurveDAOSettings(BaseModel):
     crv: str | None = None
     crvusd: str | None = None
-    # Present in sonic.yaml and taiko.yaml. Undeclared until now, and pydantic's
-    # extra='ignore' plus the model_dump() round-trip in update_deployment_config() meant
-    # any further deploy step against those chains deleted it - from the file and from what
-    # curve-api-core serves.
+    # In sonic.yaml and taiko.yaml; undeclared fields are dropped on the model_dump() round-trip.
     scrvusd: str | None = None
     ownership_admin: str | None = None
     parameter_admin: str | None = None

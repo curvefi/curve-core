@@ -1,11 +1,7 @@
 """Unit tests for `manage.py status`.
 
-Every case here is a regression test for a bug that actually shipped, not a demonstration
-that the code runs. The comment on each names the failure it locks down, because a test whose
-purpose is forgotten gets deleted the first time it becomes inconvenient.
-
-Offline only - nothing here touches a network, so the suite is deterministic and runnable in
-CI without credentials.
+Each case is a regression test for a bug that shipped; the comment names the failure it
+locks down. Offline only - no network, so the suite is deterministic in CI.
 """
 
 import io
@@ -73,11 +69,7 @@ def test_version_compare_still_raises_on_genuinely_malformed():
 
 
 def test_fetch_latest_contract_sorts_on_digits_across_unrelated_contracts(tmp_path):
-    """Two contracts in one folder compete on a number that means nothing across them.
-
-    This is why CONTRACTS reports shared folders: fxswap's stableswap_math sits beside
-    twocrypto's math and loses only because 011 < 210.
-    """
+    """Two contracts in one folder compete on a number that means nothing across them."""
     (tmp_path / "math_v_210.vy").write_text("# a")
     (tmp_path / "stableswap_math_v_011.vy").write_text("# b")
     assert fetch_latest_contract(tmp_path).name == "math_v_210.vy"
@@ -99,11 +91,7 @@ def test_fetch_latest_contract_ignores_files_without_v_nnn(tmp_path):
 
 
 def test_contract_rows_descends_past_a_node_that_has_an_address():
-    """An early `return` here hid every nested row - 72 of them across the fleet.
-
-    `registry_handlers` sits *inside* a node that itself has an address, so stopping at the
-    first address meant metaregistry handlers were never checked by any on-chain probe.
-    """
+    """An early `return` here hid every nested row - 72 across the fleet."""
     raw = {
         "contracts": {
             "registries": {
@@ -175,11 +163,7 @@ def render(text, **kwargs):
 
 
 def test_emit_never_leaves_trailing_whitespace():
-    """rich.Padding pads every wrapped line out to the block width.
-
-    That is invisible on screen and shows up as 22 dirty lines the moment output is
-    redirected to a file - which is how a CI log or a --json companion run gets read.
-    """
+    """rich.Padding pads wrapped lines to block width - invisible on screen, dirty in a file."""
     lines = render("word " * 40, indent=6, bullet="- ")
     assert lines, "expected wrapped output"
     assert all(line == line.rstrip() for line in lines)
@@ -207,8 +191,7 @@ def test_plural_agrees():
 
 
 def test_undeclared_reports_keys_no_model_declares():
-    """SCHEMA exists because pydantic's extra='ignore' plus a model_dump() round-trip
-    deletes these on the next write - silently, from a file production reads."""
+    """extra='ignore' plus a model_dump() round-trip deletes these on the next write."""
     from scripts.deploy.models import DeploymentConfig
 
     found = _undeclared({"config": {"totally_made_up_key": 1}}, DeploymentConfig)
@@ -243,8 +226,7 @@ def _deployment(version="1.0.0"):
 
 
 def test_pending_splits_blocked_from_ready_without_repeating_a_chain():
-    """The chain list used to print unlabelled after the blocked ones were named, so the
-    blocked chains appeared twice and the total never visibly added up."""
+    """Blocked chains used to appear twice, and the total never visibly added up."""
     deployments = {name: (None, _deployment()) for name in ("prod/a", "prod/b", "prod/c")}
     blocked = {"prod/a": "rejected", "prod/b": "missing"}
 
@@ -286,11 +268,7 @@ def test_pending_keeps_every_chain_in_subjects_for_the_summary_rollup():
 
 
 def test_check_wiring_survives_a_chain_with_no_rpc():
-    """`inspect` returned a 4-tuple on this path while the caller unpacked 5.
-
-    Unreachable only while every chain config happens to carry a public_rpc_url - it raises
-    ValueError the first time one does not.
-    """
+    """`inspect` returned a 4-tuple here while the caller unpacked 5."""
     deployments = {"prod/norpc": (None, {"config": {}, "contracts": {}})}
     assert check_wiring(deployments) == []
 
@@ -311,13 +289,7 @@ def test_unverified_defaults_off_so_a_finding_is_a_result_unless_it_says_otherwi
 
 
 def test_dao_round_trip_keeps_scrvusd():
-    """`update_deployment_config()` rewrites the whole file through model_dump().
-
-    Any key no model declares is dropped by pydantic's extra='ignore' - so before scrvusd
-    was declared, running any deploy step against sonic deleted it from the file and from
-    what curve-api-core serves. taiko carries it too, and was protected only by failing
-    validation for an unrelated reason; fixing that first would have lost it.
-    """
+    """Undeclared keys are dropped when update_deployment_config() rewrites via model_dump()."""
     from scripts.deploy.models import DeploymentConfig
 
     payload = {
@@ -344,12 +316,7 @@ def test_dao_round_trip_keeps_scrvusd():
 
 
 def test_legacy_amm_registries_survive_the_round_trip():
-    """avalanche.yaml and fantom.yaml carry registries this script never deploys.
-
-    curve-api-core serves them as the main / factory-v2 / crypto / factory-crypto /
-    factory-eywa registries for those chains, so dropping them on a model_dump() would
-    remove real platforms from the public API.
-    """
+    """Dropping these would remove real platforms curve-api-core serves."""
     from scripts.deploy.models import AmmDeployment
 
     row = {

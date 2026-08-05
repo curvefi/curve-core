@@ -29,19 +29,13 @@ jobs:
       - run: poetry run pytest tests/ -q
 
   drift:
-    # `status` reports the deployment-state problems that already exist on main, so gating on
-    # its exit code would fail every build. Gate on the count per kind instead: the existing
-    # backlog is allowed, growing it is not. Fixing findings and lowering the baseline is the
-    # intended direction - regenerate with:
-    #   python manage.py status --json out.json
-    # then rewrite .github/status-baseline.json from the per-kind counts.
+    # Gates on per-kind counts, not the exit code: the existing backlog is allowed, growing it
+    # is not. Lower status-baseline.json as findings are fixed.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          # PENDING compares contracts/ against what each chain records, and CONTRACTS reads
-          # git history for nothing - but get_latest_commit_hash needs real history if any
-          # check ever grows to use it. Cheap insurance against a confusing shallow-clone bug.
+          # get_latest_commit_hash needs real history, not a shallow clone.
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:

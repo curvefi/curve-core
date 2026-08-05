@@ -14,8 +14,7 @@ from settings.models import ChainConfig
 class DaoSettings(BaseModel):
     crv: str | None = None
     crvusd: str | None = None
-    # Mirrors CurveDAOSettings in settings/models.py - both walk the same `dao` block, so a
-    # field missing from either one is still dropped on the round-trip.
+    # Mirrors CurveDAOSettings; both walk `dao`, so it must be declared on each.
     scrvusd: str | None = None
     emergency_admin: str | None = None
     ownership_admin: str | None = None
@@ -72,12 +71,7 @@ class StableswapSingleAmmDeployment(SingleAmmDeployment):
 
 
 class LegacyAmmDeployment(BaseModel):
-    """A registry Curve deployed before this repo existed - factory address only.
-
-    These are recorded by hand in avalanche.yaml and fantom.yaml, and curve-api-core reads
-    them to report the `main` / `factory-v2` / `crypto` / `factory-crypto` / `factory-eywa`
-    registries for those chains. This script never deploys them.
-    """
+    """A pre-curve-core registry, factory address only. Hand-written, never deployed here."""
 
     factory: Contract | None = None
 
@@ -87,9 +81,7 @@ class AmmDeployment(BaseModel):
     tricryptoswap: SingleAmmDeployment | None = None
     twocryptoswap: SingleAmmDeployment | None = None
 
-    # Declared so a model_dump() round-trip cannot drop them. They are live: the API serves
-    # them today, and they survived only because those two files have no settings/chains
-    # config and so can never be targeted by a deploy.
+    # In avalanche.yaml/fantom.yaml and served by curve-api-core; declared so a dump keeps them.
     oldmain: LegacyAmmDeployment | None = None
     oldstable: LegacyAmmDeployment | None = None
     oldcrypto: LegacyAmmDeployment | None = None

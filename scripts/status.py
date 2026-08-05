@@ -313,10 +313,8 @@ def check_pending(deployments, configs=None, blocked=()):
             try:
                 newer = version_a_gt_version_b(available, str(recorded))
             except ValueError:
-                # version_a_gt_version_b int-casts each dotted part, so a recorded version
-                # that is not plain digits-and-dots (e.g. "1.0.0rc1") breaks the deployer
-                # itself on the next run, not just this report. A leading "v" no longer
-                # lands here - normalise_version handles that form.
+                # A version that is not digits-and-dots (e.g. "1.0.0rc1") breaks the deployer
+                # itself, not just this report.
                 malformed.append((chain, slot, recorded))
                 continue
             if newer:
@@ -454,10 +452,8 @@ def _undeclared(raw, model: type[BaseModel], trail=()):
     return out
 
 
-# config.* keys curve-api-core reads out of these files (constants/configs/configs.js).
-# It derives its entire chain list from deployments/, so a key it reads that nothing here
-# writes is served as undefined for every chain - invisible from inside this repo, because
-# walking the models only ever finds keys that ARE present.
+# config.* keys curve-api-core reads (constants/configs/configs.js). A key it reads that
+# nothing writes is served as undefined; walking the models only finds keys that ARE present.
 API_CONSUMED_CONFIG_KEYS = (
     "file_name",
     "network_name",
@@ -550,11 +546,8 @@ def check_config(configs, selected=None):
     return findings
 
 
-# The deployer's own pattern, imported rather than mirrored. A local copy had drifted to
-# \s* where the deployer uses literal spaces, so it would have passed contracts the
-# blueprint path then rejected - the exact false negative this check exists to prevent.
-# ANY_VERSION_RE is deliberately loose: it only has to find the line so we can report what
-# was declared, including forms the deployer refuses.
+# Imported, not mirrored - a local copy had drifted and produced false negatives.
+# ANY_VERSION_RE is loose on purpose: it reports what was declared, including refused forms.
 BLUEPRINT_VERSION_RE = BLUEPRINT_VERSION_PATTERN
 ANY_VERSION_RE = re.compile(r'version:\s*public\(constant\(String\[8\]\)\)\s*=\s*"([^"]+)"')
 
@@ -564,11 +557,8 @@ def check_contracts():
     findings = []
     contracts_dir = BASE_DIR / "contracts"
 
-    # Two distinct failures, previously reported as one:
-    #  - unparseable: the blueprint regex does not match, so deploy raises immediately;
-    #  - mismatched: it parses but disagrees with the _v_NNN filename, so the deploy
-    #    succeeds and records a version that contradicts the name fetch_latest_contract
-    #    sorts on - silent, and worse for it.
+    # unparseable: deploy raises immediately. mismatched: deploy succeeds and records a
+    # version contradicting the filename fetch_latest_contract sorts on - silent, and worse.
     unparseable, mismatched, no_version = [], [], []
     for source in sorted(contracts_dir.rglob("*_v_*.vy")):
         rel = source.relative_to(BASE_DIR).as_posix()
@@ -583,13 +573,8 @@ def check_contracts():
         elif normalise_version(declared.group(1)) != implied:
             mismatched.append(f"{rel}: declares {declared.group(1)!r}, filename implies {implied!r}")
 
-    # fetch_latest_contract sorts a whole folder on the _v_NNN digits alone, so two unrelated
-    # contracts sharing a folder compete for the same slot on a number that means nothing
-    # across them. Whichever happens to be higher gets deployed. That is how fxswap's
-    # stableswap_math landed next to twocryptoswap's math: it loses 011 < 210 today, but the
-    # next version of it wins the folder and every chain silently gets the wrong contract -
-    # reported by PENDING as an ordinary upgrade, because PENDING compares versions, not
-    # identities. Nothing about the numbers being safe today is enforced anywhere.
+    # fetch_latest_contract sorts a folder on _v_NNN alone, so two unrelated contracts in one
+    # folder compete for the slot. PENDING would report the swap as an ordinary upgrade.
     shared = []
     for folder in sorted({f.parent for f in contracts_dir.rglob("*_v_*.vy")}):
         by_stem = defaultdict(list)
@@ -752,10 +737,8 @@ def check_required(deployments, broken_configs=()):
         except ValidationError as exc:
             errors = exc.errors()
             note = path.relative_to(BASE_DIR).as_posix()
-            # Only claim inheritance for the fields that genuinely appear in both. Chain
-            # co-occurrence is not enough: neon and taiko fail CONFIG on is_testnet /
-            # reference_token_addresses but fail here on native_currency_coingecko_id,
-            # which is a separate mistake and was previously mislabelled as inherited.
+            # Match on fields, not chains: neon/taiko fail CONFIG and REQUIRED on different
+            # fields, and were previously mislabelled as inherited.
             from_config = {".".join(str(p) for p in e["loc"]) for e in broken_configs.get(chain, ())}
             here = {".".join(str(p) for p in e["loc"][1:]) for e in errors if e["loc"][:1] == ("config",)}
             shared = from_config & here
@@ -1038,14 +1021,8 @@ def _as_address(result):
     return "0x" + result[-40:].lower() if isinstance(result, str) and len(result) >= 42 else None
 
 
-# Deployed code is not the compiler's runtime output verbatim:
-#  - normal contracts append immutables and constructor args after the runtime code, so the
-#    on-chain code starts with it;
-#  - blueprints go through boa's deploy_as_blueprint (deployment_utils.deploy_contract),
-#    which prepends the EIP-5202 deploy wrapper - b"\x61" + len +
-#    b"\x3d\x81\x60\x0a\x3d\x39\xf3" - 10 bytes that run at creation and are not part of
-#    the stored code. (deployment_utils.deploy_via_create2 builds the same wrapper by hand,
-#    but nothing calls it; do not read it as the path in use.)
+# Deployed code is not the compiler's runtime output verbatim: normal contracts append
+# immutables and ctor args (so match by prefix); blueprints carry a 10-byte EIP-5202 wrapper.
 BLUEPRINT_WRAPPER_BYTES = 10
 
 
@@ -1220,10 +1197,8 @@ def check_wiring(deployments, workers=8):
         chain, raw = item
         rpc = (raw.get("config") or {}).get("public_rpc_url")
         if not rpc:
-            # Five values, like every other exit: the caller unpacks five, so the old
-            # four-tuple here was a ValueError waiting for the first chain config without a
-            # public_rpc_url. Every chain has one today, which is the only reason it has not
-            # fired.
+            # Five values like every other exit - the caller unpacks five. A four-tuple here
+            # was a ValueError waiting for the first chain without a public_rpc_url.
             return chain, [], [], Counter(), []
         wiring, ownership, unresolved, answered = [], [], [], 0
         # Count failed calls rather than swallowing them: a dead RPC must report
@@ -1267,10 +1242,8 @@ def check_wiring(deployments, workers=8):
             for slot, row in contract_rows(raw):
                 if row.get("deployment_type") == "blueprint" or not norm(row.get("address")):
                     continue
-                # admin() first, owner() as fallback. Three outcomes, and they must stay
-                # distinct: an answer to compare, a transport failure, or no usable answer
-                # at all (the contract exposes neither getter, or has no code) - the last
-                # of which previously passed as if the ownership had been confirmed.
+                # Three outcomes must stay distinct: an answer, a transport failure, or no
+                # usable answer - the last previously passed as if ownership were confirmed.
                 resolved = None
                 for signature in ("admin()", "owner()"):
                     try:
@@ -1289,10 +1262,8 @@ def check_wiring(deployments, workers=8):
                         # nobody can administer, which is worth saying out loud.
                         label = " (zero address - unownable)" if int(resolved, 16) == 0 else ""
                         ownership.append(f"{slot} owner={resolved}{label}")
-        # Plenty of these contracts (zaps, math, views, handlers) expose no owner at all,
-        # so a single unresolved row means nothing. Only when *none* resolved is ownership
-        # genuinely unverifiable - a codeless chain or a dead endpoint - and that is the
-        # case the silent-pass bug used to hide.
+        # Zaps/math/views expose no owner, so one unresolved row means nothing. Only *none*
+        # resolving is genuinely unverifiable.
         if answered:
             unresolved = []
         return chain, wiring, ownership, failures, unresolved
