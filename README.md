@@ -73,8 +73,8 @@ Put settings file {chain_name}.yaml into [settings/chains](/settings/chains) dir
 
 - **network_name** - chain name
 - **chain_id** - chain id
-- **rollup_type** - can be _op_stack_, _arb_orbit_, _polygon_cdk_, _zksync_ or "\_". Zksync rollups currently aren't
-  fully supported
+- **rollup_type** - can be _op_stack_, _arb_orbit_, _polygon_cdk_, _zksync_, _taiko_ or _not_rollup_. Zksync rollups
+  currently aren't fully supported
 - **native_wrapped_token** - address of native wrapped token (can be non-eth token)
 - **dao** - params of contracts already present on chain (script will deploy x-gov contracts, CRV and crvUSD should
   be bridged using native bridges)
