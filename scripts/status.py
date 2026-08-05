@@ -1585,7 +1585,7 @@ def status_command(chain, only, onchain, wiring, bytecode, summary, brief, json_
         return
 
     tally = "  ".join(f"[{KIND_STYLE[k]}]{k} {len(by_kind[k])}[/]" for k in KIND_ORDER if by_kind.get(k))
-    console.print(f"[bold]{len(findings)} findings[/]  {tally}")
+    console.print(f"[bold]{plural(len(findings), 'finding')}[/]  {tally}")
     raise SystemExit(1)
 
 

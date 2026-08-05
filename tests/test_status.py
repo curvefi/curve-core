@@ -341,3 +341,28 @@ def test_dao_round_trip_keeps_scrvusd():
     }
     dumped = DeploymentConfig.model_validate(payload).model_dump()
     assert dumped["config"]["dao"]["scrvusd"] == "0x" + "22" * 20
+
+
+def test_legacy_amm_registries_survive_the_round_trip():
+    """avalanche.yaml and fantom.yaml carry registries this script never deploys.
+
+    curve-api-core serves them as the main / factory-v2 / crypto / factory-crypto /
+    factory-eywa registries for those chains, so dropping them on a model_dump() would
+    remove real platforms from the public API.
+    """
+    from scripts.deploy.models import AmmDeployment
+
+    row = {
+        "address": "0x" + "ab" * 20,
+        "compiler_settings": {"compiler_version": "0.3.1", "evm_version": "paris", "optimisation_level": "gas"},
+        "constructor_args_encoded": "0x",
+        "contract_github_url": "https://x",
+        "contract_path": "/contracts/x.vy",
+        "contract_version": "1.0.0",
+        "deployment_timestamp": 1,
+        "deployment_type": "normal",
+    }
+    keys = ["oldmain", "oldstable", "oldcrypto", "oldcryptofacto", "eywa"]
+    dumped = AmmDeployment.model_validate({k: {"factory": row} for k in keys}).model_dump()
+    for key in keys:
+        assert dumped[key]["factory"]["address"] == row["address"], key

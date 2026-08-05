@@ -71,10 +71,30 @@ class StableswapSingleAmmDeployment(SingleAmmDeployment):
     meta_implementation: Contract | None = None
 
 
+class LegacyAmmDeployment(BaseModel):
+    """A registry Curve deployed before this repo existed - factory address only.
+
+    These are recorded by hand in avalanche.yaml and fantom.yaml, and curve-api-core reads
+    them to report the `main` / `factory-v2` / `crypto` / `factory-crypto` / `factory-eywa`
+    registries for those chains. This script never deploys them.
+    """
+
+    factory: Contract | None = None
+
+
 class AmmDeployment(BaseModel):
     stableswap: StableswapSingleAmmDeployment | None = None
     tricryptoswap: SingleAmmDeployment | None = None
     twocryptoswap: SingleAmmDeployment | None = None
+
+    # Declared so a model_dump() round-trip cannot drop them. They are live: the API serves
+    # them today, and they survived only because those two files have no settings/chains
+    # config and so can never be targeted by a deploy.
+    oldmain: LegacyAmmDeployment | None = None
+    oldstable: LegacyAmmDeployment | None = None
+    oldcrypto: LegacyAmmDeployment | None = None
+    oldcryptofacto: LegacyAmmDeployment | None = None
+    eywa: LegacyAmmDeployment | None = None
 
 
 #  <----------------------------------------------------------------->
