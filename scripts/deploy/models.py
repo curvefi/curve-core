@@ -14,6 +14,9 @@ from settings.models import ChainConfig
 class DaoSettings(BaseModel):
     crv: str | None = None
     crvusd: str | None = None
+    # Mirrors CurveDAOSettings in settings/models.py - both walk the same `dao` block, so a
+    # field missing from either one is still dropped on the round-trip.
+    scrvusd: str | None = None
     emergency_admin: str | None = None
     ownership_admin: str | None = None
     parameter_admin: str | None = None

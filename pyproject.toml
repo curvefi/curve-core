@@ -22,6 +22,14 @@ titanoboa = "0.2.6"
 black = "24.4.2"
 isort = "5.13.2"
 
+[tool.pytest.ini_options]
+# package-mode = false means poetry never installs this project, so `scripts` is not
+# importable from site-packages. `python -m pytest` papers over that by putting the CWD on
+# sys.path; the bare `pytest` console script does not - which is why the suite passed
+# locally and failed in CI. Put the repo root on sys.path explicitly so both work.
+pythonpath = ["."]
+testpaths = ["tests"]
+
 [tool.black]
 exclude = '''
 (

@@ -32,6 +32,11 @@ class RollupType(StrEnum):
 class CurveDAOSettings(BaseModel):
     crv: str | None = None
     crvusd: str | None = None
+    # Present in sonic.yaml and taiko.yaml. Undeclared until now, and pydantic's
+    # extra='ignore' plus the model_dump() round-trip in update_deployment_config() meant
+    # any further deploy step against those chains deleted it - from the file and from what
+    # curve-api-core serves.
+    scrvusd: str | None = None
     ownership_admin: str | None = None
     parameter_admin: str | None = None
     emergency_admin: str | None = None

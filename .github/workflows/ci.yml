@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install black==24.4.2 isort==5.13.2
+      - run: black --check --config pyproject.toml .
+      - run: isort --check-only --line-length=120 .
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install poetry==1.8.3
+      - run: poetry install --no-interaction
+      - run: poetry run pytest tests/ -q
+
+  drift:
+    # `status` reports the deployment-state problems that already exist on main, so gating on
+    # its exit code would fail every build. Gate on the count per kind instead: the existing
+    # backlog is allowed, growing it is not. Fixing findings and lowering the baseline is the
+    # intended direction - regenerate with:
+    #   python manage.py status --json out.json
+    # then rewrite .github/status-baseline.json from the per-kind counts.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # PENDING compares contracts/ against what each chain records, and CONTRACTS reads
+          # git history for nothing - but get_latest_commit_hash needs real history if any
+          # check ever grows to use it. Cheap insurance against a confusing shallow-clone bug.
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install poetry==1.8.3
+      - run: poetry install --no-interaction
+
+      # Offline checks only - no RPC, no credentials, fully deterministic.
+      - name: Report deployment drift
+        run: poetry run python manage.py status --brief || true
+
+      - name: Fail if any check got worse
+        run: |
+          poetry run python manage.py status --json findings.json || true
+          python - <<'PY'
+          import collections, json, sys
+
+          baseline = json.load(open(".github/status-baseline.json"))
+          current = collections.Counter(f["kind"] for f in json.load(open("findings.json")))
+
+          worse = {k: (baseline.get(k, 0), n) for k, n in current.items() if n > baseline.get(k, 0)}
+          better = {k: (b, current.get(k, 0)) for k, b in baseline.items() if current.get(k, 0) < b}
+
+          for kind, (was, now) in sorted(better.items()):
+              print(f"improved: {kind} {was} -> {now}")
+          if better and not worse:
+              print("\nLower .github/status-baseline.json to lock these in.")
+
+          if worse:
+              print("\nThis change introduces new findings:\n")
+              for kind, (was, now) in sorted(worse.items()):
+                  print(f"  {kind}: {was} -> {now}")
+              print("\nRun `python manage.py status --brief` locally to see them.")
+              sys.exit(1)
+          print("\nno new findings")
+          PY

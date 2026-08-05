@@ -126,10 +126,16 @@ To see what is deployed and what would change if the deployer ran again:
 
 ```
 python manage.py status                    # every chain, every offline check
+python manage.py status --brief            # one line per finding
 python manage.py status --summary          # one-row-per-chain matrix
 python manage.py status --chain prod/sonic # one chain
+python manage.py status --only pending     # a single check
 python manage.py status --json out.json    # machine-readable
 ```
+
+`--brief` prints one line per finding with no explanations, and hides findings whose check
+could not run - it says how many, so a shorter report never quietly becomes an emptier one.
+`--summary` and `--brief` are alternative renderings and cannot be combined.
 
 Read-only — it never sends a transaction, and `manage.py` skips the boa connection for this
 command, so it runs on a fresh clone with no `settings/env` and no `DEPLOYER_EOA_PRIVATE_KEY`.
