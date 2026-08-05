@@ -145,8 +145,9 @@ class YamlDeploymentFile:
         # latest git commit hash:
         latest_git_commit_for_file = get_latest_commit_hash(contract_object.filename)
         contract_relative_path = get_relative_path(contract_path)
+        # curve-lite was renamed to curve-core; already-recorded URLs still redirect.
         github_url = (
-            f"https://github.com/curvefi/curve-lite/blob/{latest_git_commit_for_file}/"
+            f"https://github.com/curvefi/curve-core/blob/{latest_git_commit_for_file}/"
             f"{'/'.join(contract_relative_path.parts[1:])}"
         )
 

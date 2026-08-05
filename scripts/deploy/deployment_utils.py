@@ -18,6 +18,7 @@ from .utils import (
     fetch_latest_contract,
     get_relative_path,
     get_version_from_filename,
+    normalise_version,
     version_a_gt_version_b,
 )
 
@@ -67,6 +68,16 @@ def deploy_contract(
         deployed_contract_version = "0.0.0"  # contract has never been deployed
         if deployed_contract:
             deployed_contract_version = deployed_contract.contract_version  # contract has been deployed
+
+            # "0.0.0" means "never deployed" below, so an address recorded with it - or with
+            # no version - would be redeployed over.
+            if deployed_contract.address and normalise_version(deployed_contract_version or "") in ("", "0.0.0"):
+                raise ValueError(
+                    f"{contract_designation} is recorded at {deployed_contract.address} with "
+                    f"contract_version={deployed_contract_version!r}. Refusing to continue: that "
+                    f"reads as 'never deployed' and would redeploy over a live address. Set the "
+                    f"real version, or remove the record if the address is wrong."
+                )
 
         # deploy contract if nothing has been deployed, or if deployed contract is old
         if version_a_gt_version_b(version_latest_contract, deployed_contract_version):
