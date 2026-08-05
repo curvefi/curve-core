@@ -87,7 +87,7 @@ contracts:
         deployment_timestamp: null
         deployment_type: normal
       implementation:
-        address: ""
+        address: "0x0c59d36b23f809f8b6C7cb4c8C590a0AC103baEf"
         compiler_settings:
           compiler_version: null
           evm_version: null
@@ -173,6 +173,17 @@ contracts:
         constructor_args_encoded: null
         contract_github_url: null
         contract_path: null
+        contract_version: null
+        deployment_timestamp: null
+        deployment_type: normal
+      implementation:
+        address: "0x988d1037e9608B21050A8EFba0c6C45e01A3Bce7"
+        compiler_settings: null
+          compiler_version: 0.3.10
+          evm_version: null
+          optimisation_level: null
+        constructor_args_encoded: null
+        contract_github_url: null
         contract_version: null
         deployment_timestamp: null
         deployment_type: normal
