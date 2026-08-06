@@ -350,6 +350,7 @@ def test_source_provenance_flags_a_file_edited_since_its_deploy_commit():
     from scripts.status import _git, source_provenance
 
     old = _git("rev-list", "--max-parents=0", "HEAD").split("\n")[0]
+    assert old != _git("rev-parse", "HEAD"), "needs full history - clone with fetch-depth: 0"
     state, source = source_provenance(_row(f"https://github.com/curvefi/curve-core/blob/{old}/README.md", "README.md"))
     assert state == "drifted"
     assert source, "the historical source must come back so --from-commit can compile it"
@@ -392,3 +393,24 @@ def test_file_name_collisions_ignore_a_chain_s_own_devnet_prod_pair():
     assert not clashes({"monad": ["deployments/devnet/monad.yaml", "deployments/prod/monad.yaml"]})
     assert clashes({"monad": ["deployments/prod/monad.yaml", "deployments/prod/monad_v2.yaml"]})
     assert clashes({"monad": ["deployments/devnet/monad.yaml", "deployments/prod/other.yaml"]})
+
+
+def test_a_deployment_file_that_is_not_valid_yaml_is_reported_not_raised(tmp_path, monkeypatch):
+    """main once shipped `compiler_settings: null` with children under it; status crashed on
+    the whole repo instead of reporting the one bad file."""
+    from scripts import status
+
+    broken = tmp_path / "deployments" / "prod"
+    broken.mkdir(parents=True)
+    (broken / "avalanche.yaml").write_text(
+        "contracts:\n  amm:\n    implementation:\n      compiler_settings: null\n        compiler_version: 0.3.10\n"
+    )
+    monkeypatch.setattr(status, "BASE_DIR", tmp_path)
+
+    good, unreadable = status.load_deployments()
+    assert good == {}
+    assert list(unreadable) == ["prod/avalanche"]
+
+    finding = status.check_required({}, {}, (), unreadable)[0]
+    assert finding.kind == "REQUIRED"
+    assert "line 5" in finding.details[0], finding.details

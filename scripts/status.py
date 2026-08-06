@@ -185,8 +185,9 @@ class Finding(NamedTuple):
 # --------------------------------------------------------------------------------------
 
 
-def load_deployments(only_chain: str | None = None) -> dict[str, tuple[Path, dict]]:
-    """Raw YAML per deployment file, keyed "env/stem" (prod/sonic).
+def load_deployments(only_chain: str | None = None) -> tuple[dict[str, tuple[Path, dict]], dict]:
+    """Raw YAML per deployment file, keyed "env/stem" (prod/sonic), plus the files that
+    are not parseable at all.
 
     Keyed by path rather than config.file_name because prod and devnet files routinely
     share a file_name - keying on it drops one of every such pair, which is exactly the
@@ -194,18 +195,27 @@ def load_deployments(only_chain: str | None = None) -> dict[str, tuple[Path, dic
 
     Deliberately not YamlDeploymentFile.get_deployment_config(), which validates: some
     files fail validation and those are precisely what REQUIRED exists to report.
+
+    A file that is not valid YAML is returned, not raised: reporting broken deployment
+    files is the whole job, so meeting one must not take the other 26 chains down with it.
     """
-    out = {}
+    out, unreadable = {}, {}
     for path in sorted((BASE_DIR / "deployments").rglob("*.yaml")):
         if {"debug", "examples"} & set(path.parts):
             continue  # dry-run output and templates, not real deployments
-        raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         key = f"{path.parent.name}/{path.stem}"
+        try:
+            raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except yaml.YAMLError as exc:
+            # Only key and stem can match here - file_name lives inside the file.
+            if not only_chain or only_chain in (key, path.stem):
+                unreadable[key] = (path, exc)
+            continue
         name = (raw.get("config") or {}).get("file_name") or path.stem
         if only_chain and only_chain not in (key, name, path.stem):
             continue
         out[key] = (path, raw)
-    return out
+    return out, unreadable
 
 
 def chain_configs() -> dict[str, Path]:
@@ -768,14 +778,29 @@ def _summarise_errors(errors, limit=4):
     return (lead, f"fields: {shown}")
 
 
-def check_required(deployments, broken_configs=(), legacy=()):
+def check_required(deployments, broken_configs=(), legacy=(), unreadable=()):
     """Pydantic's own verdict - these files cannot be loaded by the deployer at all.
 
     `broken_configs` lets a finding point at its cause: the deployer copies the chain
     config into the deployment file, so an invalid config reappears here as an invalid
     deployment. Reporting both without linking them counts one mistake twice.
+
+    `unreadable` never reached pydantic - the YAML itself does not parse.
     """
     findings = []
+    for chain, (path, exc) in sorted(dict(unreadable).items()):
+        mark = getattr(exc, "problem_mark", None)
+        where = f"line {mark.line + 1}" if mark else "unknown line"
+        findings.append(
+            Finding(
+                "REQUIRED",
+                f"{chain}  (not valid YAML)",
+                path.relative_to(BASE_DIR).as_posix(),
+                (),
+                (f"{where}: {getattr(exc, 'problem', None) or exc}",),
+                subjects=(chain,),
+            )
+        )
     for chain, (path, raw) in sorted(deployments.items()):
         if chain in legacy:
             continue
@@ -856,10 +881,7 @@ def check_coverage(deployments, configs, selected=None, legacy=()):
     # that: Lite chains are deployed to their testnet first and keep the name, and the API
     # separates them by folder. Only report names shared by genuinely different chains.
     by_name = defaultdict(list)
-    for path in sorted((BASE_DIR / "deployments").rglob("*.yaml")):
-        if {"debug", "examples"} & set(path.parts):
-            continue
-        raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    for path, raw in deployments.values():
         by_name[(raw.get("config") or {}).get("file_name") or path.stem].append(path.relative_to(BASE_DIR).as_posix())
     clashes = {
         name: paths
@@ -1549,9 +1571,9 @@ def status_command(chain, only, onchain, wiring, bytecode, from_commit, summary,
     if summary and brief:
         # Both replace the findings list with something else; there is no sensible merge.
         raise click.UsageError("--summary and --brief are alternative renderings, pick one")
-    everything = load_deployments()
-    deployments = load_deployments(chain)
-    if not deployments:
+    everything, _ = load_deployments()
+    deployments, unreadable = load_deployments(chain)
+    if not deployments and not unreadable:
         # UsageError exits 2, keeping "you invoked this wrong" distinguishable from
         # "drift was found" (1) for CI.
         raise click.UsageError(f"no deployment found for {chain!r}")
@@ -1581,7 +1603,7 @@ def status_command(chain, only, onchain, wiring, bytecode, from_commit, summary,
         "config": lambda: check_config(configs, selected),
         "contracts": check_contracts,
         "schema": lambda: check_schema(deployments),
-        "required": lambda: check_required(deployments, broken_configs, legacy),
+        "required": lambda: check_required(deployments, broken_configs, legacy, unreadable),
         "coverage": lambda: check_coverage(everything, configs, selected, legacy),
         "integrity": lambda: check_integrity(deployments, legacy),
     }
