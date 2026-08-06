@@ -375,3 +375,20 @@ def test_source_provenance_reports_a_url_with_no_commit():
 
     assert source_provenance(_row("https://github.com/x/y/blob/main/README.md", "README.md"))[0] == "unpinned"
     assert source_provenance({"contract_path": "/x.vy"})[0] == "unpinned"
+
+
+def test_file_name_collisions_ignore_a_chain_s_own_devnet_prod_pair():
+    """Lite chains are deployed to their testnet first and keep the file_name; curve-api-core
+    separates them by folder. Only a name shared by different chains hides one downstream."""
+    from pathlib import Path
+
+    def clashes(by_name):
+        return {
+            n: ps
+            for n, ps in by_name.items()
+            if len({Path(p).stem for p in ps}) > 1 or len({Path(p).parent.name for p in ps}) < len(ps)
+        }
+
+    assert not clashes({"monad": ["deployments/devnet/monad.yaml", "deployments/prod/monad.yaml"]})
+    assert clashes({"monad": ["deployments/prod/monad.yaml", "deployments/prod/monad_v2.yaml"]})
+    assert clashes({"monad": ["deployments/devnet/monad.yaml", "deployments/prod/other.yaml"]})

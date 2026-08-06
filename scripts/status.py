@@ -851,16 +851,21 @@ def check_coverage(deployments, configs, selected=None, legacy=()):
             )
         )
 
-    # config.file_name is curve-api-core's blockchain id, and it loads deployments/prod and
-    # deployments/devnet into one map - so two files sharing a file_name means one wins and
-    # the other is invisible downstream.
+    # config.file_name is curve-api-core's blockchain id, so two *different* chains sharing
+    # one means the second is invisible downstream. A chain's own devnet/prod pair is not
+    # that: Lite chains are deployed to their testnet first and keep the name, and the API
+    # separates them by folder. Only report names shared by genuinely different chains.
     by_name = defaultdict(list)
     for path in sorted((BASE_DIR / "deployments").rglob("*.yaml")):
         if {"debug", "examples"} & set(path.parts):
             continue
         raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         by_name[(raw.get("config") or {}).get("file_name") or path.stem].append(path.relative_to(BASE_DIR).as_posix())
-    clashes = {name: paths for name, paths in by_name.items() if len(paths) > 1}
+    clashes = {
+        name: paths
+        for name, paths in by_name.items()
+        if len({Path(p).stem for p in paths}) > 1 or len({Path(p).parent.name for p in paths}) < len(paths)
+    }
     if selected:
         # Under --chain, report only the collision the selected chain is part of - it is
         # about that chain, so suppressing it entirely hid the finding that mattered most.
