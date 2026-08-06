@@ -333,3 +333,45 @@ def test_legacy_amm_registries_survive_the_round_trip():
     dumped = AmmDeployment.model_validate({k: {"factory": row} for k in keys}).model_dump()
     for key in keys:
         assert dumped[key]["factory"]["address"] == row["address"], key
+
+
+# --------------------------------------------------------------------------------------
+# source provenance
+# --------------------------------------------------------------------------------------
+
+
+def _row(url, path="scripts/status.py"):
+    return {"contract_path": "/" + path, "contract_github_url": url}
+
+
+def test_source_provenance_flags_a_file_edited_since_its_deploy_commit():
+    """contract_path + contract_version do not identify what was deployed: vendored sources
+    are edited in place while the version constant stays put."""
+    from scripts.status import _git, source_provenance
+
+    old = _git("rev-list", "--max-parents=0", "HEAD").split("\n")[0]
+    state, source = source_provenance(_row(f"https://github.com/curvefi/curve-core/blob/{old}/README.md", "README.md"))
+    assert state == "drifted"
+    assert source, "the historical source must come back so --from-commit can compile it"
+
+
+def test_source_provenance_is_current_when_the_file_has_not_moved():
+    from scripts.status import _git, source_provenance
+
+    head = _git("rev-parse", "HEAD")
+    state, source = source_provenance(_row(f"https://github.com/x/y/blob/{head}/README.md", "README.md"))
+    assert (state, source) == ("current", None)
+
+
+def test_source_provenance_reports_an_unknown_commit_rather_than_guessing():
+    from scripts.status import source_provenance
+
+    state, _ = source_provenance(_row("https://github.com/x/y/blob/" + "0" * 40 + "/README.md", "README.md"))
+    assert state == "unreachable"
+
+
+def test_source_provenance_reports_a_url_with_no_commit():
+    from scripts.status import source_provenance
+
+    assert source_provenance(_row("https://github.com/x/y/blob/main/README.md", "README.md"))[0] == "unpinned"
+    assert source_provenance({"contract_path": "/x.vy"})[0] == "unpinned"

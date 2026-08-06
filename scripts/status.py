@@ -48,6 +48,7 @@ Exits 1 when anything is reported, so it works as a CI gate.
 
 import json
 import re
+import subprocess
 import sys
 import textwrap
 import types
@@ -1089,8 +1090,38 @@ def _as_address(result):
 # immutables and ctor args (so match by prefix); blueprints carry a 10-byte EIP-5202 wrapper.
 BLUEPRINT_WRAPPER_BYTES = 10
 
+# The commit contract_github_url pins. Vendored sources are edited in place while the version
+# constant stays put, so contract_path + contract_version do not identify what was deployed.
+DEPLOY_COMMIT_RE = re.compile(r"/blob/([0-9a-f]{7,40})/")
 
-def check_bytecode(deployments, workers=8):
+
+def _git(*args):
+    result = subprocess.run(["git", *args], capture_output=True, text=True, cwd=BASE_DIR)
+    return result.stdout.strip() if result.returncode == 0 else None
+
+
+def source_provenance(row):
+    """(state, source) for a row, where state is why it can or cannot be compared.
+
+    "current"   - the file has not changed since the deploy commit, so compiling it is valid
+    "drifted"   - it has changed; comparing against today's file proves nothing
+    "unpinned"  - no usable commit recorded, so drift cannot be ruled out
+    "unreachable" - the commit is not in this clone (shallow, or rewritten history)
+    """
+    path = str(row.get("contract_path") or "").lstrip("/")
+    match = DEPLOY_COMMIT_RE.search(str(row.get("contract_github_url") or ""))
+    if not path or not match:
+        return "unpinned", None
+    commit = match.group(1)
+    then, now = _git("rev-parse", f"{commit}:{path}"), _git("rev-parse", f"HEAD:{path}")
+    if then is None:
+        return "unreachable", None
+    if then == now:
+        return "current", None
+    return "drifted", _git("show", f"{commit}:{path}")
+
+
+def check_bytecode(deployments, workers=8, from_commit=False):
     """Recompile each recorded contract and compare against the code actually on chain.
 
     This is the only check that proves contract_path / contract_version / evm_version
@@ -1099,7 +1130,7 @@ def check_bytecode(deployments, workers=8):
     compiled: dict[tuple, dict] = {}
     missing_compilers = set()
 
-    def compile_row(row):
+    def compile_row(row, source_text=None):
         settings = row.get("compiler_settings") or {}
         version, evm = settings.get("compiler_version"), settings.get("evm_version")
         if not version:
@@ -1107,7 +1138,7 @@ def check_bytecode(deployments, workers=8):
             # is no source to recompile. Say so rather than crashing on a null path below.
             raise ValueError("no compiler_version recorded - cannot recompile")
         source = BASE_DIR / Path(str(row["contract_path"]).lstrip("/"))
-        key = (str(source), version, evm)
+        key = (str(source), version, evm, hash(source_text))
         if key not in compiled:
             binary = Path.home() / ".vvm" / f"vyper-{version}{'.exe' if sys.platform == 'win32' else ''}"
             if not binary.exists():
@@ -1120,7 +1151,7 @@ def check_bytecode(deployments, workers=8):
                     f"`python -c \"import vvm; vvm.install_vyper('{version}')\"`"
                 )
             compiled[key] = vvm.compile_source(
-                source.read_text(encoding="utf-8"),
+                source_text if source_text is not None else source.read_text(encoding="utf-8"),
                 vyper_binary=binary,
                 base_path=BASE_DIR,
                 evm_version=evm,
@@ -1145,10 +1176,17 @@ def check_bytecode(deployments, workers=8):
             jobs.append((chain, slot, row, rpc))
 
     # Compile serially (cached, CPU-bound, and vvm shells out) but fetch code concurrently.
-    expected = {}
+    expected, drifted = {}, defaultdict(list)
     for chain, slot, row, _ in jobs:
+        # A vendored source edited after the deploy makes today's file the wrong artifact to
+        # compare against - the mismatch would be ours, not the chain's. Report it as
+        # unverifiable unless --from-commit is on, which compiles what was actually deployed.
+        state, historical = source_provenance(row)
+        if state != "current" and not from_commit:
+            drifted[chain].append((slot, state))
+            continue
         try:
-            output = compile_row(row)
+            output = compile_row(row, historical if state == "drifted" else None)
         except Exception as exc:
             expected[(chain, slot)] = ("error", f"{type(exc).__name__}: {exc}")
             continue
@@ -1166,8 +1204,9 @@ def check_bytecode(deployments, workers=8):
             return chain, slot, row, None, _error_label(exc)
 
     mismatched, uncompilable, unreachable = defaultdict(list), [], defaultdict(Counter)
+    comparable = [j for j in jobs if (j[0], j[1]) in expected]
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        for future in as_completed([pool.submit(probe, job) for job in jobs]):
+        for future in as_completed([pool.submit(probe, job) for job in comparable]):
             chain, slot, row, code, failure = future.result()
             kind, want = expected[(chain, slot)]
             if kind == "error":
@@ -1228,6 +1267,25 @@ def check_bytecode(deployments, workers=8):
                 "" if len(other) == len(shown) else f"showing {len(shown)} of {len(other)}",
                 (),
                 tuple(shown),
+                unverified=True,
+            )
+        )
+    REASONS = {
+        "drifted": "contract_path was edited after this deploy",
+        "unpinned": "no commit recorded in contract_github_url",
+        "unreachable": "the recorded commit is not in this clone",
+    }
+    for chain, rows in sorted(drifted.items()):
+        why = Counter(state for _, state in rows)
+        findings.append(
+            Finding(
+                "BYTECODE",
+                f"{chain}: unverified, {plural(len(rows), 'row')} cannot be compared "
+                f"({_dominant(Counter({REASONS[s]: n for s, n in why.items()}))})",
+                "compiling the file at contract_path today would test the wrong source - "
+                "re-run with --from-commit to compile what was actually deployed",
+                tuple(sorted(slot for slot, _ in rows)),
+                subjects=(chain,),
                 unverified=True,
             )
         )
@@ -1473,10 +1531,15 @@ def render_summary(console, deployments, configs, findings, all_deployments=None
 @click.option("--onchain", is_flag=True, help="verify every recorded address has bytecode")
 @click.option("--wiring", is_flag=True, help="check factory pointers and ownership on chain")
 @click.option("--bytecode", is_flag=True, help="recompile and compare against deployed code (slow)")
+@click.option(
+    "--from-commit",
+    is_flag=True,
+    help="with --bytecode: compile each contract from the commit it was deployed at, not the current file",
+)
 @click.option("--summary", is_flag=True, help="one-row-per-chain table instead of full findings")
 @click.option("--brief", is_flag=True, help="one line per finding, no explanations")
 @click.option("--json", "json_path", metavar="PATH", default=None, help="write findings as JSON")
-def status_command(chain, only, onchain, wiring, bytecode, summary, brief, json_path):
+def status_command(chain, only, onchain, wiring, bytecode, from_commit, summary, brief, json_path):
     """Report what is deployed and what the next deploy would change."""
     if summary and brief:
         # Both replace the findings list with something else; there is no sensible merge.
@@ -1537,7 +1600,7 @@ def status_command(chain, only, onchain, wiring, bytecode, summary, brief, json_
         findings += check_wiring(deployments)
         ran.append("WIRING")
     if bytecode:
-        findings += check_bytecode(deployments)
+        findings += check_bytecode(deployments, from_commit=from_commit)
         ran.append("BYTECODE")
 
     by_kind = defaultdict(list)
