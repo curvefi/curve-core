@@ -145,6 +145,16 @@ python manage.py status --json out.json    # machine-readable
 could not run - it says how many, so a shorter report never quietly becomes an emptier one.
 `--summary` and `--brief` are alternative renderings and cannot be combined.
 
+On a pull request, CI runs this against the branch and against its base and comments with the
+difference, so a fix needs no bookkeeping and a fault already on the base branch never fails a
+branch that did not cause it. New `CONFIG` or `REQUIRED` findings fail the build; everything
+else reports. To see the same locally:
+
+```
+python manage.py status --json head.json
+python manage.py compare base.json head.json
+```
+
 Read-only — it never sends a transaction, and `manage.py` skips the boa connection for this
 command, so it runs on a fresh clone with no `settings/env` and no `DEPLOYER_EOA_PRIVATE_KEY`.
 Exits `1` when anything is reported, so it can be used as a CI gate.

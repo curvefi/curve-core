@@ -32,9 +32,13 @@ jobs:
       - run: poetry run pytest tests/ -q
 
   drift:
-    # Gates on per-kind counts, not the exit code: the existing backlog is allowed, growing it
-    # is not. Lower status-baseline.json as findings are fixed.
+    # Compares this branch against its base rather than a committed count: a fix needs no
+    # bookkeeping, a new contract version reads as new work, and a fault already on the base
+    # branch never fails a PR that did not cause it.
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -47,31 +51,55 @@ jobs:
       - run: poetry install --no-interaction
 
       # Offline checks only - no RPC, no credentials, fully deterministic.
-      - name: Report deployment drift
+      - name: Report deployment status
         run: poetry run python manage.py status --brief || true
 
-      - name: Fail if any check got worse
+      - name: Findings on this branch
+        run: poetry run python manage.py status --json head.json || true
+
+      - name: Findings on the base branch
+        if: github.event_name == 'pull_request'
         run: |
-          poetry run python manage.py status --json findings.json || true
-          python - <<'PY'
-          import collections, json, sys
+          base="${{ github.event.pull_request.base.sha }}"
+          git worktree add --detach .tmp/base "$base"
+          # This branch's checks against the base branch's data, so a change to the tool
+          # cannot read as a change in what it found.
+          cp -r scripts manage.py .tmp/base/
+          cp settings/models.py .tmp/base/settings/models.py
+          (cd .tmp/base && poetry run python manage.py status --json "$GITHUB_WORKSPACE/base.json") || true
 
-          baseline = json.load(open(".github/status-baseline.json"))
-          current = collections.Counter(f["kind"] for f in json.load(open("findings.json")))
+      - name: Compare
+        id: compare
+        if: github.event_name == 'pull_request'
+        run: |
+          set +e
+          poetry run python manage.py compare base.json head.json --output report.md
+          echo "blocking=$?" >> "$GITHUB_OUTPUT"
+          if [ -s report.md ]; then
+            echo "has_report=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_report=false" >> "$GITHUB_OUTPUT"
+          fi
 
-          worse = {k: (baseline.get(k, 0), n) for k, n in current.items() if n > baseline.get(k, 0)}
-          better = {k: (b, current.get(k, 0)) for k, b in baseline.items() if current.get(k, 0) < b}
+      # continue-on-error: a fork PR cannot write comments, and that must not fail the run.
+      - name: Post summary
+        if: steps.compare.outputs.has_report == 'true'
+        uses: marocchino/sticky-pull-request-comment@v2
+        continue-on-error: true
+        with:
+          header: deployment-status
+          path: report.md
 
-          for kind, (was, now) in sorted(better.items()):
-              print(f"improved: {kind} {was} -> {now}")
-          if better and not worse:
-              print("\nLower .github/status-baseline.json to lock these in.")
+      - name: Clear summary
+        if: steps.compare.outputs.has_report == 'false'
+        uses: marocchino/sticky-pull-request-comment@v2
+        continue-on-error: true
+        with:
+          header: deployment-status
+          delete: true
 
-          if worse:
-              print("\nThis change introduces new findings:\n")
-              for kind, (was, now) in sorted(worse.items()):
-                  print(f"  {kind}: {was} -> {now}")
-              print("\nRun `python manage.py status --brief` locally to see them.")
-              sys.exit(1)
-          print("\nno new findings")
-          PY
+      - name: Fail on new blocking findings
+        if: steps.compare.outputs.blocking != '0' && steps.compare.outputs.blocking != ''
+        run: |
+          echo "New CONFIG or REQUIRED findings - see the PR comment."
+          exit 1
