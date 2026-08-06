@@ -18,7 +18,7 @@ import click
 import yaml
 
 from scripts.deploy.models import DeploymentConfig
-from scripts.status import contract_rows
+from scripts.status import contract_rows, rel
 from settings.config import BASE_DIR
 
 # Deliberately not inside deployments/: that directory holds nothing but chain folders, and
@@ -96,7 +96,7 @@ def index_command(check):
 
     if check:
         if stale:
-            names = ", ".join(p.relative_to(BASE_DIR).as_posix() for p in stale)
+            names = ", ".join(rel(p) for p in stale)
             raise click.ClickException(f"out of date: {names}\nRun `python manage.py index` and commit the result.")
         click.echo("index and schema are up to date")
         return
@@ -105,5 +105,5 @@ def index_command(check):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
     index = json.loads(wanted[INDEX_PATH])
-    click.echo(f"wrote {index['count']} chains to {INDEX_PATH.relative_to(BASE_DIR).as_posix()}")
-    click.echo(f"wrote schema to {SCHEMA_PATH.relative_to(BASE_DIR).as_posix()}")
+    click.echo(f"wrote {index['count']} chains to {rel(INDEX_PATH)}")
+    click.echo(f"wrote schema to {rel(SCHEMA_PATH)}")

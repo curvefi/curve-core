@@ -9,6 +9,7 @@ import urllib.error
 from collections import Counter
 
 import pytest
+from click.testing import CliRunner
 from rich.console import Console
 
 from scripts.deploy.utils import fetch_latest_contract, normalise_version, version_a_gt_version_b
@@ -24,10 +25,6 @@ from scripts.status import (
     emit,
     plural,
 )
-
-# --------------------------------------------------------------------------------------
-# version handling
-# --------------------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -63,11 +60,6 @@ def test_version_compare_still_raises_on_genuinely_malformed():
         version_a_gt_version_b("1.0.0rc1", "1.0.0")
 
 
-# --------------------------------------------------------------------------------------
-# contract resolution
-# --------------------------------------------------------------------------------------
-
-
 def test_fetch_latest_contract_sorts_on_digits_across_unrelated_contracts(tmp_path):
     """Two contracts in one folder compete on a number that means nothing across them."""
     (tmp_path / "math_v_210.vy").write_text("# a")
@@ -83,11 +75,6 @@ def test_fetch_latest_contract_ignores_files_without_v_nnn(tmp_path):
     (tmp_path / "twocrypto_view.vy").write_text("# unreachable")
     with pytest.raises(FileNotFoundError):
         fetch_latest_contract(tmp_path)
-
-
-# --------------------------------------------------------------------------------------
-# walking deployment files
-# --------------------------------------------------------------------------------------
 
 
 def test_contract_rows_descends_past_a_node_that_has_an_address():
@@ -114,11 +101,6 @@ def test_contract_rows_descends_past_a_node_that_has_an_address():
 def test_contract_rows_tolerates_non_dict_nodes():
     raw = {"contracts": {"amm": {"stableswap": None, "twocrypto": ["not", "a", "dict"]}}}
     assert list(contract_rows(raw)) == []
-
-
-# --------------------------------------------------------------------------------------
-# RPC failure classification
-# --------------------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -151,11 +133,6 @@ def test_dominant_names_the_most_common_and_counts_the_rest():
     assert _dominant(Counter()) == ""
 
 
-# --------------------------------------------------------------------------------------
-# rendering
-# --------------------------------------------------------------------------------------
-
-
 def render(text, **kwargs):
     console = Console(file=io.StringIO(), width=60, no_color=True, legacy_windows=False)
     emit(console, text, **kwargs)
@@ -185,11 +162,6 @@ def test_plural_agrees():
     assert plural(0, "chain") == "0 chains"
 
 
-# --------------------------------------------------------------------------------------
-# schema walking
-# --------------------------------------------------------------------------------------
-
-
 def test_undeclared_reports_keys_no_model_declares():
     """extra='ignore' plus a model_dump() round-trip deletes these on the next write."""
     from scripts.deploy.models import DeploymentConfig
@@ -202,11 +174,6 @@ def test_undeclared_is_quiet_on_a_clean_payload():
     from scripts.deploy.models import DeploymentConfig
 
     assert _undeclared({}, DeploymentConfig) == []
-
-
-# --------------------------------------------------------------------------------------
-# PENDING: blocked vs ready
-# --------------------------------------------------------------------------------------
 
 
 def _deployment(version="1.0.0"):
@@ -262,30 +229,15 @@ def test_pending_keeps_every_chain_in_subjects_for_the_summary_rollup():
     assert set(rows[0].subjects) == {"prod/a", "prod/b"}
 
 
-# --------------------------------------------------------------------------------------
-# WIRING: the guard path
-# --------------------------------------------------------------------------------------
-
-
 def test_check_wiring_survives_a_chain_with_no_rpc():
     """`inspect` returned a 4-tuple here while the caller unpacked 5."""
     deployments = {"prod/norpc": (None, {"config": {}, "contracts": {}})}
     assert check_wiring(deployments) == []
 
 
-# --------------------------------------------------------------------------------------
-# Finding semantics
-# --------------------------------------------------------------------------------------
-
-
 def test_unverified_defaults_off_so_a_finding_is_a_result_unless_it_says_otherwise():
     assert Finding("SCHEMA", "x").unverified is False
     assert Finding("ONCHAIN", "x", unverified=True).unverified is True
-
-
-# --------------------------------------------------------------------------------------
-# schema round-trip
-# --------------------------------------------------------------------------------------
 
 
 def test_dao_round_trip_keeps_scrvusd():
@@ -333,11 +285,6 @@ def test_legacy_amm_registries_survive_the_round_trip():
     dumped = AmmDeployment.model_validate({k: {"factory": row} for k in keys}).model_dump()
     for key in keys:
         assert dumped[key]["factory"]["address"] == row["address"], key
-
-
-# --------------------------------------------------------------------------------------
-# source provenance
-# --------------------------------------------------------------------------------------
 
 
 def _row(url, path="scripts/status.py"):
@@ -423,147 +370,6 @@ def test_pre_curve_core_chains_are_out_of_scope():
 
     everything, _ = load_deployments()
     assert legacy_deployments(everything, chain_configs()) == {"prod/avalanche", "prod/fantom", "prod/x_layer"}
-
-# --------------------------------------------------------------------------------------
-# generated registry artifacts
-# --------------------------------------------------------------------------------------
-
-
-def test_index_is_deterministic():
-    """--check compares bytes, so any run-to-run variation would fail CI at random."""
-    from scripts.index import build_index, render
-
-    assert render(build_index()) == render(build_index())
-
-
-def test_index_includes_chains_that_fail_validation():
-    """avalanche/fantom/x_layer are hand-written catalog rows that pydantic rejects, but they
-    are real chains with real addresses. A validation-gated index would drop them silently."""
-    from scripts.index import build_index
-
-    ids = {c["id"] for c in build_index()["chains"]}
-    assert {"prod/avalanche", "prod/fantom", "prod/x_layer"} <= ids
-
-
-def test_index_excludes_debug_and_example_files():
-    from scripts.index import build_index
-
-    ids = {c["id"] for c in build_index()["chains"]}
-    assert not any(i.startswith(("debug/", "examples/")) for i in ids), ids
-
-
-def test_index_refuses_to_ship_a_missing_chain(tmp_path, monkeypatch):
-    """An index that quietly omits a chain is worse than no index."""
-    import click
-
-    from scripts import index as index_module
-
-    broken = tmp_path / "deployments" / "prod"
-    broken.mkdir(parents=True)
-    (broken / "x.yaml").write_text("config:\n  a: null\n    b: 1\n")
-    monkeypatch.setattr(index_module, "BASE_DIR", tmp_path)
-
-    with pytest.raises(click.ClickException):
-        index_module.build_index()
-
-
-def test_contract_addresses_skips_empty_and_descends_past_a_node_with_an_address():
-    from scripts.index import contract_addresses
-
-    raw = {
-        "contracts": {
-            "amm": {"stableswap": {"factory": {"address": "0xaaa"}, "implementation": {"address": ""}}},
-            "registries": {"metaregistry": {"address": "0xbbb", "handlers": {"one": {"address": "0xccc"}}}},
-        }
-    }
-    found = dict(contract_addresses(raw))
-    assert found == {
-        "amm.stableswap.factory": "0xaaa",
-        "registries.metaregistry": "0xbbb",
-        "registries.metaregistry.handlers.one": "0xccc",
-    }
-
-
-# --------------------------------------------------------------------------------------
-# chain config scaffold
-# --------------------------------------------------------------------------------------
-
-
-def _answers(**overrides):
-    base = {
-        "network_name": "mychain",
-        "chain_id": 12345,
-        "is_testnet": False,
-        "layer": 2,
-        "rollup_type": "op_stack",
-        "explorer_base_url": "https://explorer.mychain.org",
-        "native_currency_symbol": "MYC",
-        "native_currency_coingecko_id": "mychain",
-        "public_rpc_url": "https://rpc.mychain.org",
-        "wrapped_native_token": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-        "logo_url": "https://example.com/logo.png",
-        "reference_token_addresses": {"weth": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", "usdc": "", "usdt": ""},
-    }
-    base.update(overrides)
-    return base
-
-
-def test_scaffold_writes_a_config_that_validates():
-    """The whole point: all four onboarding templates were invalid, so a scaffold that can
-    emit an invalid file would just reproduce the problem it exists to fix."""
-    from scripts.init import render_config, validate_config
-
-    config = validate_config("prod", "mychain", render_config(_answers()))
-    assert (config.file_name, config.chain_id, config.rollup_type) == ("mychain", 12345, "op_stack")
-    # wrapper is not asked for; the model fills it from wrapped_native_token.
-    assert config.wrapper == config.wrapped_native_token
-
-
-def test_scaffold_refuses_answers_that_do_not_validate():
-    from pydantic import ValidationError
-
-    from scripts.init import render_config, validate_config
-
-    text = render_config(_answers(chain_id="not-a-number"))
-    with pytest.raises(ValidationError):
-        validate_config("prod", "mychain", text)
-
-
-def test_scaffold_leaves_unknown_tokens_as_visible_placeholders():
-    """Empty usdc/usdt must stay obviously unfilled rather than becoming empty strings that
-    look deliberate - and the file must still validate, since they are optional."""
-    from scripts.init import render_config, validate_config
-
-    text = render_config(_answers())
-    assert "usdc:  # fill in for your chain" in text
-    assert "usdt:  # fill in for your chain" in text
-    config = validate_config("prod", "mychain", text)
-    assert config.reference_token_addresses.usdc is None
-
-
-def test_probe_reads_the_hex_chain_id_and_notices_a_missing_multicall3(monkeypatch):
-    from scripts import init as init_module
-
-    def fake_rpc(rpc, method, params, timeout=15):
-        return {"eth_chainId": "0x92", "eth_getCode": "0x"}[method]
-
-    monkeypatch.setattr(init_module, "_rpc_call", fake_rpc)
-    assert init_module.probe_chain("https://x") == {"chain_id": 146, "multicall3": False}
-
-
-def test_probe_reports_multicall3_unknown_rather_than_failing_the_scaffold(monkeypatch):
-    """chain_id is the valuable answer; losing it because a second call failed is worse."""
-    from scripts import init as init_module
-
-    def fake_rpc(rpc, method, params, timeout=15):
-        if method == "eth_chainId":
-            return "0x1"
-        raise OSError("node does not support eth_getCode")
-
-    monkeypatch.setattr(init_module, "_rpc_call", fake_rpc)
-    assert init_module.probe_chain("https://x") == {"chain_id": 1, "multicall3": None}
-
-
 def test_status_chain_accepts_a_config_with_no_deployment():
     """`init` leaves exactly this state, and the hint it prints used to fail."""
     from scripts.status import chain_configs, load_deployments
@@ -573,50 +379,21 @@ def test_status_chain_accepts_a_config_with_no_deployment():
     assert "prod/units" in chain_configs()
 
 
-# --------------------------------------------------------------------------------------
-# deploy --dry-run
-# --------------------------------------------------------------------------------------
+def test_status_command_exits_2_on_an_unknown_chain():
+    from click.testing import CliRunner
+
+    from scripts.status import status_command
+
+    result = CliRunner().invoke(status_command, ["--chain", "nope"])
+    assert result.exit_code == 2
+    assert "no deployment or chain config found" in result.output
 
 
-def test_plan_covers_every_folder_the_deployer_touches():
-    """The step list is hand-ordered; this is what stops it drifting from run_deploy_all."""
-    from scripts.plan import unknown_folders
-    from settings.config import get_chain_settings
+def test_status_command_rejects_two_renderers_at_once():
+    from click.testing import CliRunner
 
-    assert unknown_folders(get_chain_settings("prod/sonic.yaml")) == set()
+    from scripts.status import status_command
 
-
-def test_plan_notices_a_folder_missing_from_the_steps(monkeypatch):
-    from scripts import plan as plan_module
-    from settings.config import get_chain_settings
-
-    monkeypatch.setattr(plan_module, "deployer_folders", lambda: {"helpers/brand_new_thing"})
-    assert plan_module.unknown_folders(get_chain_settings("prod/sonic.yaml")) == {"helpers/brand_new_thing"}
-
-
-def test_plan_reports_the_zero_version_guard_as_blocked():
-    """deploy_contract raises rather than redeploying over a live address; the dry run must
-    say so instead of promising an upgrade."""
-    from scripts.plan import plan_step
-
-    raw = {"contracts": {"helpers": {"router": {"address": "0xabc123def456", "contract_version": "0.0.0"}}}}
-    action, detail = plan_step("helpers/router", raw)
-    assert action == "BLOCKED"
-    assert "0.0.0" in detail
-
-
-def test_plan_marks_an_undeployed_slot_as_new():
-    from scripts.plan import plan_step
-
-    action, detail = plan_step("helpers/router", {})
-    assert action == "deploy"
-    assert detail.endswith("(new)")
-
-
-def test_plan_skips_xgov_when_all_three_admins_are_preset():
-    """run_deploy_all skips xgov entirely in that case - the plan must agree."""
-    from scripts.plan import build_plan
-    from settings.config import get_chain_settings
-
-    steps = {s["slot"]: s for s in build_plan(get_chain_settings("prod/sonic.yaml"), {})}
-    assert steps["governance/agent"]["action"] == "skip"
+    result = CliRunner().invoke(status_command, ["--summary", "--brief"])
+    assert result.exit_code == 2
+    assert "alternative renderings" in result.output

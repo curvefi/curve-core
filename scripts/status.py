@@ -143,6 +143,14 @@ CHECK_BLURB = {
 }
 
 
+def rel(path):
+    """Path for display. Absolute when it is outside the repo, rather than raising."""
+    try:
+        return Path(path).relative_to(BASE_DIR).as_posix()
+    except ValueError:
+        return str(path)
+
+
 def plural(count, noun):
     return f"{count} {noun}" if count == 1 else f"{count} {noun}s"
 

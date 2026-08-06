@@ -17,7 +17,7 @@ from pathlib import Path
 import click
 import yaml
 
-from scripts.status import RpcError, _rpc_call
+from scripts.status import RpcError, _rpc_call, rel
 from settings.config import BASE_DIR
 from settings.models import ChainConfig, RollupType
 
@@ -144,7 +144,7 @@ def init_command(chain, rpc, force):
     name = Path(name).stem
     path = CHAINS_DIR / env / f"{name}.yaml"
     if path.exists() and not force:
-        raise click.UsageError(f"{path.relative_to(BASE_DIR).as_posix()} already exists - pass --force to overwrite")
+        raise click.UsageError(f"{rel(path)} already exists - pass --force to overwrite")
 
     answers = ask({}, probe_chain, rpc)
     text = render_config(answers)
@@ -155,7 +155,7 @@ def init_command(chain, rpc, force):
 
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
-    click.echo(f"\nwrote {path.relative_to(BASE_DIR).as_posix()}")
+    click.echo(f"\nwrote {rel(path)}")
     click.echo(
         textwrap.dedent(
             f"""
