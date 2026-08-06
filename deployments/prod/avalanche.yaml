@@ -178,8 +178,8 @@ contracts:
         deployment_type: normal
       implementation:
         address: "0x988d1037e9608B21050A8EFba0c6C45e01A3Bce7"
-        compiler_settings: null
-          compiler_version: 0.3.10
+        compiler_settings: 
+          compiler_version: null
           evm_version: null
           optimisation_level: null
         constructor_args_encoded: null
