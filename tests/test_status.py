@@ -571,3 +571,52 @@ def test_status_chain_accepts_a_config_with_no_deployment():
     deployments, unreadable = load_deployments("prod/units")
     assert not deployments and not unreadable
     assert "prod/units" in chain_configs()
+
+
+# --------------------------------------------------------------------------------------
+# deploy --dry-run
+# --------------------------------------------------------------------------------------
+
+
+def test_plan_covers_every_folder_the_deployer_touches():
+    """The step list is hand-ordered; this is what stops it drifting from run_deploy_all."""
+    from scripts.plan import unknown_folders
+    from settings.config import get_chain_settings
+
+    assert unknown_folders(get_chain_settings("prod/sonic.yaml")) == set()
+
+
+def test_plan_notices_a_folder_missing_from_the_steps(monkeypatch):
+    from scripts import plan as plan_module
+    from settings.config import get_chain_settings
+
+    monkeypatch.setattr(plan_module, "deployer_folders", lambda: {"helpers/brand_new_thing"})
+    assert plan_module.unknown_folders(get_chain_settings("prod/sonic.yaml")) == {"helpers/brand_new_thing"}
+
+
+def test_plan_reports_the_zero_version_guard_as_blocked():
+    """deploy_contract raises rather than redeploying over a live address; the dry run must
+    say so instead of promising an upgrade."""
+    from scripts.plan import plan_step
+
+    raw = {"contracts": {"helpers": {"router": {"address": "0xabc123def456", "contract_version": "0.0.0"}}}}
+    action, detail = plan_step("helpers/router", raw)
+    assert action == "BLOCKED"
+    assert "0.0.0" in detail
+
+
+def test_plan_marks_an_undeployed_slot_as_new():
+    from scripts.plan import plan_step
+
+    action, detail = plan_step("helpers/router", {})
+    assert action == "deploy"
+    assert detail.endswith("(new)")
+
+
+def test_plan_skips_xgov_when_all_three_admins_are_preset():
+    """run_deploy_all skips xgov entirely in that case - the plan must agree."""
+    from scripts.plan import build_plan
+    from settings.config import get_chain_settings
+
+    steps = {s["slot"]: s for s in build_plan(get_chain_settings("prod/sonic.yaml"), {})}
+    assert steps["governance/agent"]["action"] == "skip"

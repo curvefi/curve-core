@@ -23,8 +23,9 @@ def commands(ctx):
     if ctx.invoked_subcommand in READ_ONLY_COMMANDS:
         return
 
-    # Asking what a command does should never open a connection or demand configuration.
-    if "--help" in sys.argv or "-h" in sys.argv:
+    # Asking what a command does - or what it would do - should never open a connection
+    # or demand configuration.
+    if "--help" in sys.argv or "-h" in sys.argv or "--dry-run" in sys.argv:
         return
 
     if not settings.WEB3_PROVIDER_URL:

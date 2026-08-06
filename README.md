@@ -113,6 +113,15 @@ python manage.py deploy all devnet/chain_config_filename.yaml
 
 The path is relative to [settings/chains](/settings/chains) and includes the directory.
 
+To see what that would do first:
+
+```
+python manage.py deploy all prod/sonic.yaml --dry-run
+```
+
+Reports every contract it would deploy, upgrade or reuse, and which steps it would skip.
+Needs no key, no RPC and no `settings/env`. Exits non-zero if anything would stop the deploy.
+
 Or via Docker, which builds the environment for you:
 
 ```
