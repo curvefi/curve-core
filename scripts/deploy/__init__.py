@@ -4,7 +4,6 @@ from pathlib import Path
 import click
 
 from scripts.logging_config import get_logger
-from scripts.plan import dry_run as plan_dry_run
 from scripts.tests.post_deploy import test_post_deploy
 from scripts.tests.pre_deployment import test_pre_deploy
 from settings.config import BASE_DIR, get_chain_settings, settings
@@ -41,6 +40,10 @@ def deploy_commands():
 def run_deploy_all(chain_config_file: str, dry_run: bool = False) -> None:
 
     if dry_run:
+        # Imported here, not at module scope: scripts.plan imports scripts.deploy.utils, so a
+        # top-level import is a cycle that only survives if this package is imported first.
+        from scripts.plan import dry_run as plan_dry_run
+
         # Returns before anything touches a chain; manage.py skips the connection for it.
         raise SystemExit(1 if plan_dry_run(chain_config_file) else 0)
 

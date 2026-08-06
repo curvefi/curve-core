@@ -23,9 +23,12 @@ def commands(ctx):
     if ctx.invoked_subcommand in READ_ONLY_COMMANDS:
         return
 
-    # Asking what a command does - or what it would do - should never open a connection
-    # or demand configuration.
-    if "--help" in sys.argv or "-h" in sys.argv or "--dry-run" in sys.argv:
+    # Asking what a command does should never open a connection or demand configuration.
+    if "--help" in sys.argv or "-h" in sys.argv:
+        return
+
+    # Only `deploy all --dry-run`; a loose match would disarm the gate for any future flag user.
+    if sys.argv[1:3] == ["deploy", "all"] and "--dry-run" in sys.argv:
         return
 
     if not settings.WEB3_PROVIDER_URL:

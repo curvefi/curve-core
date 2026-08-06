@@ -5,6 +5,8 @@ Offline: the dry run never opens a connection, which is the property under test.
 
 from click.testing import CliRunner
 
+from settings.config import BASE_DIR
+
 
 def test_plan_covers_every_folder_the_deployer_touches():
     """The step list is hand-ordered; this is what stops it drifting from run_deploy_all."""
@@ -69,3 +71,53 @@ def test_dry_run_command_fails_on_an_invalid_chain_config():
     result = CliRunner().invoke(run_deploy_all, ["prod/taiko.yaml", "--dry-run"])
     assert result.exit_code == 1
     assert "not a valid chain config" in result.output
+
+
+def test_plan_honours_the_agent_version_pin_on_rollups():
+    """deploy_xgov pins the agent to v_100 on op_stack/arb_orbit/polygon_cdk because v_101 is
+    vyper 0.4.0. Reporting the newest file there named a contract that would never deploy."""
+    from pathlib import Path
+
+    from scripts.deploy.utils import fetch_filename_from_version
+    from scripts.plan import plan_step
+
+    expected = Path(fetch_filename_from_version(Path("contracts/governance/agent"), "v_100")).name
+    assert plan_step("governance/agent", {}, "v_100")[1].startswith(expected)
+    assert not plan_step("governance/agent", {})[1].startswith(expected)  # unpinned differs
+
+
+def test_plan_knows_about_every_pinned_call_site():
+    """A new deploy_contract_version= pin must be modelled, or the plan silently lies again."""
+    import re
+
+    from scripts.plan import DEPLOY_DIR
+
+    pinned = {
+        path.relative_to(DEPLOY_DIR).as_posix()
+        for path in DEPLOY_DIR.rglob("*.py")
+        if re.search(r"deploy_contract_version\s*=(?!\s*\"v_000\")", path.read_text(encoding="utf-8"))
+        and path.name != "deployment_utils.py"
+    }
+    assert pinned == {"governance/xgov.py"}, f"unmodelled version pin in {pinned}"
+
+
+def test_plan_imports_without_the_deploy_package_being_loaded_first():
+    """A top-level `from scripts.plan import ...` in scripts/deploy/__init__ made this a cycle
+    that only worked when the deploy package happened to be imported first."""
+    import subprocess
+    import sys
+
+    result = subprocess.run(
+        [sys.executable, "-c", "import scripts.plan"], capture_output=True, text=True, cwd=str(BASE_DIR)
+    )
+    assert result.returncode == 0, result.stderr
+
+
+def test_call_site_scan_catches_both_path_spellings(tmp_path, monkeypatch):
+    """Only Path(BASE_DIR, ...) was matched, so the other spelling was invisible."""
+    from scripts import plan as plan_module
+
+    (tmp_path / "a.py").write_text('deploy_contract(s, Path(BASE_DIR, "contracts", "helpers", "one"))')
+    (tmp_path / "b.py").write_text('deploy_contract(s, BASE_DIR / "contracts" / "helpers" / "two")')
+    monkeypatch.setattr(plan_module, "DEPLOY_DIR", tmp_path)
+    assert plan_module.deployer_folders() == {"helpers/one", "helpers/two"}

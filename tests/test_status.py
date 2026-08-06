@@ -397,3 +397,11 @@ def test_status_command_rejects_two_renderers_at_once():
     result = CliRunner().invoke(status_command, ["--summary", "--brief"])
     assert result.exit_code == 2
     assert "alternative renderings" in result.output
+
+
+def test_status_chain_accepts_a_bare_name_for_a_config_only_chain():
+    """`init prod/x` leaves a config with no deployment; --chain x must still resolve."""
+    from scripts.status import chain_configs
+
+    configs = chain_configs()
+    assert next((k for k in configs if "units" in (k, k.split("/")[-1])), None) == "prod/units"

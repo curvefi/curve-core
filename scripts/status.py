@@ -1571,12 +1571,12 @@ def status_command(chain, only, onchain, wiring, bytecode, from_commit, summary,
     if targeted_out_of_scope and not deployments:
         raise click.UsageError(f"{chain!r} was not deployed by this repo - out of scope")
 
-    # A chain scaffolded by `init` has a config and no deployment yet. Only an unknown
-    # name is a usage error.
-    if not deployments and not unreadable and chain not in configs:
+    # A chain scaffolded by `init` has a config and no deployment yet.
+    config_match = next((key for key in configs if chain in (key, key.split("/")[-1])), None) if chain else None
+    if not deployments and not unreadable and not config_match:
         # UsageError exits 2, keeping "invoked wrong" apart from "drift found" (1) for CI.
         raise click.UsageError(f"no deployment or chain config found for {chain!r}")
-    selected = {chain} if chain and not deployments else set(deployments) if chain else None
+    selected = {config_match} if chain and not deployments else set(deployments) if chain else None
 
     console = Console()
     prod = sum(1 for path, _ in deployments.values() if path.parent.name == "prod")

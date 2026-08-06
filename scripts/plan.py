@@ -18,6 +18,7 @@ import click
 import yaml
 
 from scripts.deploy.utils import (
+    fetch_filename_from_version,
     fetch_latest_contract,
     get_version_from_filename,
     normalise_version,
@@ -26,12 +27,19 @@ from scripts.deploy.utils import (
 from settings.config import BASE_DIR
 
 DEPLOY_DIR = BASE_DIR / "scripts" / "deploy"
-CALL_SITE = re.compile(r'Path\(\s*BASE_DIR\s*,\s*"contracts"\s*((?:,\s*"[^"]+"\s*)*)', re.S)
+# Both spellings, so a new call site cannot hide from the staleness check.
+CALL_SITES = (
+    re.compile(r'Path\(\s*BASE_DIR\s*,\s*"contracts"\s*((?:,\s*"[^"]+"\s*)*)', re.S),
+    re.compile(r'BASE_DIR\s*/\s*"contracts"\s*((?:/\s*"[^"]+"\s*)*)', re.S),
+)
+
+# deploy_xgov pins the agent to 0.3.10 on these rollups; agent_v_101.vy is 0.4.0.
+AGENT_PIN = {"arb_orbit", "op_stack", "polygon_cdk"}
 
 # In run_deploy_all order. Second element names the condition that skips the step.
 STEPS = [
-    ("governance/relayer/{rollup_type}", "xgov"),
     ("governance/agent", "xgov"),
+    ("governance/relayer/{rollup_type}", "xgov"),
     ("governance/vault", "vault"),
     ("gauge/child_gauge/factory", None),
     ("gauge/child_gauge/implementation", None),
@@ -64,10 +72,12 @@ def deployer_folders():
     """Every contracts/ folder passed to deploy_contract(), read from the source."""
     found = set()
     for path in sorted(DEPLOY_DIR.rglob("*.py")):
-        for match in CALL_SITE.finditer(path.read_text(encoding="utf-8")):
-            parts = re.findall(r'"([^"]+)"', match.group(1))
-            if parts:
-                found.add("/".join(parts))
+        source = path.read_text(encoding="utf-8")
+        for pattern in CALL_SITES:
+            for match in pattern.finditer(source):
+                parts = re.findall(r'"([^"]+)"', match.group(1))
+                if parts:
+                    found.add("/".join(parts))
     return found
 
 
@@ -81,15 +91,19 @@ def recorded_row(raw, slot):
     return node if isinstance(node, dict) and "address" in node else None
 
 
-def plan_step(slot, raw):
-    """(action, detail) for one folder, using the deployer's own resolution rules."""
+def plan_step(slot, raw, pinned=None):
+    """(action, detail) for one folder, using the deployer's own resolution rules.
+
+    `pinned` mirrors deploy_contract_version: the deployer skips fetch_latest_contract
+    entirely for it, so reporting the newest file there would name the wrong contract.
+    """
     folder = BASE_DIR / "contracts" / Path(slot)
     if not folder.is_dir():
         return "BLOCKED", "no such folder"
     try:
-        latest = fetch_latest_contract(folder)
-    except FileNotFoundError:
-        return "BLOCKED", "no _v_NNN file the deployer can select"
+        latest = Path(fetch_filename_from_version(folder, pinned)) if pinned else fetch_latest_contract(folder)
+    except (FileNotFoundError, IndexError):
+        return "BLOCKED", f"no {pinned or '_v_NNN'} file the deployer can select"
     version = get_version_from_filename(latest)
     row = recorded_row(raw, slot)
     if not row or not row.get("address"):
@@ -118,7 +132,8 @@ def build_plan(chain_settings, raw):
         if condition in skip:
             steps.append({"slot": slot, "action": "skip", "detail": f"{condition} already set in chain config"})
             continue
-        action, detail = plan_step(slot, raw)
+        pinned = "v_100" if slot == "governance/agent" and chain_settings.rollup_type in AGENT_PIN else None
+        action, detail = plan_step(slot, raw, pinned)
         steps.append({"slot": slot, "action": action, "detail": detail})
     return steps
 
