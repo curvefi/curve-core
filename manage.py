@@ -7,13 +7,14 @@ from eth_account import Account
 from scripts.compare import compare_command
 from scripts.deploy import deploy_commands
 from scripts.index import index_command
+from scripts.init import init_command
 from scripts.status import status_command
 from scripts.tests import test_commands
 from settings.config import settings
 
 # Commands that do NOT touch a chain, listed as the exception so anything added later
 # defaults to getting a connection rather than silently running without one.
-READ_ONLY_COMMANDS = ("status", "compare", "index")
+READ_ONLY_COMMANDS = ("status", "compare", "index", "init")
 
 
 @click.group("commands")
@@ -50,4 +51,5 @@ if __name__ == "__main__":
     commands.add_command(status_command)
     commands.add_command(compare_command)
     commands.add_command(index_command)
+    commands.add_command(init_command)
     commands()

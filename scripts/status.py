@@ -1552,20 +1552,23 @@ def status_command(chain, only, onchain, wiring, bytecode, from_commit, summary,
         raise click.UsageError("--summary and --brief are alternative renderings, pick one")
     everything, _ = load_deployments()
     deployments, unreadable = load_deployments(chain)
-    if not deployments and not unreadable:
-        # UsageError exits 2, keeping "you invoked this wrong" distinguishable from
-        # "drift was found" (1) for CI.
-        raise click.UsageError(f"no deployment found for {chain!r}")
     configs = chain_configs()
 
     # Scope is what curve-core deploys. avalanche, fantom and x_layer predate this repo and
     # cannot be targeted by a deploy, so carrying them here only adds noise.
     out_of_scope = legacy_deployments(everything, configs)
+    targeted_out_of_scope = bool(chain) and bool(set(deployments) & out_of_scope)
     everything = {k: v for k, v in everything.items() if k not in out_of_scope}
     deployments = {k: v for k, v in deployments.items() if k not in out_of_scope}
-    if chain and not deployments and not unreadable:
+    if targeted_out_of_scope and not deployments:
         raise click.UsageError(f"{chain!r} was not deployed by this repo - out of scope")
-    selected = set(deployments) if chain else None
+
+    # A chain scaffolded by `init` has a config and no deployment yet. Only an unknown
+    # name is a usage error.
+    if not deployments and not unreadable and chain not in configs:
+        # UsageError exits 2, keeping "invoked wrong" apart from "drift found" (1) for CI.
+        raise click.UsageError(f"no deployment or chain config found for {chain!r}")
+    selected = {chain} if chain and not deployments else set(deployments) if chain else None
 
     console = Console()
     prod = sum(1 for path, _ in deployments.values() if path.parent.name == "prod")

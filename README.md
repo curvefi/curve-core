@@ -68,8 +68,17 @@ poetry install
 
 #### Chain params file
 
-Put settings file {chain_name}.yaml into [settings/chains](/settings/chains) directory.
-[Example](/settings/chains/examples/example.yaml). It will be used for deployment.
+Scaffold one:
+
+```
+python manage.py init prod/mychain
+```
+
+It asks for each field, reads `chain_id` from the RPC you give it, checks multicall3 exists
+on that chain, and refuses to write anything `ChainConfig` would reject.
+
+Or copy [the example](/settings/chains/examples/example.yaml) into
+[settings/chains](/settings/chains) as {chain_name}.yaml and fill it in by hand.
 
 - **network_name** - chain name
 - **chain_id** - chain id
