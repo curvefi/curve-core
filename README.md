@@ -128,6 +128,29 @@ to deploy test tokens and pools + add liquidity and permorm a swap in test pool.
 use mocks in production.
 
 
+## Consuming the registry
+
+`deployments/` is the cross-chain Curve address registry. Two generated files make it
+readable without walking the tree or calling the GitHub API with a token:
+
+- [registry/index.json](/registry/index.json) - every chain, its config essentials, and every
+  recorded address flattened to `amm.stableswap.factory` keys.
+- [registry/schema.json](/registry/schema.json) - JSON Schema for a deployment file, generated
+  from the pydantic models.
+
+They live outside `deployments/` on purpose: that directory contains only chain folders, and
+consumers enumerate it.
+
+Both are generated. Regenerate after changing any deployment file:
+
+```
+python manage.py index          # write both
+python manage.py index --check  # fail if either is stale (CI runs this)
+```
+
+The index includes chains whose files predate this repo and do not validate, since they are
+still real deployments consumers need.
+
 ## Deployment status and drift
 
 To see what is deployed and what would change if the deployer ran again:

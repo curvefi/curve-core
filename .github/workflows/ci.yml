@@ -31,6 +31,19 @@ jobs:
       - run: poetry install --no-interaction
       - run: poetry run pytest tests/ -q
 
+  artifacts:
+    # index.json and schema.json are generated. Regenerating and diffing is the only way
+    # a committed artifact cannot drift from the files it describes.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install poetry==1.8.3
+      - run: poetry install --no-interaction
+      - run: poetry run python manage.py index --check
+
   drift:
     # Compares this branch against its base rather than a committed count: a fix needs no
     # bookkeeping, a new contract version reads as new work, and a fault already on the base
