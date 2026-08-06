@@ -215,6 +215,32 @@ def chain_configs() -> dict[str, Path]:
     return {f"{p.parent.name}/{p.stem}": p for p in root.rglob("*.yaml") if "examples" not in p.parts}
 
 
+def legacy_deployments(deployments, configs) -> set:
+    """Chains recorded here but never deployed by this repo.
+
+    avalanche, fantom and x_layer were full-Curve deployments later deprecated to Lite; their
+    rows are hand-written, with no contract_path or compiler metadata. Detected by shape - no
+    chain config and no provenance on any row - rather than by a hardcoded list, so a future
+    one is classified automatically. They cannot be targeted by a deploy, so validating them
+    against the deployer's models says nothing useful.
+    """
+    legacy = set()
+    for chain, (_, raw) in deployments.items():
+        if chain in configs:
+            continue
+        rows = list(contract_rows(raw))
+        if rows and not any(row.get("contract_path") for _, row in rows):
+            legacy.add(chain)
+    return legacy
+
+
+def example_configs() -> dict[str, Path]:
+    """The onboarding templates, kept apart from real chains so COVERAGE does not report
+    them as configs that were never deployed."""
+    root = BASE_DIR / "settings" / "chains" / "examples"
+    return {f"examples/{p.stem}": p for p in sorted(root.glob("*.yaml"))}
+
+
 def contract_rows(raw: dict):
     """Yield (dotted_slot, row) for every contract entry, valid or not.
 
@@ -543,7 +569,25 @@ def check_config(configs, selected=None):
                 subjects=(key,),
             )
         )
+
+    # The templates are what a new chain is told to copy, so an invalid one breaks onboarding
+    # before anything else. Nothing checked them until now.
+    if not selected:
+        for key, errors in config_errors(example_configs()).items():
+            findings.append(
+                Finding(
+                    "CONFIG",
+                    f"{key}  ({plural(len(errors), 'error')}) - onboarding template",
+                    f"{configs_path(key)} is what README tells a new chain to copy",
+                    (),
+                    _summarise_errors(errors),
+                )
+            )
     return findings
+
+
+def configs_path(key):
+    return f"settings/chains/{key}.yaml"
 
 
 # Imported, not mirrored - a local copy had drifted and produced false negatives.
@@ -723,7 +767,7 @@ def _summarise_errors(errors, limit=4):
     return (lead, f"fields: {shown}")
 
 
-def check_required(deployments, broken_configs=()):
+def check_required(deployments, broken_configs=(), legacy=()):
     """Pydantic's own verdict - these files cannot be loaded by the deployer at all.
 
     `broken_configs` lets a finding point at its cause: the deployer copies the chain
@@ -732,6 +776,8 @@ def check_required(deployments, broken_configs=()):
     """
     findings = []
     for chain, (path, raw) in sorted(deployments.items()):
+        if chain in legacy:
+            continue
         try:
             DeploymentConfig.model_validate(raw)
         except ValidationError as exc:
@@ -759,13 +805,15 @@ def check_required(deployments, broken_configs=()):
     return findings
 
 
-def check_coverage(deployments, configs, selected=None):
+def check_coverage(deployments, configs, selected=None, legacy=()):
     """Repo-wide by nature; `selected` only narrows what is worth printing."""
     findings = []
     # Both sides are keyed env/stem, so a prod deployment needs a prod config and a devnet
     # one a devnet config; matching on the bare name would call a devnet-only chain covered.
     for key, (path, _) in sorted(deployments.items()):
         if selected and key not in selected:
+            continue
+        if key in legacy:
             continue
         if key not in configs:
             findings.append(
@@ -776,6 +824,20 @@ def check_coverage(deployments, configs, selected=None):
                     subjects=(key,),
                 )
             )
+    listed = sorted(k for k in legacy if not selected or k in selected)
+    if listed:
+        findings.append(
+            Finding(
+                "COVERAGE",
+                f"{plural(len(listed), 'chain')} recorded but not deployed by this repo",
+                "full-Curve deployments later deprecated to Lite - hand-written rows with no "
+                "provenance. They have no chain config, so nothing here can target them, and "
+                "REQUIRED skips them: pydantic's verdict on a file the deployer cannot load "
+                "says nothing useful",
+                tuple(listed),
+                subjects=tuple(listed),
+            )
+        )
     for key in sorted(set(configs) - set(deployments)):
         if selected and key not in selected:
             continue
@@ -823,16 +885,18 @@ def check_coverage(deployments, configs, selected=None):
 ADMIN_ROLES = ("ownership_admin", "parameter_admin", "emergency_admin")
 
 
-def check_integrity(deployments):
+def check_integrity(deployments, legacy=()):
     by_addr = defaultdict(list)
     partial, ungoverned = [], []
     for chain, (_, raw) in sorted(deployments.items()):
         dao = (raw.get("config") or {}).get("dao") or {}
         admins = {k: norm(v) for k, v in dao.items() if k.endswith("_admin") and norm(v)}
         if not admins and any(role in dao for role in ADMIN_ROLES):
-            # Every admin recorded as null. Not "no finding" - it means the file names no
-            # governance at all for a chain that has contracts deployed on it.
-            ungoverned.append(chain)
+            # Every admin recorded as null: the file names no governance at all for a chain
+            # with contracts on it. Skipped for legacy chains - the harm is that
+            # update_address_provider writes the nulls, and nothing here can run against them.
+            if chain not in legacy:
+                ungoverned.append(chain)
             continue
         if len(admins) < 2:
             continue
@@ -1440,6 +1504,7 @@ def status_command(chain, only, onchain, wiring, bytecode, summary, brief, json_
     # Chains `deploy all` cannot run on today, mapped to why. The two causes are disjoint -
     # config_errors only sees chains that have a config - and they are fixed in different
     # places, so PENDING names the cause rather than pointing at both sections at once.
+    legacy = legacy_deployments(everything, configs)
     blocked = {chain: "rejected" for chain in broken_configs}
     blocked.update({chain: "missing" for chain in set(everything) - set(configs)})
 
@@ -1448,9 +1513,9 @@ def status_command(chain, only, onchain, wiring, bytecode, summary, brief, json_
         "config": lambda: check_config(configs, selected),
         "contracts": check_contracts,
         "schema": lambda: check_schema(deployments),
-        "required": lambda: check_required(deployments, broken_configs),
-        "coverage": lambda: check_coverage(everything, configs, selected),
-        "integrity": lambda: check_integrity(deployments),
+        "required": lambda: check_required(deployments, broken_configs, legacy),
+        "coverage": lambda: check_coverage(everything, configs, selected, legacy),
+        "integrity": lambda: check_integrity(deployments, legacy),
     }
     # CONTRACTS inspects contracts/ and abi/, which belong to no chain - including it in a
     # --chain report would attribute repo-wide problems to that chain.

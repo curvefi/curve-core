@@ -69,7 +69,7 @@ poetry install
 #### Chain params file
 
 Put settings file {chain_name}.yaml into [settings/chains](/settings/chains) directory.
-[Example](/settings/chains/example.yaml). It will be used for deployment.
+[Example](/settings/chains/examples/example.yaml). It will be used for deployment.
 
 - **network_name** - chain name
 - **chain_id** - chain id
@@ -100,6 +100,14 @@ export DEPLOYER_EOA_PRIVATE_KEY={your key}
 
 ```
 python manage.py deploy all devnet/chain_config_filename.yaml
+```
+
+The path is relative to [settings/chains](/settings/chains) and includes the directory.
+
+Or via Docker, which builds the environment for you:
+
+```
+docker compose up --build
 ```
 
 #### Deployment results

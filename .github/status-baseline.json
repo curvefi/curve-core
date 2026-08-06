@@ -1,9 +1,9 @@
 {
   "CONFIG": 3,
   "CONTRACTS": 4,
-  "COVERAGE": 7,
-  "INTEGRITY": 5,
+  "COVERAGE": 3,
+  "INTEGRITY": 4,
   "PENDING": 4,
-  "REQUIRED": 6,
+  "REQUIRED": 3,
   "SCHEMA": 1
 }
