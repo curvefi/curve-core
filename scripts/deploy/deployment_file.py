@@ -14,9 +14,15 @@ from scripts.logging_config import get_logger
 from settings.config import BASE_DIR, settings
 from settings.models import ChainConfig
 
-from .utils import get_latest_commit_hash, get_relative_path
+from .utils import get_latest_commit_hash, get_relative_path, normalise_version
 
 logger = get_logger()
+
+# The version a blueprint deploy records. `v?` because upstream declares versions as
+# "v2.1.0" while this repo records "2.1.0"; the group excludes the prefix so stored
+# versions stay consistent. Exported so scripts/status.py can report on exactly what this
+# accepts rather than keeping a second, drifting copy of the pattern.
+BLUEPRINT_VERSION_PATTERN = re.compile(r'version: public\(constant\(String\[8\]\)\) = "v?([\d.]+)"')
 
 
 class YamlDeploymentFile:
@@ -139,8 +145,9 @@ class YamlDeploymentFile:
         # latest git commit hash:
         latest_git_commit_for_file = get_latest_commit_hash(contract_object.filename)
         contract_relative_path = get_relative_path(contract_path)
+        # curve-lite was renamed to curve-core; already-recorded URLs still redirect.
         github_url = (
-            f"https://github.com/curvefi/curve-lite/blob/{latest_git_commit_for_file}/"
+            f"https://github.com/curvefi/curve-core/blob/{latest_git_commit_for_file}/"
             f"{'/'.join(contract_relative_path.parts[1:])}"
         )
 
@@ -153,10 +160,9 @@ class YamlDeploymentFile:
         evm_version = chain_settings.evm_version
 
         if not as_blueprint:
-            version = contract_object.version().strip()
+            version = normalise_version(contract_object.version())
         else:
-            pattern = 'version: public\(constant\(String\[8\]\)\) = "([\d.]+)"'
-            match = re.search(pattern, source_code)
+            match = BLUEPRINT_VERSION_PATTERN.search(source_code)
 
             if match:
                 version = match.group(1)

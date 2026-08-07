@@ -22,6 +22,11 @@ titanoboa = "0.2.6"
 black = "24.4.2"
 isort = "5.13.2"
 
+[tool.pytest.ini_options]
+# package-mode = false, so `scripts` is not installed; bare `pytest` needs the root on sys.path.
+pythonpath = ["."]
+testpaths = ["tests"]
+
 [tool.black]
 exclude = '''
 (

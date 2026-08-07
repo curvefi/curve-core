@@ -1,0 +1,1016 @@
+{
+  "$defs": {
+    "AmmDeployment": {
+      "properties": {
+        "stableswap": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StableswapSingleAmmDeployment"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "tricryptoswap": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SingleAmmDeployment"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "twocryptoswap": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SingleAmmDeployment"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "oldmain": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LegacyAmmDeployment"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "oldstable": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LegacyAmmDeployment"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "oldcrypto": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LegacyAmmDeployment"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "oldcryptofacto": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LegacyAmmDeployment"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "eywa": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LegacyAmmDeployment"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "AmmDeployment",
+      "type": "object"
+    },
+    "ChainConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "file_name": {
+          "title": "File Name",
+          "type": "string"
+        },
+        "file_path": {
+          "title": "File Path",
+          "type": "string"
+        },
+        "network_name": {
+          "title": "Network Name",
+          "type": "string"
+        },
+        "is_testnet": {
+          "title": "Is Testnet",
+          "type": "boolean"
+        },
+        "chain_id": {
+          "title": "Chain Id",
+          "type": "integer"
+        },
+        "layer": {
+          "title": "Layer",
+          "type": "integer"
+        },
+        "rollup_type": {
+          "$ref": "#/$defs/RollupType"
+        },
+        "evm_version": {
+          "default": "shanghai",
+          "title": "Evm Version",
+          "type": "string"
+        },
+        "native_token": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+          "title": "Native Token"
+        },
+        "wrapped_native_token": {
+          "title": "Wrapped Native Token",
+          "type": "string"
+        },
+        "wrapper": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Wrapper"
+        },
+        "dao": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CurveDAOSettings"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "explorer_base_url": {
+          "title": "Explorer Base Url",
+          "type": "string"
+        },
+        "logo_url": {
+          "title": "Logo Url",
+          "type": "string"
+        },
+        "native_currency_symbol": {
+          "title": "Native Currency Symbol",
+          "type": "string"
+        },
+        "native_currency_coingecko_id": {
+          "title": "Native Currency Coingecko Id",
+          "type": "string"
+        },
+        "reference_token_addresses": {
+          "$ref": "#/$defs/ReferenceTokenAddresses"
+        },
+        "public_rpc_url": {
+          "title": "Public Rpc Url",
+          "type": "string"
+        },
+        "multicall2": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Multicall2"
+        },
+        "multicall3": {
+          "default": "0xcA11bde05977b3631167028862bE2a173976CA11",
+          "title": "Multicall3",
+          "type": "string"
+        }
+      },
+      "required": [
+        "file_name",
+        "file_path",
+        "network_name",
+        "is_testnet",
+        "chain_id",
+        "layer",
+        "rollup_type",
+        "wrapped_native_token",
+        "explorer_base_url",
+        "logo_url",
+        "native_currency_symbol",
+        "native_currency_coingecko_id",
+        "reference_token_addresses",
+        "public_rpc_url"
+      ],
+      "title": "ChainConfig",
+      "type": "object"
+    },
+    "CompilerSettings": {
+      "properties": {
+        "compiler_version": {
+          "title": "Compiler Version",
+          "type": "string"
+        },
+        "evm_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Evm Version"
+        },
+        "optimisation_level": {
+          "title": "Optimisation Level",
+          "type": "string"
+        }
+      },
+      "required": [
+        "compiler_version",
+        "evm_version",
+        "optimisation_level"
+      ],
+      "title": "CompilerSettings",
+      "type": "object"
+    },
+    "Contract": {
+      "properties": {
+        "address": {
+          "title": "Address",
+          "type": "string"
+        },
+        "compiler_settings": {
+          "$ref": "#/$defs/CompilerSettings"
+        },
+        "constructor_args_encoded": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Constructor Args Encoded"
+        },
+        "contract_github_url": {
+          "title": "Contract Github Url",
+          "type": "string"
+        },
+        "contract_path": {
+          "title": "Contract Path",
+          "type": "string"
+        },
+        "contract_version": {
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "deployment_timestamp": {
+          "title": "Deployment Timestamp",
+          "type": "integer"
+        },
+        "deployment_type": {
+          "$ref": "#/$defs/DeploymentType"
+        }
+      },
+      "required": [
+        "address",
+        "compiler_settings",
+        "constructor_args_encoded",
+        "contract_github_url",
+        "contract_path",
+        "contract_version",
+        "deployment_timestamp",
+        "deployment_type"
+      ],
+      "title": "Contract",
+      "type": "object"
+    },
+    "ContractsDeployment": {
+      "properties": {
+        "amm": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AmmDeployment"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "gauge": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GaugeDeployment"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "governance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GovernanceDeployment"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "helpers": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HelpersDeployment"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "registries": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RegistriesDeployment"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "ContractsDeployment",
+      "type": "object"
+    },
+    "CurveDAOSettings": {
+      "properties": {
+        "crv": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Crv"
+        },
+        "crvusd": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Crvusd"
+        },
+        "scrvusd": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scrvusd"
+        },
+        "ownership_admin": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ownership Admin"
+        },
+        "parameter_admin": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parameter Admin"
+        },
+        "emergency_admin": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Emergency Admin"
+        },
+        "vault": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Vault"
+        }
+      },
+      "title": "CurveDAOSettings",
+      "type": "object"
+    },
+    "DeploymentType": {
+      "enum": [
+        "normal",
+        "blueprint"
+      ],
+      "title": "DeploymentType",
+      "type": "string"
+    },
+    "GaugeDeployment": {
+      "properties": {
+        "child_gauge": {
+          "$ref": "#/$defs/GaugeFactoryDeployment"
+        }
+      },
+      "required": [
+        "child_gauge"
+      ],
+      "title": "GaugeDeployment",
+      "type": "object"
+    },
+    "GaugeFactoryDeployment": {
+      "properties": {
+        "factory": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "implementation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "GaugeFactoryDeployment",
+      "type": "object"
+    },
+    "GovernanceDeployment": {
+      "properties": {
+        "agent": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "relayer": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/Contract"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Relayer"
+        },
+        "vault": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "GovernanceDeployment",
+      "type": "object"
+    },
+    "HelpersDeployment": {
+      "properties": {
+        "deposit_and_stake_zap": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "rate_provider": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "router": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "stable_swap_meta_zap": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "HelpersDeployment",
+      "type": "object"
+    },
+    "LegacyAmmDeployment": {
+      "description": "A pre-curve-core registry, factory address only. Hand-written, never deployed here.",
+      "properties": {
+        "factory": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "LegacyAmmDeployment",
+      "type": "object"
+    },
+    "MetaregistryHandlers": {
+      "properties": {
+        "stableswap": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "tricryptoswap": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "twocryptoswap": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "MetaregistryHandlers",
+      "type": "object"
+    },
+    "MetaregistyContract": {
+      "properties": {
+        "address": {
+          "title": "Address",
+          "type": "string"
+        },
+        "compiler_settings": {
+          "$ref": "#/$defs/CompilerSettings"
+        },
+        "constructor_args_encoded": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Constructor Args Encoded"
+        },
+        "contract_github_url": {
+          "title": "Contract Github Url",
+          "type": "string"
+        },
+        "contract_path": {
+          "title": "Contract Path",
+          "type": "string"
+        },
+        "contract_version": {
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "deployment_timestamp": {
+          "title": "Deployment Timestamp",
+          "type": "integer"
+        },
+        "deployment_type": {
+          "$ref": "#/$defs/DeploymentType"
+        },
+        "registry_handlers": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MetaregistryHandlers"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "address",
+        "compiler_settings",
+        "constructor_args_encoded",
+        "contract_github_url",
+        "contract_path",
+        "contract_version",
+        "deployment_timestamp",
+        "deployment_type"
+      ],
+      "title": "MetaregistyContract",
+      "type": "object"
+    },
+    "Pool": {
+      "properties": {
+        "symbol": {
+          "title": "Symbol",
+          "type": "string"
+        },
+        "address": {
+          "title": "Address",
+          "type": "string"
+        },
+        "factory": {
+          "title": "Factory",
+          "type": "string"
+        },
+        "tokens": {
+          "items": {
+            "$ref": "#/$defs/Token"
+          },
+          "title": "Tokens",
+          "type": "array"
+        }
+      },
+      "required": [
+        "symbol",
+        "address",
+        "factory",
+        "tokens"
+      ],
+      "title": "Pool",
+      "type": "object"
+    },
+    "ReferenceTokenAddresses": {
+      "properties": {
+        "usdc": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Usdc"
+        },
+        "usdt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Usdt"
+        },
+        "weth": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Weth"
+        }
+      },
+      "title": "ReferenceTokenAddresses",
+      "type": "object"
+    },
+    "RegistriesDeployment": {
+      "properties": {
+        "address_provider": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "metaregistry": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MetaregistyContract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "RegistriesDeployment",
+      "type": "object"
+    },
+    "RollupType": {
+      "enum": [
+        "op_stack",
+        "arb_orbit",
+        "polygon_cdk",
+        "zksync",
+        "taiko",
+        "not_rollup"
+      ],
+      "title": "RollupType",
+      "type": "string"
+    },
+    "SingleAmmDeployment": {
+      "properties": {
+        "factory": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "implementation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "math": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "views": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "SingleAmmDeployment",
+      "type": "object"
+    },
+    "StableswapSingleAmmDeployment": {
+      "properties": {
+        "factory": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "implementation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "math": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "views": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "meta_implementation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "StableswapSingleAmmDeployment",
+      "type": "object"
+    },
+    "Token": {
+      "properties": {
+        "address": {
+          "title": "Address",
+          "type": "string"
+        }
+      },
+      "required": [
+        "address"
+      ],
+      "title": "Token",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "config": {
+      "$ref": "#/$defs/ChainConfig"
+    },
+    "contracts": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ContractsDeployment"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "tokens": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/Token"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tokens"
+    },
+    "pools": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/Pool"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pools"
+    }
+  },
+  "required": [
+    "config"
+  ],
+  "title": "DeploymentConfig",
+  "type": "object"
+}

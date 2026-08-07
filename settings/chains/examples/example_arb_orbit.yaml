@@ -1,5 +1,6 @@
 network_name: Arbitrum Local
 chain_id: 42161
+is_testnet: False
 rollup_type: arb_orbit
 dao:
   crv: "0x11cDb42B0EB46D95f990BeDD4695A6e3fA034978"
@@ -12,3 +13,8 @@ native_currency_symbol: ETH
 native_currency_coingecko_id: ethereum
 public_rpc_url: https://arbitrum.llamarpc.com
 wrapped_native_token: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"
+logo_url: https://example.com/logo.png
+reference_token_addresses:
+  weth: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"
+  usdc:  # fill in for your chain
+  usdt:  # fill in for your chain
