@@ -66,7 +66,11 @@ jobs:
           # cannot read as a change in what it found.
           cp -r scripts manage.py .tmp/base/
           cp settings/models.py .tmp/base/settings/models.py
-          (cd .tmp/base && poetry run python manage.py status --json "$GITHUB_WORKSPACE/base.json") || true
+          # Run from here, not `cd .tmp/base`: poetry resolves its virtualenv from the current
+          # directory's pyproject.toml, and only this one has been installed. The script's own
+          # location still decides BASE_DIR, so it reads the base branch's files.
+          poetry run python .tmp/base/manage.py status --json base.json || true
+          test -s base.json # a missing base is a broken job, not "everything is new"
 
       - name: Compare
         id: compare
@@ -74,7 +78,14 @@ jobs:
         run: |
           set +e
           poetry run python manage.py compare base.json head.json --output report.md
-          echo "blocking=$?" >> "$GITHUB_OUTPUT"
+          code=$?
+          set -e
+          # 0 clean, 1 new blocking findings, anything else means compare itself failed.
+          if [ "$code" -gt 1 ]; then
+            echo "compare exited $code - the comparison did not run"
+            exit "$code"
+          fi
+          echo "blocking=$code" >> "$GITHUB_OUTPUT"
           if [ -s report.md ]; then
             echo "has_report=true" >> "$GITHUB_OUTPUT"
           else
