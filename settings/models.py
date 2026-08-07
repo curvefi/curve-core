@@ -13,8 +13,9 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     DEV: bool = False
 
-    WEB3_PROVIDER_URL: str
-    DEPLOYER_EOA_PRIVATE_KEY: str
+    # Empty so `status` runs without settings/env; manage.py checks before any chain command.
+    WEB3_PROVIDER_URL: str = ""
+    DEPLOYER_EOA_PRIVATE_KEY: str = ""
 
 
 class RollupType(StrEnum):
@@ -29,6 +30,8 @@ class RollupType(StrEnum):
 class CurveDAOSettings(BaseModel):
     crv: str | None = None
     crvusd: str | None = None
+    # In sonic.yaml and taiko.yaml; undeclared fields are dropped on the model_dump() round-trip.
+    scrvusd: str | None = None
     ownership_admin: str | None = None
     parameter_admin: str | None = None
     emergency_admin: str | None = None

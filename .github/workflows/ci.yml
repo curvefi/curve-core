@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install black==24.4.2 isort==5.13.2
+      - run: black --check --config pyproject.toml .
+      - run: isort --check-only --line-length=120 .
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # the provenance tests walk real history; a shallow clone has none.
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install poetry==1.8.3
+      - run: poetry install --no-interaction
+      - run: poetry run pytest tests/ -q
+
+  drift:
+    # Compares this branch against its base rather than a committed count: a fix needs no
+    # bookkeeping, a new contract version reads as new work, and a fault already on the base
+    # branch never fails a PR that did not cause it.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # get_latest_commit_hash needs real history, not a shallow clone.
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install poetry==1.8.3
+      - run: poetry install --no-interaction
+
+      # Offline checks only - no RPC, no credentials, fully deterministic.
+      - name: Report deployment status
+        run: poetry run python manage.py status --brief || true
+
+      - name: Findings on this branch
+        run: poetry run python manage.py status --json head.json || true
+
+      - name: Findings on the base branch
+        if: github.event_name == 'pull_request'
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          git worktree add --detach .tmp/base "$base"
+          # This branch's checks against the base branch's data, so a change to the tool
+          # cannot read as a change in what it found.
+          cp -r scripts manage.py .tmp/base/
+          cp settings/models.py .tmp/base/settings/models.py
+          # Run from here, not `cd .tmp/base`: poetry resolves its virtualenv from the current
+          # directory's pyproject.toml, and only this one has been installed. The script's own
+          # location still decides BASE_DIR, so it reads the base branch's files.
+          poetry run python .tmp/base/manage.py status --json base.json || true
+          test -s base.json # a missing base is a broken job, not "everything is new"
+
+      - name: Compare
+        id: compare
+        if: github.event_name == 'pull_request'
+        run: |
+          set +e
+          poetry run python manage.py compare base.json head.json --output report.md
+          code=$?
+          set -e
+          # 0 clean, 1 new blocking findings, anything else means compare itself failed.
+          if [ "$code" -gt 1 ]; then
+            echo "compare exited $code - the comparison did not run"
+            exit "$code"
+          fi
+          echo "blocking=$code" >> "$GITHUB_OUTPUT"
+          if [ -s report.md ]; then
+            echo "has_report=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_report=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # continue-on-error: a fork PR cannot write comments, and that must not fail the run.
+      - name: Post summary
+        if: steps.compare.outputs.has_report == 'true'
+        uses: marocchino/sticky-pull-request-comment@v2
+        continue-on-error: true
+        with:
+          header: deployment-status
+          path: report.md
+
+      - name: Clear summary
+        if: steps.compare.outputs.has_report == 'false'
+        uses: marocchino/sticky-pull-request-comment@v2
+        continue-on-error: true
+        with:
+          header: deployment-status
+          delete: true
+
+      - name: Fail on new blocking findings
+        if: steps.compare.outputs.blocking != '0' && steps.compare.outputs.blocking != ''
+        run: |
+          echo "New CONFIG or REQUIRED findings - see the PR comment."
+          exit 1

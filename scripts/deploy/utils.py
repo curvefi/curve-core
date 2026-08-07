@@ -73,8 +73,26 @@ def get_version_from_filename(filename: Path):
         raise ValueError("Version string is not in the expected format")
 
 
+def normalise_version(version) -> str:
+    """Drop a leading "v" from a contract version string.
+
+    Upstream repos declare versions as `"v2.1.0"`; this repo records them as `"2.1.0"`,
+    which until now meant every vendored contract had to be edited by hand. Accepting both
+    forms removes that step - and keeps stored contract_version values consistent with the
+    deployments already recorded.
+
+    Strips one "v", and only when a digit follows. `lstrip("vV")` would eat every leading
+    v ("vv1.0.0" -> "1.0.0") and mangle anything that merely starts with one ("volatile"
+    -> "olatile"), silently turning a malformed version into a plausible-looking one.
+    """
+    return re.sub(r"^[vV](?=\d)", "", str(version).strip())
+
+
 def version_a_gt_version_b(a, b):
-    return list(map(int, a.split("."))) > list(map(int, b.split(".")))
+    def parts(version):
+        return list(map(int, normalise_version(version).split(".")))
+
+    return parts(a) > parts(b)
 
 
 def get_relative_path(contract_file: Path) -> Path:
