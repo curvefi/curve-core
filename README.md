@@ -159,6 +159,10 @@ Read-only — it never sends a transaction, and `manage.py` skips the boa connec
 command, so it runs on a fresh clone with no `settings/env` and no `DEPLOYER_EOA_PRIVATE_KEY`.
 Exits `1` when anything is reported, so it can be used as a CI gate.
 
+Scope is what curve-core deploys. `avalanche`, `fantom` and `x_layer` predate this repo — they
+have no [settings/chains](/settings/chains) config and no provenance on any row, so no deploy can
+target them and every check ignores them.
+
 Each check is derived from the deployer's own code rather than reimplemented, so the report
 cannot drift from what `deploy all` actually does:
 

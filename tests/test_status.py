@@ -411,6 +411,15 @@ def test_a_deployment_file_that_is_not_valid_yaml_is_reported_not_raised(tmp_pat
     assert good == {}
     assert list(unreadable) == ["prod/avalanche"]
 
-    finding = status.check_required({}, {}, (), unreadable)[0]
+    finding = status.check_required({}, {}, unreadable)[0]
     assert finding.kind == "REQUIRED"
     assert "line 5" in finding.details[0], finding.details
+
+
+def test_pre_curve_core_chains_are_out_of_scope():
+    """avalanche, fantom and x_layer predate this repo; no deploy can target them, so carrying
+    them through the checks only adds noise."""
+    from scripts.status import chain_configs, legacy_deployments, load_deployments
+
+    everything, _ = load_deployments()
+    assert legacy_deployments(everything, chain_configs()) == {"prod/avalanche", "prod/fantom", "prod/x_layer"}
