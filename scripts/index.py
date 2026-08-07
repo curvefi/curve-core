@@ -15,10 +15,9 @@ Both are generated, never hand-edited, and `--check` in CI keeps them honest.
 import json
 
 import click
-import yaml
 
 from scripts.deploy.models import DeploymentConfig
-from scripts.status import contract_rows, rel
+from scripts.status import contract_rows, load_deployments, rel
 from settings.config import BASE_DIR
 
 # Deliberately not inside deployments/: that directory holds nothing but chain folders, and
@@ -57,25 +56,25 @@ def contract_addresses(raw):
 
 
 def build_index():
-    """Every deployment file, flattened. Raises on a file that does not parse rather than
-    quietly shipping an index that is missing a chain."""
+    """Every deployment file, flattened. Uses status's loader so "which files count" is
+    decided once, and raises rather than shipping an index that is missing a chain."""
+    deployments, unreadable = load_deployments()
+    if unreadable:
+        names = ", ".join(rel(path) for path, _ in unreadable.values())
+        raise click.ClickException(f"not valid YAML: {names}")
+
     chains = []
-    for path in sorted((BASE_DIR / "deployments").rglob("*.yaml")):
-        if {"debug", "examples"} & set(path.parts):
-            continue
-        try:
-            raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-        except yaml.YAMLError as exc:
-            raise click.ClickException(f"{path.relative_to(BASE_DIR).as_posix()} is not valid YAML: {exc}")
+    for key, (path, raw) in deployments.items():
         config = raw.get("config") or {}
-        entry = {
-            "id": f"{path.parent.name}/{path.stem}",
-            "file_name": config.get("file_name") or path.stem,
-            "file_path": path.relative_to(BASE_DIR / "deployments").as_posix(),
-            **{key: config.get(key) for key in CONFIG_KEYS},
-            "contracts": dict(sorted(contract_addresses(raw))),
-        }
-        chains.append(entry)
+        chains.append(
+            {
+                "id": key,
+                "file_name": config.get("file_name") or path.stem,
+                "file_path": path.relative_to(BASE_DIR / "deployments").as_posix(),
+                **{name: config.get(name) for name in CONFIG_KEYS},
+                "contracts": dict(sorted(contract_addresses(raw))),
+            }
+        )
     return {"count": len(chains), "chains": chains}
 
 
@@ -103,7 +102,7 @@ def index_command(check):
 
     for path, text in wanted.items():
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(text, encoding="utf-8")
+        path.write_text(text, encoding="utf-8", newline="\n")
     index = json.loads(wanted[INDEX_PATH])
     click.echo(f"wrote {index['count']} chains to {rel(INDEX_PATH)}")
     click.echo(f"wrote schema to {rel(SCHEMA_PATH)}")

@@ -67,7 +67,7 @@ def compare_command(base, head, output):
 
     click.echo(report or "no change in deployment status")
     if output:
-        Path(output).write_text(report, encoding="utf-8")
+        Path(output).write_text(report, encoding="utf-8", newline="\n")
 
     blocking = [f for f in added if f["kind"] in BLOCKING]
     if blocking:

@@ -623,17 +623,17 @@ def check_contracts():
     # version contradicting the filename fetch_latest_contract sorts on - silent, and worse.
     unparseable, mismatched, no_version = [], [], []
     for source in sorted(contracts_dir.rglob("*_v_*.vy")):
-        rel = source.relative_to(BASE_DIR).as_posix()
+        shown = source.relative_to(BASE_DIR).as_posix()
         digits = re.search(r"_v_(\d+)\.vy$", source.name).group(1)
         implied = ".".join(digits) if len(digits) == 3 else digits
         text = source.read_text(encoding="utf-8")
         declared = ANY_VERSION_RE.search(text)
         if declared is None:
-            no_version.append(rel)
+            no_version.append(shown)
         elif not BLUEPRINT_VERSION_RE.search(text):
-            unparseable.append(f"{rel}: declares {declared.group(1)!r}")
+            unparseable.append(f"{shown}: declares {declared.group(1)!r}")
         elif normalise_version(declared.group(1)) != implied:
-            mismatched.append(f"{rel}: declares {declared.group(1)!r}, filename implies {implied!r}")
+            mismatched.append(f"{shown}: declares {declared.group(1)!r}, filename implies {implied!r}")
 
     # fetch_latest_contract sorts a folder on _v_NNN alone, so two unrelated contracts in one
     # folder compete for the slot. PENDING would report the swap as an ordinary upgrade.
@@ -1576,7 +1576,7 @@ def status_command(chain, only, onchain, wiring, bytecode, from_commit, summary,
     if not deployments and not unreadable and not config_match:
         # UsageError exits 2, keeping "invoked wrong" apart from "drift found" (1) for CI.
         raise click.UsageError(f"no deployment or chain config found for {chain!r}")
-    selected = {config_match} if chain and not deployments else set(deployments) if chain else None
+    selected = (set(deployments) | set(unreadable) | ({config_match} if config_match else set())) if chain else None
 
     console = Console()
     prod = sum(1 for path, _ in deployments.values() if path.parent.name == "prod")

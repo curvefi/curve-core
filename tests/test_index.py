@@ -35,11 +35,14 @@ def test_index_refuses_to_ship_a_missing_chain(tmp_path, monkeypatch):
     import click
 
     from scripts import index as index_module
+    from scripts import status as status_module
 
     broken = tmp_path / "deployments" / "prod"
     broken.mkdir(parents=True)
     (broken / "x.yaml").write_text("config:\n  a: null\n    b: 1\n")
+    # status owns the glob now, so both modules have to point at the fixture.
     monkeypatch.setattr(index_module, "BASE_DIR", tmp_path)
+    monkeypatch.setattr(status_module, "BASE_DIR", tmp_path)
 
     with pytest.raises(click.ClickException):
         index_module.build_index()

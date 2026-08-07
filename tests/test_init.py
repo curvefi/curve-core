@@ -138,3 +138,17 @@ def test_init_command_rejects_a_chain_without_a_directory():
     result = CliRunner().invoke(init_command, ["mychain"])
     assert result.exit_code == 2
     assert "must include the directory" in result.output
+
+
+def test_free_text_answers_survive_the_yaml_round_trip():
+    """Plain scalars silently truncated a name at " #", so the file validated and was wrong."""
+    from scripts.init import render_config, validate_config
+
+    for field, value in [
+        ("network_name", "My Chain #1"),
+        ("network_name", "Chain: mainnet"),
+        ("network_name", 'Bob\'s "Chain"'),
+        ("native_currency_symbol", "NO"),  # YAML 1.1 reads this as False
+    ]:
+        answers = _answers(**{field: value})
+        assert getattr(validate_config("prod", "x", render_config(answers)), field) == value, (field, value)

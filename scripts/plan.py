@@ -24,6 +24,7 @@ from scripts.deploy.utils import (
     normalise_version,
     version_a_gt_version_b,
 )
+from scripts.status import contract_rows, rel
 from settings.config import BASE_DIR
 
 DEPLOY_DIR = BASE_DIR / "scripts" / "deploy"
@@ -82,13 +83,8 @@ def deployer_folders():
 
 
 def recorded_row(raw, slot):
-    """The deployment file's row for a dotted slot, or None."""
-    node = raw.get("contracts") or {}
-    for key in slot.split("/"):
-        if not isinstance(node, dict) or key not in node:
-            return None
-        node = node[key]
-    return node if isinstance(node, dict) and "address" in node else None
+    """The deployment file's row for a slot, or None. Same walker the checks use."""
+    return dict(contract_rows(raw)).get(slot.replace("/", "."))
 
 
 def plan_step(slot, raw, pinned=None):
@@ -162,7 +158,7 @@ def dry_run(chain_config_file):
     raw = yaml.safe_load(deployment.read_text(encoding="utf-8")) if deployment.exists() else {}
 
     click.echo(f"dry run  {chain_config_file}  chain_id {chain_settings.chain_id}  {chain_settings.rollup_type}")
-    click.echo(f"deployment file: {deployment.relative_to(BASE_DIR).as_posix()}" + ("" if raw else "  (none yet)"))
+    click.echo(f"deployment file: {rel(deployment)}" + ("" if raw else "  (none yet)"))
     click.echo("")
 
     steps = build_plan(chain_settings, raw or {})

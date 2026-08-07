@@ -11,6 +11,7 @@ what the RPC can answer, and refuses to write a file that ChainConfig would reje
 Read-only with respect to chains: the only RPC calls are eth_chainId and eth_getCode.
 """
 
+import json
 import textwrap
 from pathlib import Path
 
@@ -53,14 +54,15 @@ def render_config(answers):
     ref = answers.get("reference_token_addresses") or {}
 
     def quoted(value):
-        return f'"{value}"' if value else ""
+        # json.dumps, not f'"{value}"': a plain scalar truncates free text at " #".
+        return json.dumps(str(value)) if value else ""
 
     def token(name):
         address = ref.get(name)
         return f"  {name}: {quoted(address)}" if address else f"  {name}:  # fill in for your chain"
 
     lines = [
-        f"network_name: {answers['network_name']}",
+        f"network_name: {quoted(answers['network_name'])}",
         f"chain_id: {answers['chain_id']}",
         f"is_testnet: {answers['is_testnet']}",
         f"rollup_type: {answers['rollup_type']}",
@@ -69,15 +71,15 @@ def render_config(answers):
         lines.append("dao:")
         lines += [f"  {key}: {quoted(value)}" for key, value in dao.items() if value]
     lines += [
-        f"explorer_base_url: {answers['explorer_base_url']}",
+        f"explorer_base_url: {quoted(answers['explorer_base_url'])}",
         "",
         "# Not related to development, for further integrations",
         f"layer: {answers['layer']}",
-        f"native_currency_symbol: {answers['native_currency_symbol']}",
-        f"native_currency_coingecko_id: {answers['native_currency_coingecko_id']}",
-        f"public_rpc_url: {answers['public_rpc_url']}",
+        f"native_currency_symbol: {quoted(answers['native_currency_symbol'])}",
+        f"native_currency_coingecko_id: {quoted(answers['native_currency_coingecko_id'])}",
+        f"public_rpc_url: {quoted(answers['public_rpc_url'])}",
         f"wrapped_native_token: {quoted(answers['wrapped_native_token'])}",
-        f"logo_url: {answers['logo_url']}",
+        f"logo_url: {quoted(answers['logo_url'])}",
         "reference_token_addresses:",
         token("weth"),
         token("usdc"),
@@ -154,7 +156,7 @@ def init_command(chain, rpc, force):
         raise click.ClickException(f"the answers do not make a valid config:\n{exc}") from exc
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
+    path.write_text(text, encoding="utf-8", newline="\n")
     click.echo(f"\nwrote {rel(path)}")
     click.echo(
         textwrap.dedent(
