@@ -127,6 +127,76 @@ def test_error_label_keeps_the_nodes_own_message_for_in_band_errors():
     assert _error_label(RpcError("rate limit exceeded")).startswith("RPC error:")
 
 
+@pytest.mark.parametrize(
+    "exc, retried",
+    [
+        (urllib.error.HTTPError("u", 429, "Too Many Requests", {}, None), True),
+        (urllib.error.HTTPError("u", 503, "Unavailable", {}, None), True),
+        (TimeoutError("timed out"), True),
+        (RpcError("rate limit exceeded"), True),
+        # Waiting does not make a refusal into permission, or resolve a hostname.
+        (urllib.error.HTTPError("u", 403, "Forbidden", {}, None), False),
+        (urllib.error.URLError(OSError("Name or service not known")), False),
+        (RpcError("method not found"), False),
+    ],
+)
+def test_only_congestion_is_retried(exc, retried, monkeypatch):
+    """A dozen workers opening at once earns a 429 from a healthy endpoint, and that used to
+    be reported as unverified - throwing away what the chain was about to say."""
+    import scripts.status as status
+
+    calls = []
+
+    def fail(*args, **kwargs):
+        calls.append(1)
+        raise exc
+
+    monkeypatch.setattr(status, "_rpc_once", fail)
+    monkeypatch.setattr(status.time, "sleep", lambda _: None)
+
+    with pytest.raises(type(exc)):
+        status._rpc_call("http://rpc", "eth_getCode", [])
+    assert len(calls) == (status.RETRY_ATTEMPTS if retried else 1)
+
+
+def test_a_retry_that_succeeds_returns_the_answer(monkeypatch):
+    import scripts.status as status
+
+    answers = iter([urllib.error.HTTPError("u", 429, "Too Many Requests", {}, None), "0xcode"])
+
+    def flaky(*args, **kwargs):
+        value = next(answers)
+        if isinstance(value, Exception):
+            raise value
+        return value
+
+    monkeypatch.setattr(status, "_rpc_once", flaky)
+    monkeypatch.setattr(status.time, "sleep", lambda _: None)
+    assert status._rpc_call("http://rpc", "eth_getCode", []) == "0xcode"
+
+
+@pytest.mark.parametrize(
+    "labels, probes, dead",
+    [
+        # Refused or unresolvable on every probe: the published URL does not work.
+        (Counter({"HTTP 403": 25}), 25, True),
+        (Counter({"unreachable (gaierror)": 27}), 27, True),
+        # Congestion, already retried - the endpoint is busy, not broken.
+        (Counter({"HTTP 429": 25}), 25, False),
+        (Counter({"timeout": 25}), 25, False),
+        (Counter({"RPC error: rate limit exceeded": 25}), 25, False),
+        # Some answered, so the endpoint is up whatever the rest failed on.
+        (Counter({"HTTP 403": 5}), 25, False),
+    ],
+)
+def test_a_broken_endpoint_is_a_finding_not_a_gap(labels, probes, dead):
+    """public_rpc_url is the URL the UI reads. That it does not work is something the run
+    established, not something it failed to establish."""
+    from scripts.status import _endpoint_is_dead
+
+    assert _endpoint_is_dead(labels, probes) is dead
+
+
 def test_dominant_names_the_most_common_and_counts_the_rest():
     assert _dominant(Counter({"HTTP 429": 24})) == "HTTP 429"
     assert _dominant(Counter({"HTTP 429": 24, "timeout": 3, "HTTP 503": 1})) == "HTTP 429 and 2 other kinds"

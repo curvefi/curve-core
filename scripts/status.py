@@ -51,6 +51,7 @@ import re
 import subprocess
 import sys
 import textwrap
+import time
 import types
 import urllib.error
 import urllib.request
@@ -1024,33 +1025,76 @@ def check_onchain(deployments, workers=12):
         )
         for chain, rows in sorted(ghosts.items())
     ]
-    # A dead public RPC is infrastructure noise, not a deployment finding. Name the reason:
-    # every probe failing usually means back off and re-run, some probes failing usually
-    # means the endpoint is fine and those addresses are the problem.
+    # A URL that answered nothing is something established, not something missed. Congestion
+    # is excluded - already retried, so a busy chain stays below and stays unverified.
+    dead = {chain: labels for chain, labels in errors.items() if _endpoint_is_dead(labels, probed[chain])}
+    findings += [
+        Finding(
+            "ONCHAIN",
+            f"{chain}: public_rpc_url answered none of {probed[chain]} probes ({_dominant(labels)})",
+            "the UI reads this field, so the URL needs replacing - nothing was learned about the addresses",
+            subjects=(chain,),
+        )
+        for chain, labels in sorted(dead.items())
+    ]
     findings += [
         Finding(
             "ONCHAIN",
             f"{chain}: unverified, RPC failed on {sum(labels.values())}/{probed[chain]} "
             f"probes ({_dominant(labels)})",
-            (
-                "every probe failed - public_rpc_url is dead, or rate-limited by an earlier "
-                "run; re-run after a pause before believing it"
-                if sum(labels.values()) == probed[chain]
-                else "some probes failed - no conclusion drawn for those addresses"
-            ),
+            "no conclusion drawn for those addresses - the endpoint is busy, re-run after a pause",
             subjects=(chain,),
             unverified=True,
         )
         for chain, labels in sorted(errors.items())
+        if chain not in dead
     ]
     return findings
+
+
+# Already retried by the time a label survives, so these mean "still busy", not "broken".
+TRANSIENT_LABELS = ("HTTP 429", "HTTP 502", "HTTP 503", "HTTP 504", "timeout")
+
+
+def _endpoint_is_dead(labels, probes):
+    """Every probe failed, and none of it was congestion: the URL itself does not work."""
+    return sum(labels.values()) == probes and not any(
+        label.startswith(TRANSIENT_LABELS) or "limit" in label.lower() for label in labels
+    )
 
 
 class RpcError(RuntimeError):
     """A JSON-RPC call that answered, but with an error object instead of a result."""
 
 
-def _rpc_call(rpc, method, params, timeout=25):
+# "Later", not "no": a dozen workers opening at once earns a 429 from a healthy endpoint.
+RETRY_STATUS = (429, 502, 503, 504)
+RETRY_ATTEMPTS = 3
+RETRY_BACKOFF = 1.5  # seconds before the second attempt, doubled for each one after
+
+
+def _transient(exc):
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code in RETRY_STATUS
+    if isinstance(exc, TimeoutError):
+        return True
+    if isinstance(exc, urllib.error.URLError):
+        # A refused connection or an unresolvable host will not fix itself in 3 seconds.
+        return isinstance(getattr(exc, "reason", None), TimeoutError)
+    return isinstance(exc, RpcError) and "limit" in str(exc).lower()
+
+
+def _rpc_call(rpc, method, params, timeout=25, attempts=RETRY_ATTEMPTS):
+    for attempt in range(attempts):
+        try:
+            return _rpc_once(rpc, method, params, timeout)
+        except Exception as exc:
+            if not _transient(exc) or attempt == attempts - 1:
+                raise
+            time.sleep(RETRY_BACKOFF * 2**attempt)
+
+
+def _rpc_once(rpc, method, params, timeout):
     body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": method, "params": params}).encode()
     request = urllib.request.Request(
         rpc, data=body, headers={"content-type": "application/json", "User-Agent": "Mozilla/5.0"}

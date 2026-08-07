@@ -243,8 +243,39 @@ python manage.py status --wiring    # factory pointers and ownership match the f
 python manage.py status --bytecode  # recompile and compare against deployed code
 ```
 
+A probe that fails on congestion — `429`, `503`, a timeout — is retried with backoff, since
+a dozen workers opening at once earns a rate limit from an endpoint that is perfectly
+healthy. What survives that is reported two ways: an endpoint that answered *nothing* for a
+reason waiting cannot fix is a broken `public_rpc_url` and a finding in its own right, while
+anything else leaves those addresses unverified rather than judged.
+
 `--bytecode` is the only check that proves `contract_path` / `contract_version` /
 `evm_version` describe what is really on chain. Normal contracts must match by prefix (the
 tail is immutables and constructor args); blueprints must match `blueprint_bytecode` minus
 the 10-byte EIP-5202 wrapper that `deploy_via_create2` prepends. It is slow — compilation
 is cached per source, but it recompiles every distinct contract.
+
+### Nightly monitor
+
+A chain deviates when someone touches it, not when someone opens a PR here, so the on-chain
+checks also run on a schedule and keep one GitHub issue in sync with what they find. Every
+probe goes to the `public_rpc_url` the deployment file already records, so the job needs no
+secrets — and an endpoint that answers nothing is reported as a deviation in its own right,
+since that is the URL the UI reads.
+
+```
+python manage.py status --onchain --wiring --json onchain.json
+python manage.py monitor onchain.json --previous issue.md --body body.md --delta delta.md
+```
+
+The issue opens on a **prod** deviation, comments when that set changes, and closes itself
+when prod is clean again. Devnet deviations are listed in the body but never open or close
+it: a wiped testnet is real information and not a 6am alert, and devnet churn alone would
+keep the issue open permanently. Probes that got no answer are listed the same way, for the
+same reason — a public endpoint that rate-limits tonight and answers tomorrow would
+otherwise notify the team every other night.
+
+`--body` is empty when prod is clean and `--delta` is empty when nothing changed, which is
+how the workflow decides whether to close and whether to comment. Coverage is counted in
+chains rather than findings, and a chain some other finding already names is not counted as
+unchecked — one unreachable chain otherwise reports itself several times over.

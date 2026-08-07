@@ -1,0 +1,74 @@
+name: on-chain health
+
+# A deviation appears when someone touches a chain, not when someone opens a PR here.
+# GitHub disables a public repo's scheduled workflow after 60 days with no activity.
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  LABEL: onchain-health
+  TITLE: "On-chain deviations"
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install poetry==1.8.3
+      - run: poetry install --no-interaction
+
+      # No secrets: every probe goes to the public_rpc_url the deployment file records.
+      - name: Probe every chain
+        run: poetry run python manage.py status --onchain --wiring --json onchain.json || true
+
+      - name: Find the open issue
+        id: issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          number=$(gh issue list --label "$LABEL" --state open --limit 1 --json number -q '.[0].number')
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+          if [ -n "$number" ]; then
+            gh issue view "$number" --json body -q .body > previous.md
+          else
+            : > previous.md
+          fi
+
+      - name: Render the report
+        run: |
+          poetry run python manage.py monitor onchain.json \
+            --previous previous.md --body body.md --delta delta.md \
+            --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
+      # The issue is the alert, so the job stays green - a permanently red nightly is ignored.
+      - name: Update the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ steps.issue.outputs.number }}
+        run: |
+          if [ ! -s body.md ]; then
+            if [ -n "$NUMBER" ]; then
+              gh issue close "$NUMBER" --comment "Every probe clean - reopening automatically if that changes."
+            fi
+            exit 0
+          fi
+          if [ -z "$NUMBER" ]; then
+            gh label create "$LABEL" --color FBCA04 --description "nightly on-chain probe" 2>/dev/null || true
+            # Opening notifies and editing does not; that is the whole notification model.
+            gh issue create --title "$TITLE" --label "$LABEL" --body-file body.md
+            exit 0
+          fi
+          gh issue edit "$NUMBER" --body-file body.md
+          if [ -s delta.md ]; then
+            gh issue comment "$NUMBER" --body-file delta.md
+          fi
