@@ -25,22 +25,9 @@ from settings.config import BASE_DIR
 INDEX_PATH = BASE_DIR / "registry" / "index.json"
 SCHEMA_PATH = BASE_DIR / "registry" / "schema.json"
 
-# Config keys worth publishing: identity, how to reach the chain, and how to render it.
-# Deliberately not the whole config - `dao` and `reference_token_addresses` are nested and
-# belong to the file itself, which the index points at.
-CONFIG_KEYS = (
-    "network_name",
-    "chain_id",
-    "layer",
-    "is_testnet",
-    "rollup_type",
-    "native_currency_symbol",
-    "native_currency_coingecko_id",
-    "explorer_base_url",
-    "public_rpc_url",
-    "wrapped_native_token",
-    "multicall3",
-)
+# The config block goes out verbatim. curve-api-core reads config.* straight off the file,
+# so an allowlist here means a key it starts reading is served as undefined until someone
+# notices - and `reference_token_addresses`, which it does read, was already being dropped.
 
 
 def contract_addresses(raw):
@@ -70,14 +57,12 @@ def build_index():
 
     chains = []
     for key, (path, raw) in deployments.items():
-        config = raw.get("config") or {}
         chains.append(
             {
                 "id": key,
-                "file_name": config.get("file_name") or path.stem,
                 "file_path": path.relative_to(BASE_DIR / "deployments").as_posix(),
                 "deployed_by_core": key not in out_of_scope,
-                **{name: config.get(name) for name in CONFIG_KEYS},
+                "config": raw.get("config") or {},
                 "contracts": dict(sorted(contract_addresses(raw))),
             }
         )

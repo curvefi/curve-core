@@ -519,6 +519,7 @@ API_CONSUMED_CONFIG_KEYS = (
     "native_currency_coingecko_id",
     "platform_coingecko_id",
     "public_rpc_url",
+    "reference_token_addresses",
 )
 
 

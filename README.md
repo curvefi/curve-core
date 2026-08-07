@@ -151,8 +151,8 @@ use mocks in production.
 `deployments/` is the cross-chain Curve address registry. Two generated files make it
 readable without walking the tree or calling the GitHub API with a token:
 
-- [registry/index.json](/registry/index.json) - every chain, its config essentials, and every
-  recorded address flattened to `amm.stableswap.factory` keys.
+- [registry/index.json](/registry/index.json) - every chain, its `config` block verbatim, and
+  every recorded address flattened to `amm.stableswap.factory` keys.
 - [registry/schema.json](/registry/schema.json) - JSON Schema for a deployment file, generated
   from the pydantic models.
 
@@ -170,6 +170,20 @@ The index covers every recorded chain, including the ones this repo did not depl
 hand-maintained for curve-api-core, so a registry without them would be less useful than the
 directory it replaces. Each carries `deployed_by_core`, set from the same rule `status` uses to
 decide what it checks, so filter on that rather than maintaining a list.
+
+`config` goes out verbatim rather than as a chosen subset. curve-api-core reads `config.*`
+straight off the file, so an allowlist here would serve a key it starts reading as `undefined`
+until someone noticed — which had already happened to `reference_token_addresses`.
+
+The index is the whole chain list in one unauthenticated request:
+
+```
+curl -s https://raw.githubusercontent.com/curvefi/curve-core/main/registry/index.json
+```
+
+Contract entries carry the address only. Anything that needs a row's version or deployment
+metadata should fetch that chain's file by its `file_path`, which is also a raw request and
+also needs no token.
 
 ## Deployment status and drift
 
