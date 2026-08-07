@@ -19,7 +19,7 @@ pydantic = "^2.8.2"
 titanoboa = "0.2.6"
 
 [tool.poetry.group.dev.dependencies]
-black = "24.4.2"
+black = "26.3.1"
 isort = "5.13.2"
 
 [tool.black]
