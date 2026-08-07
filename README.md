@@ -185,6 +185,22 @@ Contract entries carry the address only. Anything that needs a row's version or 
 metadata should fetch that chain's file by its `file_path`, which is also a raw request and
 also needs no token.
 
+### The registry as a page
+
+Both artifacts are also published on GitHub Pages, alongside one searchable page over them —
+every chain, what it has per contract family, and every address linked to its explorer:
+
+```
+python manage.py site   # write site/
+```
+
+CI builds and deploys it on every push to `main` that touches a deployment. `site/` is not
+committed: it is derived from `registry/index.json`, which is, so the HTML adds nothing to
+review. The page renders from the committed artifact rather than rebuilding the index, so the
+table and the JSON served beside it cannot describe different data.
+
+It reports what is *recorded*, not what is live — `status --onchain` is what checks that.
+
 ## Deployment status and drift
 
 To see what is deployed and what would change if the deployer ran again:
