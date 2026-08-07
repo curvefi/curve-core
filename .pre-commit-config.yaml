@@ -5,6 +5,9 @@ repos:
     rev: v4.3.0
     hooks:
       - id: end-of-file-fixer
+        # Not contracts/: vyper hashes the source into the deploy bytecode, so a trailing
+        # newline changes what a blueprint puts on chain. 110 recorded rows are blueprints.
+        exclude: ^contracts/
   - repo: https://github.com/pycqa/isort # sorts imports
     rev: 5.13.2
     hooks:

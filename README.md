@@ -271,6 +271,11 @@ tail is immutables and constructor args); blueprints must match `blueprint_bytec
 the 10-byte EIP-5202 wrapper that `deploy_via_create2` prepends. It is slow — compilation
 is cached per source, but it recompiles every distinct contract.
 
+Vyper hashes the source into the *deploy* bytecode, so editing a `.vy` file changes what a
+blueprint puts on chain even when the change is only whitespace — runtime bytecode, and so
+every normal contract, is unaffected. That is why `end-of-file-fixer` skips
+[contracts](/contracts): 110 of the 632 recorded rows are blueprints.
+
 ### Nightly monitor
 
 A chain deviates when someone touches it, not when someone opens a PR here, so the on-chain

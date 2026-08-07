@@ -13,9 +13,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install black==24.4.2 isort==5.13.2
-      - run: black --check --config pyproject.toml .
-      - run: isort --check-only --line-length=120 .
+      # Hooks and their pins come from .pre-commit-config.yaml, so CI and the local hook
+      # cannot drift apart. It also runs end-of-file-fixer, which CI never did - the local
+      # hook only sees staged files, so eight files had been sitting unfixed.
+      - uses: pre-commit/action@v3.0.0
 
   test:
     runs-on: ubuntu-latest
