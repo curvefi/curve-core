@@ -370,6 +370,8 @@ def test_pre_curve_core_chains_are_out_of_scope():
 
     everything, _ = load_deployments()
     assert legacy_deployments(everything, chain_configs()) == {"prod/avalanche", "prod/fantom", "prod/x_layer"}
+
+
 def test_status_chain_accepts_a_config_with_no_deployment():
     """`init` leaves exactly this state, and the hint it prints used to fail."""
     from scripts.status import chain_configs, load_deployments

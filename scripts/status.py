@@ -252,6 +252,16 @@ def legacy_deployments(deployments, configs) -> set:
     return legacy
 
 
+def in_scope(deployments, configs) -> tuple[dict, set]:
+    """(kept, skipped) - what curve-core deploys, and what predates it.
+
+    The single definition of scope. `status` and `index` both call it, so the report cannot
+    cover a different set of chains than the published index.
+    """
+    skipped = legacy_deployments(deployments, configs)
+    return {key: value for key, value in deployments.items() if key not in skipped}, skipped
+
+
 def example_configs() -> dict[str, Path]:
     """The onboarding templates, kept apart from real chains so COVERAGE does not report
     them as configs that were never deployed."""
@@ -1562,11 +1572,9 @@ def status_command(chain, only, onchain, wiring, bytecode, from_commit, summary,
     deployments, unreadable = load_deployments(chain)
     configs = chain_configs()
 
-    # Scope is what curve-core deploys. avalanche, fantom and x_layer predate this repo and
-    # cannot be targeted by a deploy, so carrying them here only adds noise.
-    out_of_scope = legacy_deployments(everything, configs)
+    # Scope is what curve-core deploys; index applies the same rule.
+    everything, out_of_scope = in_scope(everything, configs)
     targeted_out_of_scope = bool(chain) and bool(set(deployments) & out_of_scope)
-    everything = {k: v for k, v in everything.items() if k not in out_of_scope}
     deployments = {k: v for k, v in deployments.items() if k not in out_of_scope}
     if targeted_out_of_scope and not deployments:
         raise click.UsageError(f"{chain!r} was not deployed by this repo - out of scope")

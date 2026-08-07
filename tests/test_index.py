@@ -14,13 +14,20 @@ def test_index_is_deterministic():
     assert render(build_index()) == render(build_index())
 
 
-def test_index_includes_chains_that_fail_validation():
-    """avalanche/fantom/x_layer are hand-written catalog rows that pydantic rejects, but they
-    are real chains with real addresses. A validation-gated index would drop them silently."""
+def test_index_publishes_every_chain_and_flags_what_status_skips():
+    """status skips chains it cannot deploy; the registry still publishes them, because they
+    are hand-maintained for curve-api-core. Both read the same in_scope() verdict, so they
+    cannot come to disagree about which chain is which."""
     from scripts.index import build_index
+    from scripts.status import chain_configs, in_scope, load_deployments
 
-    ids = {c["id"] for c in build_index()["chains"]}
-    assert {"prod/avalanche", "prod/fantom", "prod/x_layer"} <= ids
+    everything, _ = load_deployments()
+    scoped, skipped = in_scope(everything, chain_configs())
+    entries = {c["id"]: c for c in build_index()["chains"]}
+
+    assert set(entries) == set(everything), "the registry must not drop a chain"
+    assert {i for i, c in entries.items() if c["deployed_by_core"]} == set(scoped)
+    assert {i for i, c in entries.items() if not c["deployed_by_core"]} == skipped
 
 
 def test_index_excludes_debug_and_example_files():

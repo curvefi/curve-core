@@ -17,7 +17,7 @@ import json
 import click
 
 from scripts.deploy.models import DeploymentConfig
-from scripts.status import contract_rows, load_deployments, rel
+from scripts.status import chain_configs, contract_rows, in_scope, load_deployments, rel
 from settings.config import BASE_DIR
 
 # Deliberately not inside deployments/: that directory holds nothing but chain folders, and
@@ -56,12 +56,17 @@ def contract_addresses(raw):
 
 
 def build_index():
-    """Every deployment file, flattened. Uses status's loader so "which files count" is
-    decided once, and raises rather than shipping an index that is missing a chain."""
+    """Every recorded chain, flattened, including the ones curve-core did not deploy.
+
+    Those predate this repo and are hand-maintained for curve-api-core, so a registry that
+    dropped them would be less useful than the directory it replaces. `deployed_by_core`
+    marks them, using the same in_scope() verdict `status` uses to skip them.
+    """
     deployments, unreadable = load_deployments()
     if unreadable:
         names = ", ".join(rel(path) for path, _ in unreadable.values())
         raise click.ClickException(f"not valid YAML: {names}")
+    _, out_of_scope = in_scope(deployments, chain_configs())
 
     chains = []
     for key, (path, raw) in deployments.items():
@@ -71,6 +76,7 @@ def build_index():
                 "id": key,
                 "file_name": config.get("file_name") or path.stem,
                 "file_path": path.relative_to(BASE_DIR / "deployments").as_posix(),
+                "deployed_by_core": key not in out_of_scope,
                 **{name: config.get(name) for name in CONFIG_KEYS},
                 "contracts": dict(sorted(contract_addresses(raw))),
             }

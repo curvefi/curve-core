@@ -166,8 +166,10 @@ python manage.py index          # write both
 python manage.py index --check  # fail if either is stale (CI runs this)
 ```
 
-The index includes chains whose files predate this repo and do not validate, since they are
-still real deployments consumers need.
+The index covers every recorded chain, including the ones this repo did not deploy — they are
+hand-maintained for curve-api-core, so a registry without them would be less useful than the
+directory it replaces. Each carries `deployed_by_core`, set from the same rule `status` uses to
+decide what it checks, so filter on that rather than maintaining a list.
 
 ## Deployment status and drift
 
