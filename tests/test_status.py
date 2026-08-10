@@ -197,6 +197,58 @@ def test_a_broken_endpoint_is_a_finding_not_a_gap(labels, probes, dead):
     assert _endpoint_is_dead(labels, probes) is dead
 
 
+def test_changed_chains_reads_deployment_paths_as_chain_keys(monkeypatch):
+    """CI probes only what a branch touched, so a path that maps to the wrong key silently
+    checks the wrong chain."""
+    import scripts.status as status
+
+    listing = "\n".join(
+        [
+            "deployments/prod/sonic.yaml",
+            "deployments/devnet/arc.yaml",
+            "deployments/debug/ink.yaml",  # dry-run output, never a real chain
+            "deployments/examples/example.yaml",
+            "deployments/prod/notes.md",  # not a deployment file
+            "scripts/status.py",  # outside deployments; git already filtered, belt and braces
+        ]
+    )
+    monkeypatch.setattr(status, "_git", lambda *args: listing)
+    assert status.changed_chains("origin/main") == {"prod/sonic", "devnet/arc"}
+
+
+def test_changed_chains_reports_an_unusable_ref_rather_than_an_empty_set(monkeypatch):
+    """An empty set means "nothing changed" and would silently probe nothing at all."""
+    import scripts.status as status
+
+    monkeypatch.setattr(status, "_git", lambda *args: None)
+    assert status.changed_chains("nope") is None
+
+
+def test_changed_chains_diffs_the_working_tree_against_the_merge_base(monkeypatch):
+    """Merge base, or work that landed on the base branch reads as this branch's. Working tree
+    rather than HEAD, or an uncommitted edit is invisible - which it was, first time round."""
+    import scripts.status as status
+
+    calls = []
+
+    def fake_git(*args):
+        calls.append(args)
+        return "abc123" if args[0] == "merge-base" else ""
+
+    monkeypatch.setattr(status, "_git", fake_git)
+    status.changed_chains("origin/main")
+
+    assert calls[0] == ("merge-base", "origin/main", "HEAD")
+    assert calls[1] == ("diff", "--name-only", "abc123", "--", "deployments")
+
+
+def test_changed_chains_gives_up_when_the_merge_base_fails(monkeypatch):
+    import scripts.status as status
+
+    monkeypatch.setattr(status, "_git", lambda *args: None)
+    assert status.changed_chains("nope") is None
+
+
 def test_dominant_names_the_most_common_and_counts_the_rest():
     assert _dominant(Counter({"HTTP 429": 24})) == "HTTP 429"
     assert _dominant(Counter({"HTTP 429": 24, "timeout": 3, "HTTP 503": 1})) == "HTTP 429 and 2 other kinds"

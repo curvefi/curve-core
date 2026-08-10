@@ -286,6 +286,16 @@ python manage.py status --wiring    # factory pointers and ownership match the f
 python manage.py status --bytecode  # recompile and compare against deployed code
 ```
 
+`--changed-since REF` narrows any of them to the chains whose deployment file differs from
+`REF`, measured from the merge base so work that landed on the base branch meanwhile is not
+counted, and against the working tree so an uncommitted edit still shows. CI runs it on every
+pull request that touches [deployments](/deployments) and comments with what it found on those
+chains — a hand-edited address is exactly what no offline check can catch.
+
+```
+python manage.py status --changed-since origin/main --onchain --wiring
+```
+
 A probe that fails on congestion — `429`, `503`, a timeout — is retried with backoff, since
 a dozen workers opening at once earns a rate limit from an endpoint that is perfectly
 healthy. What survives that is reported two ways: an endpoint that answered *nothing* for a

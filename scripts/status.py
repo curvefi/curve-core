@@ -1169,6 +1169,25 @@ def _git(*args):
     return result.stdout.strip() if result.returncode == 0 else None
 
 
+def changed_chains(ref):
+    """Chain keys whose deployment file differs from `ref`, or None if the ref is unusable.
+
+    Diffed from the merge base so work that landed on the base branch meanwhile does not read
+    as this branch's - the same reason `compare` uses it. Against the working tree rather than
+    HEAD, so an edit you have not committed yet still counts locally.
+    """
+    base = _git("merge-base", ref, "HEAD")
+    listing = _git("diff", "--name-only", base, "--", "deployments") if base else None
+    if listing is None:
+        return None
+    keys = set()
+    for line in listing.splitlines():
+        path = Path(line)
+        if path.suffix == ".yaml" and not {"debug", "examples"} & set(path.parts):
+            keys.add(f"{path.parent.name}/{path.stem}")
+    return keys
+
+
 def source_provenance(row):
     """(state, source) for a row, where state is why it can or cannot be compared.
 
@@ -1608,7 +1627,8 @@ def render_summary(console, deployments, configs, findings, all_deployments=None
 @click.option("--summary", is_flag=True, help="one-row-per-chain table instead of full findings")
 @click.option("--brief", is_flag=True, help="one line per finding, no explanations")
 @click.option("--json", "json_path", metavar="PATH", default=None, help="write findings as JSON")
-def status_command(chain, only, onchain, wiring, bytecode, from_commit, summary, brief, json_path):
+@click.option("--changed-since", metavar="REF", default=None, help="only chains whose deployment file changed vs REF")
+def status_command(chain, only, onchain, wiring, bytecode, from_commit, summary, brief, json_path, changed_since):
     """Report what is deployed and what the next deploy would change."""
     if summary and brief:
         # Both replace the findings list with something else; there is no sensible merge.
@@ -1630,6 +1650,14 @@ def status_command(chain, only, onchain, wiring, bytecode, from_commit, summary,
         # UsageError exits 2, keeping "invoked wrong" apart from "drift found" (1) for CI.
         raise click.UsageError(f"no deployment or chain config found for {chain!r}")
     selected = (set(deployments) | set(unreadable) | ({config_match} if config_match else set())) if chain else None
+
+    if changed_since:
+        touched = changed_chains(changed_since)
+        if touched is None:
+            raise click.UsageError(f"{changed_since!r} is not a ref this clone can diff against")
+        deployments = {k: v for k, v in deployments.items() if k in touched}
+        unreadable = {k: v for k, v in unreadable.items() if k in touched}
+        selected = set(deployments) | set(unreadable)
 
     console = Console()
     prod = sum(1 for path, _ in deployments.values() if path.parent.name == "prod")

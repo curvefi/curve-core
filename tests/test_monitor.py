@@ -58,6 +58,29 @@ def test_only_prod_opens_the_issue():
     assert [f["summary"] for f in reported] == ["devnet/megaeth: 24/24 addresses have NO bytecode"]
 
 
+def test_scope_all_lets_devnet_page():
+    """A pull request that edited a devnet file is asking about that chain; only the nightly
+    run has a reason to ignore devnet churn."""
+    from scripts.monitor import classify
+
+    findings = [_finding("ONCHAIN", "devnet/megaeth: no bytecode", subjects=["devnet/megaeth"])]
+    paging, reported, _ = classify(findings, scope="all")
+
+    assert len(paging) == 1 and reported == []
+    assert classify(findings)[0] == [], "prod scope must still ignore it"
+
+
+def test_scope_all_does_not_label_a_devnet_chain_as_prod():
+    """The headline and section heading are hardcoded to prod in the nightly shape; a pull
+    request touching devnet/arc would have filed it under "Prod"."""
+    from scripts.monitor import render_body
+
+    body = render_body([_finding("ONCHAIN", "devnet/arc: no bytecode", subjects=["devnet/arc"])], scope="all")
+
+    assert "on prod" not in body and "### Prod" not in body
+    assert "1 deviation" in body and "devnet/arc" in body
+
+
 def test_a_devnet_only_run_writes_no_body():
     from scripts.monitor import classify, render_body
 

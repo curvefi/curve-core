@@ -45,6 +45,55 @@ jobs:
       - run: poetry install --no-interaction
       - run: poetry run python manage.py index --check
 
+  onchain:
+    # Only the chains this PR touched, and only on chain. The offline checks run in `drift`
+    # for every chain; this catches a hand-edited address, which nothing offline can.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # --changed-since diffs against the merge base
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install poetry==1.8.3
+      - run: poetry install --no-interaction
+
+      - name: Probe the chains this branch changed
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          poetry run python manage.py status --changed-since "$base" --onchain --wiring --json touched.json || true
+          test -f touched.json # no findings still writes a file; a missing one is a broken job
+
+      # --scope all: the nightly run ignores devnet because it churns, but a PR that edited
+      # a devnet file is asking about exactly that chain.
+      - name: Render the report
+        id: report
+        run: |
+          poetry run python manage.py monitor touched.json --scope all --body onchain.md
+          # monitor writes the file either way; empty means nothing deviated.
+          test -s onchain.md && echo "found=true" >> "$GITHUB_OUTPUT" || echo "found=false" >> "$GITHUB_OUTPUT"
+
+      - name: Post
+        if: steps.report.outputs.found == 'true'
+        uses: marocchino/sticky-pull-request-comment@v2
+        continue-on-error: true
+        with:
+          header: onchain-touched
+          path: onchain.md
+
+      - name: Clear
+        if: steps.report.outputs.found == 'false'
+        uses: marocchino/sticky-pull-request-comment@v2
+        continue-on-error: true
+        with:
+          header: onchain-touched
+          delete: true
+
   drift:
     # Compares this branch against its base rather than a committed count: a fix needs no
     # bookkeeping, a new contract version reads as new work, and a fault already on the base

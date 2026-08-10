@@ -43,12 +43,14 @@ def subjects(finding):
     return set(finding.get("subjects") or ())
 
 
-def pages(finding):
+def pages(finding, scope="prod"):
     """A finding with no subject is repo-wide; treat it as prod rather than lose it."""
+    if scope == "all":
+        return True
     return not subjects(finding) or any(key.startswith(PAGING_ENV) for key in subjects(finding))
 
 
-def classify(findings):
+def classify(findings, scope="prod"):
     """(paging, reported, unverified) among the on-chain kinds.
 
     `unverified` drops any chain a deviation already names: a chain with no code cannot
@@ -58,8 +60,8 @@ def classify(findings):
     deviations = [f for f in probes if not f.get("unverified")]
     named = {key for f in deviations for key in subjects(f)}
     return (
-        [f for f in deviations if pages(f)],
-        [f for f in deviations if not pages(f)],
+        [f for f in deviations if pages(f, scope)],
+        [f for f in deviations if not pages(f, scope)],
         [f for f in probes if f.get("unverified") and not subjects(f) & named],
     )
 
@@ -108,27 +110,31 @@ def render_finding(finding):
 def render_coverage(probed, unverified, when):
     """Counted in chains, not findings: one silent chain produces several unverified rows."""
     incomplete = {key for f in unverified for key in subjects(f)}
-    parts = [f"{plural(probed, 'chain')} probed" if probed else "probed"]
+    parts = [f"{plural(probed, 'chain')} probed"] if probed else []
     if incomplete:
         parts.append(f"{len(incomplete)} incompletely")
-    return f"{', '.join(parts)} — {when}."
+    return f"{', '.join(parts)} — {when}." if parts else f"{when}."
 
 
-def render_body(paging, reported=(), unverified=(), probed=None, when=None, run_url=None):
-    """The issue body. Empty when prod is clean - that is how the workflow decides to close."""
+def render_body(paging, reported=(), unverified=(), probed=None, when=None, run_url=None, scope="prod"):
+    """The issue body. Empty when nothing in scope deviates - how the workflow decides to close."""
     if not paging:
         return ""
     when = when or datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
-    headline = f"**{plural(len(paging), 'deviation')} on prod**"
+    # Under "all" there is no prod/devnet split to name, so neither the headline nor the
+    # section heading claims one - a devnet chain filed under "Prod" reads as a bug.
+    headline = f"**{plural(len(paging), 'deviation')}{' on prod' if scope == 'prod' else ''}**"
     if reported:
         headline += f", {len(reported)} on devnet"
     lines = ["## On-chain health", "", f"{headline}. {render_coverage(probed, unverified, when)}", ""]
 
-    for title, rows in (("Prod", paging), ("Devnet", reported)):
+    sections = (("Prod", paging), ("Devnet", reported)) if scope == "prod" else ((None, paging),)
+    for title, rows in sections:
         if not rows:
             continue
-        lines.append(f"### {title}")
+        if title:
+            lines.append(f"### {title}")
         for row in rows:
             lines += render_finding(row)
         lines.append("")
@@ -169,10 +175,18 @@ def render_delta(added, fixed, unchanged):
 @click.option("--body", "body_path", metavar="PATH", default=None, help="write the new issue body here")
 @click.option("--delta", "delta_path", metavar="PATH", default=None, help="write the change comment here")
 @click.option("--run-url", metavar="URL", default=None, help="link back to the workflow run")
-def monitor_command(findings, previous, body_path, delta_path, run_url):
+@click.option(
+    "--scope",
+    type=click.Choice(("prod", "all")),
+    default="prod",
+    help="which deviations open the issue; 'all' also counts devnet, for a pull request",
+)
+def monitor_command(findings, previous, body_path, delta_path, run_url, scope):
     """Turn a `status --json` run into the body and the change comment for one issue."""
-    paging, reported, unverified = classify(json.loads(Path(findings).read_text(encoding="utf-8")))
-    body = render_body(paging, reported, unverified, probed=scope_size(), run_url=run_url)
+    paging, reported, unverified = classify(json.loads(Path(findings).read_text(encoding="utf-8")), scope)
+    # A pull request probed only what it touched, so the fleet size is not the denominator.
+    probed = scope_size() if scope == "prod" else None
+    body = render_body(paging, reported, unverified, probed=probed, run_url=run_url, scope=scope)
 
     was = previous_deviations(
         Path(previous).read_text(encoding="utf-8") if previous and Path(previous).exists() else ""
