@@ -17,6 +17,7 @@ import json
 import os
 import re
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from collections import defaultdict
@@ -29,6 +30,13 @@ from settings.config import BASE_DIR, settings
 ETHERSCAN_API = "https://api.etherscan.io/v2/api"
 CHAINLIST = "https://api.etherscan.io/v2/chainlist"
 THROTTLE = 0.25  # seconds between submissions; the free tier allows 5 calls a second
+
+# Blockscout, for the 12 chains Etherscan does not list. Same standard json, no key, and it
+# matches on runtime rather than creation bytecode.
+BLOCKSCOUT_VERSION = "/api/v2/config/backend-version"
+BLOCKSCOUT_CONFIG = "/api/v2/smart-contracts/verification/config"
+BLOCKSCOUT_VERIFY = "/api/v2/smart-contracts/{address}/verification/via/vyper-standard-input"
+BLOCKSCOUT_CONTRACT = "/api/v2/smart-contracts/{address}"
 
 # `import contracts.governance.relayer.relayer_v_100 as Relayer` - a module in this repo, which
 # has to travel with the source. vyper.interfaces and ethereum.ercs are builtins and must not.
@@ -114,8 +122,8 @@ def etherscan_chains():
     return {int(entry["chainid"]) for entry in listed.get("result", []) if str(entry.get("chainid", "")).isdigit()}
 
 
-def plan_row(slot, row, chain_id, supported):
-    """(action, detail) for one recorded contract."""
+def plan_row(slot, row, chain_id, route):
+    """(action, detail) for one recorded contract. `route` is what resolve_route decided."""
     if row.get("deployment_type") == "blueprint":
         return "skip", "blueprint - the chain holds initcode, which no explorer verifies"
     if not row.get("contract_path"):
@@ -124,13 +132,25 @@ def plan_row(slot, row, chain_id, supported):
         return "blocked", f"source is gone: {rel(source_path(row))}"
     if not (row.get("compiler_settings") or {}).get("compiler_version"):
         return "blocked", "no compiler_version recorded"
-    if chain_id not in supported:
-        return "blocked", f"chain {chain_id} is not on the Etherscan v2 chainlist"
+    if not route:
+        return "blocked", f"chain {chain_id} is on no Etherscan chainlist and its explorer is not Blockscout"
     state, _ = source_provenance(row)
     if state == "unreachable":
         return "blocked", "the deploy commit is not in this clone - fetch full history"
     note = {"drifted": " (source from the deploy commit)", "unpinned": " (no deploy commit recorded)"}
-    return "verify", f"vyper:{row['compiler_settings']['compiler_version']}{note.get(state, '')}"
+    return "verify", f"{route[0]} vyper:{row['compiler_settings']['compiler_version']}{note.get(state, '')}"
+
+
+def resolve_route(chain_id, config):
+    """("etherscan", None) | ("blockscout", base_url) | None.
+
+    Etherscan first: it covers most chains on one key, and Blockscout is the fallback for the
+    12 it does not list rather than a competing choice.
+    """
+    if chain_id in etherscan_chains():
+        return "etherscan", None
+    base = blockscout_base(config)
+    return ("blockscout", base) if base else None
 
 
 def submit(row, address, chain_id, api_key):
@@ -153,6 +173,97 @@ def submit(row, address, chain_id, api_key):
         answer = json.load(response)
     # status "1" means accepted for checking, not verified - the result is a guid to poll.
     return (answer.get("status") == "1", answer.get("result") or answer.get("message") or "no response")
+
+
+def _json(url, data=None, headers=None, timeout=30):
+    # Blockscout instances sit behind Cloudflare, which 403s the default Python-urllib agent.
+    request = urllib.request.Request(url, data=data, headers={"User-Agent": "Mozilla/5.0", **(headers or {})})
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        return json.load(response)
+
+
+def blockscout_base(config):
+    """The explorer's API root if it is a Blockscout instance, else None.
+
+    Asked rather than inferred from the hostname: only 3 of the 12 have "blockscout" in the
+    name, the rest are white-labelled (explorer.inkonchain.com, explorer.plume.org).
+    """
+    base = (config.get("explorer_base_url") or "").rstrip("/")
+    if not base:
+        return None
+    try:
+        # Key presence, not a truthy value - an instance reporting a blank version is still one.
+        return base if "backend_version" in _json(base + BLOCKSCOUT_VERSION, timeout=20) else None
+    except Exception:
+        return None
+
+
+def blockscout_compiler(base, version):
+    """Blockscout wants "v0.3.10+commit.91361694"; the deployment file records "0.3.10".
+
+    The instance publishes the list it will accept, so the commit hash is looked up rather
+    than hardcoded - they differ per release and a wrong one fails the build silently.
+    """
+    offered = _json(base + BLOCKSCOUT_CONFIG, timeout=25).get("vyper_compiler_versions") or []
+    exact = [v for v in offered if v.startswith(f"v{version}+commit.")]
+    return exact[0] if exact else None
+
+
+def _multipart(fields, filename, content):
+    """A form-data body, hand-rolled - the repo has no requests, and this is the one caller."""
+    boundary = "----curve-core-verify"
+    body = "".join(
+        f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n{value}\r\n'
+        for name, value in fields.items()
+    )
+    body += (
+        f'--{boundary}\r\nContent-Disposition: form-data; name="files[0]"; filename="{filename}"\r\n'
+        f"Content-Type: application/json\r\n\r\n{content}\r\n--{boundary}--\r\n"
+    )
+    return f"multipart/form-data; boundary={boundary}", body.encode()
+
+
+def blockscout_verified(address, base):
+    """Whether the explorer already holds source for this contract.
+
+    Asked before submitting, because instances disagree about what a re-submission means: ink
+    answers "verification started", tac answers a bare 404. Reading that 404 as a broken route
+    reported 21 already-verified contracts as failures.
+    """
+    try:
+        return bool(_json(base + BLOCKSCOUT_CONTRACT.format(address=address), timeout=25).get("is_verified"))
+    except Exception:
+        return False
+
+
+def submit_blockscout(row, address, base, compiler):
+    """Start verification. Blockscout queues it, so the reply is an acknowledgement."""
+    content_type, body = _multipart(
+        {"compiler_version": compiler, "license_type": "none"},
+        source_path(row).name,
+        json.dumps(standard_json(row)),
+    )
+    answer = _json(
+        base + BLOCKSCOUT_VERIFY.format(address=address),
+        data=body,
+        headers={"Content-Type": content_type},
+        timeout=60,
+    )
+    return answer.get("message") or "no response"
+
+
+def poll_blockscout(address, base, attempts=10, pause=5):
+    """Ask the contract itself whether it ended up verified."""
+    for attempt in range(attempts):
+        try:
+            contract = _json(base + BLOCKSCOUT_CONTRACT.format(address=address), timeout=25)
+        except Exception as exc:
+            return f"{type(exc).__name__}: {str(exc)[:60]}"
+        if contract.get("is_verified"):
+            return "Pass - Verified"
+        if attempt < attempts - 1:
+            time.sleep(pause)
+    return "not verified after waiting"
 
 
 def outcome(answer):
@@ -203,8 +314,9 @@ def verify_command(chain, do_submit, slot):
 
     key = next(iter(deployments))
     _, raw = deployments[key]
-    chain_id = (raw.get("config") or {}).get("chain_id")
-    supported = etherscan_chains()
+    config = raw.get("config") or {}
+    chain_id = config.get("chain_id")
+    route = resolve_route(chain_id, config)
 
     rows = [(name, row) for name, row in contract_rows(raw) if row.get("address")]
     if slot:
@@ -213,21 +325,40 @@ def verify_command(chain, do_submit, slot):
             raise click.UsageError(f"no slot {slot!r} on {key}")
 
     api_key = os.environ.get("ETHERSCAN_API_KEY") or settings.ETHERSCAN_API_KEY
-    if do_submit and not api_key:
+    if do_submit and route and route[0] == "etherscan" and not api_key:
         raise click.ClickException(
             "ETHERSCAN_API_KEY is not set - export it or put it in settings/env, or drop --submit"
         )
 
+    # Looked up once, not per contract: every row on a chain shares a compiler list.
+    compilers = {}
+
     click.echo(f"{key}  chain {chain_id}  {plural(len(rows), 'recorded contract')}\n")
     tally = defaultdict(int)
     for name, row in rows:
-        action, detail = plan_row(name, row, chain_id, supported)
+        action, detail = plan_row(name, row, chain_id, route)
         if action == "verify" and do_submit:
             time.sleep(THROTTLE)  # the free tier allows 5 calls a second
             try:
-                accepted, answer = submit(row, row["address"], chain_id, api_key)
-                detail = poll(answer, chain_id, api_key) if accepted else answer
+                if route[0] == "etherscan":
+                    accepted, answer = submit(row, row["address"], chain_id, api_key)
+                    detail = poll(answer, chain_id, api_key) if accepted else answer
+                elif blockscout_verified(row["address"], route[1]):
+                    detail = "already verified"
+                else:
+                    version = row["compiler_settings"]["compiler_version"]
+                    if version not in compilers:
+                        compilers[version] = blockscout_compiler(route[1], version)
+                    if not compilers[version]:
+                        raise RuntimeError(f"this Blockscout does not offer vyper {version}")
+                    started = submit_blockscout(row, row["address"], route[1], compilers[version])
+                    detail = poll_blockscout(row["address"], route[1]) if "started" in started.lower() else started
                 action = outcome(detail)
+            except urllib.error.HTTPError as exc:
+                # The explorer answering is not our bug. 404 here is the route, not the address:
+                # some instances advertise vyper-standard-input and never deployed the verifier.
+                hint = " - this instance has no verification API" if exc.code == 404 else ""
+                action, detail = "failed", f"explorer HTTP {exc.code}{hint}"
             except Exception as exc:
                 # One contract must not abandon the rest - a whole-chain run is 20-odd of them.
                 action, detail = "error", f"{type(exc).__name__}: {str(exc)[:80]}"

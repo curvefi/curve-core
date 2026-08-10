@@ -150,10 +150,18 @@ The payload states no optimisation mode on purpose. `deploy all` compiles with
 `evm_version` alone, so a `# pragma optimize` in the source is what chose the mode on chain,
 and Vyper rejects a setting that contradicts one.
 
-Two things it will not do. **Blueprints are skipped**: what sits on chain for one is the
-initcode, which no explorer verifies against a source file. And chains missing from the
-Etherscan v2 chainlist are reported as blocked rather than attempted — `ink`, `etherlink`,
-`x_layer` and `plume` are Blockscout-family and need their own submission route.
+Chains missing from the Etherscan v2 chainlist fall back to Blockscout, which takes the same
+standard JSON, needs no key, and matches on runtime rather than creation bytecode. It is a
+fallback rather than a choice: a chain Etherscan lists is never probed for Blockscout. The
+instance is asked whether it is one — most are white-labelled, so the hostname does not say —
+and it publishes the compiler strings it accepts, so `v0.3.10+commit.91361694` is looked up
+rather than guessed.
+
+Already-verified contracts are detected before submitting, because instances disagree about
+what a re-submission means: some answer "verification started", others a bare `404`.
+
+**Blueprints are skipped** on every explorer: what sits on chain for one is the initcode,
+which nothing verifies against a source file.
 
 
 ### Deploy test pools
