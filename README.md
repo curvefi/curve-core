@@ -133,8 +133,27 @@ docker compose up --build
 Upon success, script will generate deployment file with address and other info in [deployments](/deployments) directory.
 File will have the same name as chain. ABI is stored in [abi](/abi) folder.
 Deployments are reusable, so if something fails, it can be fixed and rerun.
-**NOTE:** contracts should be verified separately on explorers like etherscan since it doesn't support Vyper contract
-verification by API.
+
+#### Verifying on explorers
+
+```
+python manage.py verify prod/sonic            # what would be submitted, and where
+python manage.py verify prod/sonic --submit   # send them (needs ETHERSCAN_API_KEY)
+```
+
+Etherscan's v2 API takes Vyper through `codeformat=vyper-json`, on one endpoint keyed by
+chain id, so a single key covers every chain it lists. The deployment file already records
+what an explorer asks for — compiler version, evm version, constructor args and the source
+path — so this assembles a payload rather than gathering facts.
+
+The payload states no optimisation mode on purpose. `deploy all` compiles with
+`evm_version` alone, so a `# pragma optimize` in the source is what chose the mode on chain,
+and Vyper rejects a setting that contradicts one.
+
+Two things it will not do. **Blueprints are skipped**: what sits on chain for one is the
+initcode, which no explorer verifies against a source file. And chains missing from the
+Etherscan v2 chainlist are reported as blocked rather than attempted — `ink`, `etherlink`,
+`x_layer` and `plume` are Blockscout-family and need their own submission route.
 
 
 ### Deploy test pools

@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     WEB3_PROVIDER_URL: str = ""
     DEPLOYER_EOA_PRIVATE_KEY: str = ""
 
+    # Read-only and rate-limited rather than spendable, so unlike the deployer key this one
+    # is fine to keep in settings/env. `verify` needs it; nothing else does.
+    ETHERSCAN_API_KEY: str = ""
+
 
 class RollupType(StrEnum):
     op_stack = "op_stack"
