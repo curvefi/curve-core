@@ -30,6 +30,24 @@ jobs:
           python-version: "3.11"
       - run: pip install poetry==1.8.3
       - run: poetry install --no-interaction
+
+      # Without a compiler the payload test skips, and it is the one that proves the
+      # verification payload builds what the deployer built.
+      - name: Cache vyper compilers
+        uses: actions/cache@v4
+        with:
+          path: ~/.vvm
+          key: vvm-${{ hashFiles('deployments/**/*.yaml') }}
+          restore-keys: vvm-
+      - name: Install the compilers the fleet records
+        run: |
+          poetry run python -c "
+          import vvm
+          from scripts.status import recorded_compilers
+          for version in recorded_compilers():
+              vvm.install_vyper(version)
+          "
+
       - run: poetry run pytest tests/ -q
 
   artifacts:

@@ -300,8 +300,10 @@ def test_the_payload_builds_what_the_deployer_builds(path):
     """The point of the whole command: an explorer compiling this payload must land on the
     same runtime bytecode the deployer produced, or verification fails on a real contract."""
     vvm = pytest.importorskip("vvm")
-    if not (Path.home() / ".vvm").exists():
-        pytest.skip("no local vyper compilers")
+    # Ask for the compiler, not the folder: ~/.vvm exists and is empty on a fresh CI runner,
+    # so a directory check skipped nothing and the compile blew up instead.
+    if "0.3.10" not in {str(v) for v in vvm.get_installed_vyper_versions()}:
+        pytest.skip("vyper 0.3.10 is not installed - `vvm.install_vyper('0.3.10')`")
 
     from scripts.verify import source_path, standard_json
 
