@@ -18,18 +18,44 @@ env:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # --bytecode recompiles every distinct contract, which is most of the runtime.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # source_provenance walks history to tell current source from drifted
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: pip install poetry==1.8.3
       - run: poetry install --no-interaction
 
+      # Keyed on the versions themselves: a new compiler in a deployment file misses the
+      # cache and installs, an unchanged fleet reuses it.
+      - name: Cache vyper compilers
+        id: compilers
+        uses: actions/cache@v4
+        with:
+          path: ~/.vvm
+          key: vvm-${{ hashFiles('deployments/**/*.yaml') }}
+          restore-keys: vvm-
+
+      - name: Install the compilers the fleet records
+        run: |
+          poetry run python -c "
+          import vvm
+          from scripts.status import recorded_compilers
+          for version in recorded_compilers():
+              print(f'installing vyper {version}')
+              vvm.install_vyper(version)
+          "
+
       # No secrets: every probe goes to the public_rpc_url the deployment file records.
+      # --from-commit because sources move on: without it 12 chains report every row as
+      # "cannot be compared", and the question here is whether the chain matches what we
+      # recorded deploying, not whether today's file still compiles to it.
       - name: Probe every chain
-        run: poetry run python manage.py status --onchain --wiring --json onchain.json || true
+        run: poetry run python manage.py status --onchain --wiring --bytecode --from-commit --json onchain.json || true
 
       - name: Find the open issue
         id: issue

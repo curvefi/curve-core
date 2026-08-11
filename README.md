@@ -326,6 +326,11 @@ python manage.py status --onchain --wiring --json onchain.json
 python manage.py monitor onchain.json --previous issue.md --body body.md --delta delta.md
 ```
 
+The nightly run includes `--bytecode`, which is why it is the slow one: it recompiles every
+distinct contract. CI caches `~/.vvm` keyed on the deployment files, and installs exactly the
+versions they record — `check_bytecode` refuses to fetch a missing compiler, since vvm would
+query GitHub's release list once per contract.
+
 The issue opens on a **prod** deviation, comments when that set changes, and closes itself
 when prod is clean again. Devnet deviations are listed in the body but never open or close
 it: a wiped testnet is real information and not a 6am alert, and devnet churn alone would

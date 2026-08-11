@@ -1169,6 +1169,22 @@ def _git(*args):
     return result.stdout.strip() if result.returncode == 0 else None
 
 
+def recorded_compilers(deployments=None):
+    """Every vyper version the fleet records, so CI can install exactly those.
+
+    check_bytecode deliberately does not fetch a missing compiler - vvm would query GitHub's
+    release list once per contract - so the versions have to be known before it runs.
+    """
+    deployments = load_deployments()[0] if deployments is None else deployments
+    versions = set()
+    for _, (_, raw) in deployments.items():
+        for _, row in contract_rows(raw):
+            version = (row.get("compiler_settings") or {}).get("compiler_version")
+            if version:
+                versions.add(str(version))
+    return sorted(versions)
+
+
 def changed_chains(ref):
     """Chain keys whose deployment file differs from `ref`, or None if the ref is unusable.
 

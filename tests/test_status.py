@@ -197,6 +197,43 @@ def test_a_broken_endpoint_is_a_finding_not_a_gap(labels, probes, dead):
     assert _endpoint_is_dead(labels, probes) is dead
 
 
+def test_recorded_compilers_lists_what_the_fleet_actually_uses():
+    """CI installs exactly these; check_bytecode refuses to fetch a missing one, because vvm
+    would query GitHub's release list once per contract."""
+    from scripts.status import contract_rows, load_deployments, recorded_compilers
+
+    versions = recorded_compilers()
+    assert versions == sorted(versions), "sorted, so the cache key is stable"
+    assert versions, "the fleet records compiler versions; an empty list would install nothing"
+    assert all(v[0].isdigit() for v in versions), versions
+
+    written = {
+        (row.get("compiler_settings") or {}).get("compiler_version")
+        for _, (_, raw) in load_deployments()[0].items()
+        for _, row in contract_rows(raw)
+    }
+    assert set(versions) == {str(v) for v in written if v}
+
+
+def test_recorded_compilers_skips_rows_with_no_version():
+    """31 rows record null; installing "None" fails the whole step."""
+    from scripts.status import recorded_compilers
+
+    rows = {
+        "prod/x": (
+            None,
+            {
+                "contracts": {
+                    "a": {"address": "0x1", "compiler_settings": {"compiler_version": "0.3.10"}},
+                    "b": {"address": "0x2", "compiler_settings": {"compiler_version": None}},
+                    "c": {"address": "0x3"},
+                }
+            },
+        )
+    }
+    assert recorded_compilers(rows) == ["0.3.10"]
+
+
 def test_changed_chains_reads_deployment_paths_as_chain_keys(monkeypatch):
     """CI probes only what a branch touched, so a path that maps to the wrong key silently
     checks the wrong chain."""
