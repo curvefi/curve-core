@@ -143,6 +143,14 @@ CHECK_BLURB = {
 }
 
 
+def rel(path):
+    """Path for display. Absolute when it is outside the repo, rather than raising."""
+    try:
+        return Path(path).relative_to(BASE_DIR).as_posix()
+    except ValueError:
+        return str(path)
+
+
 def plural(count, noun):
     return f"{count} {noun}" if count == 1 else f"{count} {noun}s"
 
@@ -242,6 +250,16 @@ def legacy_deployments(deployments, configs) -> set:
         if rows and not any(row.get("contract_path") for _, row in rows):
             legacy.add(chain)
     return legacy
+
+
+def in_scope(deployments, configs) -> tuple[dict, set]:
+    """(kept, skipped) - what curve-core deploys, and what predates it.
+
+    The single definition of scope. `status` and `index` both call it, so the report cannot
+    cover a different set of chains than the published index.
+    """
+    skipped = legacy_deployments(deployments, configs)
+    return {key: value for key, value in deployments.items() if key not in skipped}, skipped
 
 
 def example_configs() -> dict[str, Path]:
@@ -615,17 +633,17 @@ def check_contracts():
     # version contradicting the filename fetch_latest_contract sorts on - silent, and worse.
     unparseable, mismatched, no_version = [], [], []
     for source in sorted(contracts_dir.rglob("*_v_*.vy")):
-        rel = source.relative_to(BASE_DIR).as_posix()
+        shown = source.relative_to(BASE_DIR).as_posix()
         digits = re.search(r"_v_(\d+)\.vy$", source.name).group(1)
         implied = ".".join(digits) if len(digits) == 3 else digits
         text = source.read_text(encoding="utf-8")
         declared = ANY_VERSION_RE.search(text)
         if declared is None:
-            no_version.append(rel)
+            no_version.append(shown)
         elif not BLUEPRINT_VERSION_RE.search(text):
-            unparseable.append(f"{rel}: declares {declared.group(1)!r}")
+            unparseable.append(f"{shown}: declares {declared.group(1)!r}")
         elif normalise_version(declared.group(1)) != implied:
-            mismatched.append(f"{rel}: declares {declared.group(1)!r}, filename implies {implied!r}")
+            mismatched.append(f"{shown}: declares {declared.group(1)!r}, filename implies {implied!r}")
 
     # fetch_latest_contract sorts a folder on _v_NNN alone, so two unrelated contracts in one
     # folder compete for the slot. PENDING would report the swap as an ordinary upgrade.
@@ -1552,20 +1570,21 @@ def status_command(chain, only, onchain, wiring, bytecode, from_commit, summary,
         raise click.UsageError("--summary and --brief are alternative renderings, pick one")
     everything, _ = load_deployments()
     deployments, unreadable = load_deployments(chain)
-    if not deployments and not unreadable:
-        # UsageError exits 2, keeping "you invoked this wrong" distinguishable from
-        # "drift was found" (1) for CI.
-        raise click.UsageError(f"no deployment found for {chain!r}")
     configs = chain_configs()
 
-    # Scope is what curve-core deploys. avalanche, fantom and x_layer predate this repo and
-    # cannot be targeted by a deploy, so carrying them here only adds noise.
-    out_of_scope = legacy_deployments(everything, configs)
-    everything = {k: v for k, v in everything.items() if k not in out_of_scope}
+    # Scope is what curve-core deploys; index applies the same rule.
+    everything, out_of_scope = in_scope(everything, configs)
+    targeted_out_of_scope = bool(chain) and bool(set(deployments) & out_of_scope)
     deployments = {k: v for k, v in deployments.items() if k not in out_of_scope}
-    if chain and not deployments and not unreadable:
+    if targeted_out_of_scope and not deployments:
         raise click.UsageError(f"{chain!r} was not deployed by this repo - out of scope")
-    selected = set(deployments) if chain else None
+
+    # A chain scaffolded by `init` has a config and no deployment yet.
+    config_match = next((key for key in configs if chain in (key, key.split("/")[-1])), None) if chain else None
+    if not deployments and not unreadable and not config_match:
+        # UsageError exits 2, keeping "invoked wrong" apart from "drift found" (1) for CI.
+        raise click.UsageError(f"no deployment or chain config found for {chain!r}")
+    selected = (set(deployments) | set(unreadable) | ({config_match} if config_match else set())) if chain else None
 
     console = Console()
     prod = sum(1 for path, _ in deployments.values() if path.parent.name == "prod")

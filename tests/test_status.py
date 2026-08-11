@@ -9,6 +9,7 @@ import urllib.error
 from collections import Counter
 
 import pytest
+from click.testing import CliRunner
 from rich.console import Console
 
 from scripts.deploy.utils import fetch_latest_contract, normalise_version, version_a_gt_version_b
@@ -24,10 +25,6 @@ from scripts.status import (
     emit,
     plural,
 )
-
-# --------------------------------------------------------------------------------------
-# version handling
-# --------------------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -63,11 +60,6 @@ def test_version_compare_still_raises_on_genuinely_malformed():
         version_a_gt_version_b("1.0.0rc1", "1.0.0")
 
 
-# --------------------------------------------------------------------------------------
-# contract resolution
-# --------------------------------------------------------------------------------------
-
-
 def test_fetch_latest_contract_sorts_on_digits_across_unrelated_contracts(tmp_path):
     """Two contracts in one folder compete on a number that means nothing across them."""
     (tmp_path / "math_v_210.vy").write_text("# a")
@@ -83,11 +75,6 @@ def test_fetch_latest_contract_ignores_files_without_v_nnn(tmp_path):
     (tmp_path / "twocrypto_view.vy").write_text("# unreachable")
     with pytest.raises(FileNotFoundError):
         fetch_latest_contract(tmp_path)
-
-
-# --------------------------------------------------------------------------------------
-# walking deployment files
-# --------------------------------------------------------------------------------------
 
 
 def test_contract_rows_descends_past_a_node_that_has_an_address():
@@ -114,11 +101,6 @@ def test_contract_rows_descends_past_a_node_that_has_an_address():
 def test_contract_rows_tolerates_non_dict_nodes():
     raw = {"contracts": {"amm": {"stableswap": None, "twocrypto": ["not", "a", "dict"]}}}
     assert list(contract_rows(raw)) == []
-
-
-# --------------------------------------------------------------------------------------
-# RPC failure classification
-# --------------------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -151,11 +133,6 @@ def test_dominant_names_the_most_common_and_counts_the_rest():
     assert _dominant(Counter()) == ""
 
 
-# --------------------------------------------------------------------------------------
-# rendering
-# --------------------------------------------------------------------------------------
-
-
 def render(text, **kwargs):
     console = Console(file=io.StringIO(), width=60, no_color=True, legacy_windows=False)
     emit(console, text, **kwargs)
@@ -185,11 +162,6 @@ def test_plural_agrees():
     assert plural(0, "chain") == "0 chains"
 
 
-# --------------------------------------------------------------------------------------
-# schema walking
-# --------------------------------------------------------------------------------------
-
-
 def test_undeclared_reports_keys_no_model_declares():
     """extra='ignore' plus a model_dump() round-trip deletes these on the next write."""
     from scripts.deploy.models import DeploymentConfig
@@ -202,11 +174,6 @@ def test_undeclared_is_quiet_on_a_clean_payload():
     from scripts.deploy.models import DeploymentConfig
 
     assert _undeclared({}, DeploymentConfig) == []
-
-
-# --------------------------------------------------------------------------------------
-# PENDING: blocked vs ready
-# --------------------------------------------------------------------------------------
 
 
 def _deployment(version="1.0.0"):
@@ -262,30 +229,15 @@ def test_pending_keeps_every_chain_in_subjects_for_the_summary_rollup():
     assert set(rows[0].subjects) == {"prod/a", "prod/b"}
 
 
-# --------------------------------------------------------------------------------------
-# WIRING: the guard path
-# --------------------------------------------------------------------------------------
-
-
 def test_check_wiring_survives_a_chain_with_no_rpc():
     """`inspect` returned a 4-tuple here while the caller unpacked 5."""
     deployments = {"prod/norpc": (None, {"config": {}, "contracts": {}})}
     assert check_wiring(deployments) == []
 
 
-# --------------------------------------------------------------------------------------
-# Finding semantics
-# --------------------------------------------------------------------------------------
-
-
 def test_unverified_defaults_off_so_a_finding_is_a_result_unless_it_says_otherwise():
     assert Finding("SCHEMA", "x").unverified is False
     assert Finding("ONCHAIN", "x", unverified=True).unverified is True
-
-
-# --------------------------------------------------------------------------------------
-# schema round-trip
-# --------------------------------------------------------------------------------------
 
 
 def test_dao_round_trip_keeps_scrvusd():
@@ -333,11 +285,6 @@ def test_legacy_amm_registries_survive_the_round_trip():
     dumped = AmmDeployment.model_validate({k: {"factory": row} for k in keys}).model_dump()
     for key in keys:
         assert dumped[key]["factory"]["address"] == row["address"], key
-
-
-# --------------------------------------------------------------------------------------
-# source provenance
-# --------------------------------------------------------------------------------------
 
 
 def _row(url, path="scripts/status.py"):
@@ -423,3 +370,40 @@ def test_pre_curve_core_chains_are_out_of_scope():
 
     everything, _ = load_deployments()
     assert legacy_deployments(everything, chain_configs()) == {"prod/avalanche", "prod/fantom", "prod/x_layer"}
+
+
+def test_status_chain_accepts_a_config_with_no_deployment():
+    """`init` leaves exactly this state, and the hint it prints used to fail."""
+    from scripts.status import chain_configs, load_deployments
+
+    deployments, unreadable = load_deployments("prod/units")
+    assert not deployments and not unreadable
+    assert "prod/units" in chain_configs()
+
+
+def test_status_command_exits_2_on_an_unknown_chain():
+    from click.testing import CliRunner
+
+    from scripts.status import status_command
+
+    result = CliRunner().invoke(status_command, ["--chain", "nope"])
+    assert result.exit_code == 2
+    assert "no deployment or chain config found" in result.output
+
+
+def test_status_command_rejects_two_renderers_at_once():
+    from click.testing import CliRunner
+
+    from scripts.status import status_command
+
+    result = CliRunner().invoke(status_command, ["--summary", "--brief"])
+    assert result.exit_code == 2
+    assert "alternative renderings" in result.output
+
+
+def test_status_chain_accepts_a_bare_name_for_a_config_only_chain():
+    """`init prod/x` leaves a config with no deployment; --chain x must still resolve."""
+    from scripts.status import chain_configs
+
+    configs = chain_configs()
+    assert next((k for k in configs if "units" in (k, k.split("/")[-1])), None) == "prod/units"

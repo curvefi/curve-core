@@ -68,8 +68,17 @@ poetry install
 
 #### Chain params file
 
-Put settings file {chain_name}.yaml into [settings/chains](/settings/chains) directory.
-[Example](/settings/chains/examples/example.yaml). It will be used for deployment.
+Scaffold one:
+
+```
+python manage.py init prod/mychain
+```
+
+It asks for each field, reads `chain_id` from the RPC you give it, checks multicall3 exists
+on that chain, and refuses to write anything `ChainConfig` would reject.
+
+Or copy [the example](/settings/chains/examples/example.yaml) into
+[settings/chains](/settings/chains) as {chain_name}.yaml and fill it in by hand.
 
 - **network_name** - chain name
 - **chain_id** - chain id
@@ -104,6 +113,15 @@ python manage.py deploy all devnet/chain_config_filename.yaml
 
 The path is relative to [settings/chains](/settings/chains) and includes the directory.
 
+To see what that would do first:
+
+```
+python manage.py deploy all prod/sonic.yaml --dry-run
+```
+
+Reports every contract it would deploy, upgrade or reuse, and which steps it would skip.
+Needs no key, no RPC and no `settings/env`. Exits non-zero if anything would stop the deploy.
+
 Or via Docker, which builds the environment for you:
 
 ```
@@ -127,6 +145,31 @@ python manage.py deploy test_pools {chain_name}
 to deploy test tokens and pools + add liquidity and permorm a swap in test pool. WARNING!: these are test tokens, don't
 use mocks in production.
 
+
+## Consuming the registry
+
+`deployments/` is the cross-chain Curve address registry. Two generated files make it
+readable without walking the tree or calling the GitHub API with a token:
+
+- [registry/index.json](/registry/index.json) - every chain, its config essentials, and every
+  recorded address flattened to `amm.stableswap.factory` keys.
+- [registry/schema.json](/registry/schema.json) - JSON Schema for a deployment file, generated
+  from the pydantic models.
+
+They live outside `deployments/` on purpose: that directory contains only chain folders, and
+consumers enumerate it.
+
+Both are generated. Regenerate after changing any deployment file:
+
+```
+python manage.py index          # write both
+python manage.py index --check  # fail if either is stale (CI runs this)
+```
+
+The index covers every recorded chain, including the ones this repo did not deploy — they are
+hand-maintained for curve-api-core, so a registry without them would be less useful than the
+directory it replaces. Each carries `deployed_by_core`, set from the same rule `status` uses to
+decide what it checks, so filter on that rather than maintaining a list.
 
 ## Deployment status and drift
 

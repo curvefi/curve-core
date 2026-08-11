@@ -36,7 +36,16 @@ def deploy_commands():
 
 @deploy_commands.command("all", short_help="deploy all to chain")
 @click.argument("chain_config_file", type=click.STRING)
-def run_deploy_all(chain_config_file: str) -> None:
+@click.option("--dry-run", is_flag=True, help="report what would be deployed, without deploying")
+def run_deploy_all(chain_config_file: str, dry_run: bool = False) -> None:
+
+    if dry_run:
+        # Imported here, not at module scope: scripts.plan imports scripts.deploy.utils, so a
+        # top-level import is a cycle that only survives if this package is imported first.
+        from scripts.plan import dry_run as plan_dry_run
+
+        # Returns before anything touches a chain; manage.py skips the connection for it.
+        raise SystemExit(1 if plan_dry_run(chain_config_file) else 0)
 
     # in case we have a few deployed contracts not deployed via curve-core
     # we will ignore them, e.g. relayer, agent blueprint etc. needed for testing
