@@ -4,4 +4,4 @@ services:
     build:
       context: .
     container_name: deployer
-    command: "python manage.py deploy all example && tail -f /dev/null"
+    command: "python manage.py deploy all examples/example.yaml && tail -f /dev/null"

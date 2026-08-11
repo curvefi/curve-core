@@ -1,5 +1,6 @@
 network_name: example
 chain_id: 1
+is_testnet: False
 rollup_type: not_rollup
 dao:
   crv: "0xD533a949740bb3306d119CC777fa900bA034cd52"
@@ -16,3 +17,8 @@ native_currency_symbol: ETH
 native_currency_coingecko_id: ethereum
 public_rpc_url: https://eth.llamarpc.com
 wrapped_native_token: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+logo_url: https://example.com/logo.png
+reference_token_addresses:
+  weth: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+  usdc:  # fill in for your chain
+  usdt:  # fill in for your chain

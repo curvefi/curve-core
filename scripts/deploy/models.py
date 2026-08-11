@@ -14,6 +14,8 @@ from settings.models import ChainConfig
 class DaoSettings(BaseModel):
     crv: str | None = None
     crvusd: str | None = None
+    # Mirrors CurveDAOSettings; both walk `dao`, so it must be declared on each.
+    scrvusd: str | None = None
     emergency_admin: str | None = None
     ownership_admin: str | None = None
     parameter_admin: str | None = None
@@ -68,10 +70,23 @@ class StableswapSingleAmmDeployment(SingleAmmDeployment):
     meta_implementation: Contract | None = None
 
 
+class LegacyAmmDeployment(BaseModel):
+    """A pre-curve-core registry, factory address only. Hand-written, never deployed here."""
+
+    factory: Contract | None = None
+
+
 class AmmDeployment(BaseModel):
     stableswap: StableswapSingleAmmDeployment | None = None
     tricryptoswap: SingleAmmDeployment | None = None
     twocryptoswap: SingleAmmDeployment | None = None
+
+    # In avalanche.yaml/fantom.yaml and served by curve-api-core; declared so a dump keeps them.
+    oldmain: LegacyAmmDeployment | None = None
+    oldstable: LegacyAmmDeployment | None = None
+    oldcrypto: LegacyAmmDeployment | None = None
+    oldcryptofacto: LegacyAmmDeployment | None = None
+    eywa: LegacyAmmDeployment | None = None
 
 
 #  <----------------------------------------------------------------->
