@@ -8,7 +8,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=Path(BASE_DIR, "settings", "env"))
+    # extra="ignore": settings/env is gitignored, so it survives branch switches - a key one
+    # branch declares must not make every command fail on the others.
+    model_config = SettingsConfigDict(env_file=Path(BASE_DIR, "settings", "env"), extra="ignore")
 
     DEBUG: bool = True
     DEV: bool = False
