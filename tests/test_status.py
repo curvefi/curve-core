@@ -446,6 +446,21 @@ def test_legacy_amm_registries_survive_the_round_trip():
         assert dumped[key]["factory"]["address"] == row["address"], key
 
 
+def test_schema_separates_keys_that_break_the_api_from_keys_it_serves_undefined():
+    """curve-api-v2's model requires eight of these, so omitting one drops the whole chain
+    there rather than leaving a field undefined - the two cannot share a consequence."""
+    from scripts.status import API_CONSUMED_CONFIG_KEYS, check_schema
+
+    def note_for(omitted):
+        config = {key: "x" for key in API_CONSUMED_CONFIG_KEYS if key != omitted}
+        found = check_schema({"prod/x": (None, {"config": config})})
+        return next(f.note for f in found if f.summary.startswith(f"config.{omitted} is read"))
+
+    assert API_CONSUMED_CONFIG_KEYS["file_path"] and not API_CONSUMED_CONFIG_KEYS["logo_url"]
+    assert "fails to load" in note_for("file_path")
+    assert "undefined" in note_for("logo_url")
+
+
 def _row(url, path="scripts/status.py"):
     return {"contract_path": "/" + path, "contract_github_url": url}
 

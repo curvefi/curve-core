@@ -42,7 +42,7 @@ def test_the_index_publishes_the_config_verbatim():
 
 
 def test_every_config_key_the_api_reads_reaches_the_index():
-    """The other direction: SCHEMA already reports keys curve-api-core reads that nothing
+    """The other direction: SCHEMA already reports keys curve-api-v2 reads that nothing
     writes, and this stops one being written but not published."""
     from scripts.index import build_index
     from scripts.status import API_CONSUMED_CONFIG_KEYS, load_deployments

@@ -24,7 +24,7 @@ reimplemented, so the report cannot drift from what `deploy all` actually does:
              constant, and abi/ entries that no longer match a contract path.
   SCHEMA     Walks each YAML against the pydantic models' own `model_fields`. Undeclared
              keys are ignored by pydantic and dropped when the deployer rewrites the file
-             through model_dump(). Also reports the reverse: config keys curve-api-core
+             through model_dump(). Also reports the reverse: config keys curve-api-v2
              reads that no deployment writes.
   REQUIRED   Runs DeploymentConfig.model_validate() and reports pydantic's own errors -
              a file that fails here cannot be read or updated by the deployer at all.
@@ -134,7 +134,7 @@ CHECK_BLURB = {
     "PENDING": "the next `deploy all` applies these automatically, no flag needed",
     "CONFIG": "settings/chains inputs that ChainConfig rejects - `deploy all` cannot start on these",
     "CONTRACTS": "contract files the deployer would choke on, or whose ABI has drifted",
-    "SCHEMA": "keys the models and curve-api-core disagree about - dropped on round-trip, or expected and never written",
+    "SCHEMA": "keys the models and curve-api-v2 disagree about - dropped on round-trip, or expected and never written",
     "REQUIRED": "model_validate() raises - the deployer cannot read or update these chains",
     "COVERAGE": "deployments and chain configs that do not line up",
     "INTEGRITY": "admin roles that are missing, shared, or collapsed onto one address",
@@ -507,21 +507,37 @@ def _undeclared(raw, model: type[BaseModel], trail=()):
     return out
 
 
-# config.* keys curve-api-core reads (constants/configs/configs.js). A key it reads that
-# nothing writes is served as undefined; walking the models only finds keys that ARE present.
-API_CONSUMED_CONFIG_KEYS = (
-    "file_name",
-    "network_name",
-    "chain_id",
-    "explorer_base_url",
-    "multicall2",
-    "multicall3",
-    "native_currency_symbol",
-    "native_currency_coingecko_id",
-    "platform_coingecko_id",
-    "public_rpc_url",
-    "reference_token_addresses",
-)
+# config.* keys the API reads, from curve-api-v2's DeploymentConfig
+# (api/services/curve_core/deployments.py) - a typed model, so this is its own answer rather
+# than one inferred from curve-api-core's javascript. True marks the ones it requires.
+API_CONSUMED_CONFIG_KEYS = {
+    "chain_id": True,
+    "explorer_base_url": True,
+    "file_name": True,
+    "file_path": True,
+    "is_testnet": True,
+    "native_currency_symbol": True,
+    "network_name": True,
+    "public_rpc_url": True,
+    "dao": False,
+    "evm_version": False,
+    "layer": False,
+    "logo_url": False,
+    "multicall2": False,
+    "multicall3": False,
+    "native_currency_coingecko_id": False,
+    "platform_coingecko_id": False,
+    "reference_token_addresses": False,
+    "rollup_type": False,
+    "wrapped_native_token": False,
+}
+
+
+def _api_consequence(key):
+    """A required key fails closed there: pydantic drops the chain, not just the field."""
+    if API_CONSUMED_CONFIG_KEYS[key]:
+        return "the whole chain fails to load there, not just this field"
+    return "served as undefined for every chain"
 
 
 def check_schema(deployments):
@@ -537,8 +553,8 @@ def check_schema(deployments):
         [
             Finding(
                 "SCHEMA",
-                f"config.{key} is read by curve-api-core but written by no chain",
-                "served as undefined for every chain; walking the models cannot catch this, "
+                f"config.{key} is read by curve-api-v2 but written by no chain",
+                f"{_api_consequence(key)}; walking the models cannot catch this, "
                 "since it only sees keys that are present",
             )
             for key in absent
