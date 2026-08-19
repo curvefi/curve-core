@@ -8,7 +8,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=Path(BASE_DIR, "settings", "env"))
+    # extra="ignore": settings/env is gitignored, so it survives branch switches - a key one
+    # branch declares must not make every command fail on the others.
+    model_config = SettingsConfigDict(env_file=Path(BASE_DIR, "settings", "env"), extra="ignore")
 
     DEBUG: bool = True
     DEV: bool = False
@@ -16,6 +18,10 @@ class Settings(BaseSettings):
     # Empty so `status` runs without settings/env; manage.py checks before any chain command.
     WEB3_PROVIDER_URL: str = ""
     DEPLOYER_EOA_PRIVATE_KEY: str = ""
+
+    # Read-only and rate-limited rather than spendable, so unlike the deployer key this one
+    # is fine to keep in settings/env. `verify` needs it; nothing else does.
+    ETHERSCAN_API_KEY: str = ""
 
 
 class RollupType(StrEnum):

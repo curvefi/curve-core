@@ -127,6 +127,165 @@ def test_error_label_keeps_the_nodes_own_message_for_in_band_errors():
     assert _error_label(RpcError("rate limit exceeded")).startswith("RPC error:")
 
 
+@pytest.mark.parametrize(
+    "exc, retried",
+    [
+        (urllib.error.HTTPError("u", 429, "Too Many Requests", {}, None), True),
+        (urllib.error.HTTPError("u", 503, "Unavailable", {}, None), True),
+        (TimeoutError("timed out"), True),
+        (RpcError("rate limit exceeded"), True),
+        # Waiting does not make a refusal into permission, or resolve a hostname.
+        (urllib.error.HTTPError("u", 403, "Forbidden", {}, None), False),
+        (urllib.error.URLError(OSError("Name or service not known")), False),
+        (RpcError("method not found"), False),
+    ],
+)
+def test_only_congestion_is_retried(exc, retried, monkeypatch):
+    """A dozen workers opening at once earns a 429 from a healthy endpoint, and that used to
+    be reported as unverified - throwing away what the chain was about to say."""
+    import scripts.status as status
+
+    calls = []
+
+    def fail(*args, **kwargs):
+        calls.append(1)
+        raise exc
+
+    monkeypatch.setattr(status, "_rpc_once", fail)
+    monkeypatch.setattr(status.time, "sleep", lambda _: None)
+
+    with pytest.raises(type(exc)):
+        status._rpc_call("http://rpc", "eth_getCode", [])
+    assert len(calls) == (status.RETRY_ATTEMPTS if retried else 1)
+
+
+def test_a_retry_that_succeeds_returns_the_answer(monkeypatch):
+    import scripts.status as status
+
+    answers = iter([urllib.error.HTTPError("u", 429, "Too Many Requests", {}, None), "0xcode"])
+
+    def flaky(*args, **kwargs):
+        value = next(answers)
+        if isinstance(value, Exception):
+            raise value
+        return value
+
+    monkeypatch.setattr(status, "_rpc_once", flaky)
+    monkeypatch.setattr(status.time, "sleep", lambda _: None)
+    assert status._rpc_call("http://rpc", "eth_getCode", []) == "0xcode"
+
+
+@pytest.mark.parametrize(
+    "labels, probes, dead",
+    [
+        # Refused or unresolvable on every probe: the published URL does not work.
+        (Counter({"HTTP 403": 25}), 25, True),
+        (Counter({"unreachable (gaierror)": 27}), 27, True),
+        # Congestion, already retried - the endpoint is busy, not broken.
+        (Counter({"HTTP 429": 25}), 25, False),
+        (Counter({"timeout": 25}), 25, False),
+        (Counter({"RPC error: rate limit exceeded": 25}), 25, False),
+        # Some answered, so the endpoint is up whatever the rest failed on.
+        (Counter({"HTTP 403": 5}), 25, False),
+    ],
+)
+def test_a_broken_endpoint_is_a_finding_not_a_gap(labels, probes, dead):
+    """public_rpc_url is the URL the UI reads. That it does not work is something the run
+    established, not something it failed to establish."""
+    from scripts.status import _endpoint_is_dead
+
+    assert _endpoint_is_dead(labels, probes) is dead
+
+
+def test_recorded_compilers_lists_what_the_fleet_actually_uses():
+    """CI installs exactly these; check_bytecode refuses to fetch a missing one, because vvm
+    would query GitHub's release list once per contract."""
+    from scripts.status import contract_rows, load_deployments, recorded_compilers
+
+    versions = recorded_compilers()
+    assert versions == sorted(versions), "sorted, so the cache key is stable"
+    assert versions, "the fleet records compiler versions; an empty list would install nothing"
+    assert all(v[0].isdigit() for v in versions), versions
+
+    written = {
+        (row.get("compiler_settings") or {}).get("compiler_version")
+        for _, (_, raw) in load_deployments()[0].items()
+        for _, row in contract_rows(raw)
+    }
+    assert set(versions) == {str(v) for v in written if v}
+
+
+def test_recorded_compilers_skips_rows_with_no_version():
+    """31 rows record null; installing "None" fails the whole step."""
+    from scripts.status import recorded_compilers
+
+    rows = {
+        "prod/x": (
+            None,
+            {
+                "contracts": {
+                    "a": {"address": "0x1", "compiler_settings": {"compiler_version": "0.3.10"}},
+                    "b": {"address": "0x2", "compiler_settings": {"compiler_version": None}},
+                    "c": {"address": "0x3"},
+                }
+            },
+        )
+    }
+    assert recorded_compilers(rows) == ["0.3.10"]
+
+
+def test_changed_chains_reads_deployment_paths_as_chain_keys(monkeypatch):
+    """CI probes only what a branch touched, so a path that maps to the wrong key silently
+    checks the wrong chain."""
+    import scripts.status as status
+
+    listing = "\n".join(
+        [
+            "deployments/prod/sonic.yaml",
+            "deployments/devnet/arc.yaml",
+            "deployments/debug/ink.yaml",  # dry-run output, never a real chain
+            "deployments/examples/example.yaml",
+            "deployments/prod/notes.md",  # not a deployment file
+            "scripts/status.py",  # outside deployments; git already filtered, belt and braces
+        ]
+    )
+    monkeypatch.setattr(status, "_git", lambda *args: listing)
+    assert status.changed_chains("origin/main") == {"prod/sonic", "devnet/arc"}
+
+
+def test_changed_chains_reports_an_unusable_ref_rather_than_an_empty_set(monkeypatch):
+    """An empty set means "nothing changed" and would silently probe nothing at all."""
+    import scripts.status as status
+
+    monkeypatch.setattr(status, "_git", lambda *args: None)
+    assert status.changed_chains("nope") is None
+
+
+def test_changed_chains_diffs_the_working_tree_against_the_merge_base(monkeypatch):
+    """Merge base, or work that landed on the base branch reads as this branch's. Working tree
+    rather than HEAD, or an uncommitted edit is invisible - which it was, first time round."""
+    import scripts.status as status
+
+    calls = []
+
+    def fake_git(*args):
+        calls.append(args)
+        return "abc123" if args[0] == "merge-base" else ""
+
+    monkeypatch.setattr(status, "_git", fake_git)
+    status.changed_chains("origin/main")
+
+    assert calls[0] == ("merge-base", "origin/main", "HEAD")
+    assert calls[1] == ("diff", "--name-only", "abc123", "--", "deployments")
+
+
+def test_changed_chains_gives_up_when_the_merge_base_fails(monkeypatch):
+    import scripts.status as status
+
+    monkeypatch.setattr(status, "_git", lambda *args: None)
+    assert status.changed_chains("nope") is None
+
+
 def test_dominant_names_the_most_common_and_counts_the_rest():
     assert _dominant(Counter({"HTTP 429": 24})) == "HTTP 429"
     assert _dominant(Counter({"HTTP 429": 24, "timeout": 3, "HTTP 503": 1})) == "HTTP 429 and 2 other kinds"
@@ -285,6 +444,21 @@ def test_legacy_amm_registries_survive_the_round_trip():
     dumped = AmmDeployment.model_validate({k: {"factory": row} for k in keys}).model_dump()
     for key in keys:
         assert dumped[key]["factory"]["address"] == row["address"], key
+
+
+def test_schema_separates_keys_that_break_the_api_from_keys_it_serves_undefined():
+    """curve-api-v2's model requires eight of these, so omitting one drops the whole chain
+    there rather than leaving a field undefined - the two cannot share a consequence."""
+    from scripts.status import API_CONSUMED_CONFIG_KEYS, check_schema
+
+    def note_for(omitted):
+        config = {key: "x" for key in API_CONSUMED_CONFIG_KEYS if key != omitted}
+        found = check_schema({"prod/x": (None, {"config": config})})
+        return next(f.note for f in found if f.summary.startswith(f"config.{omitted} is read"))
+
+    assert API_CONSUMED_CONFIG_KEYS["file_path"] and not API_CONSUMED_CONFIG_KEYS["logo_url"]
+    assert "fails to load" in note_for("file_path")
+    assert "undefined" in note_for("logo_url")
 
 
 def _row(url, path="scripts/status.py"):

@@ -24,7 +24,7 @@ reimplemented, so the report cannot drift from what `deploy all` actually does:
              constant, and abi/ entries that no longer match a contract path.
   SCHEMA     Walks each YAML against the pydantic models' own `model_fields`. Undeclared
              keys are ignored by pydantic and dropped when the deployer rewrites the file
-             through model_dump(). Also reports the reverse: config keys curve-api-core
+             through model_dump(). Also reports the reverse: config keys curve-api-v2
              reads that no deployment writes.
   REQUIRED   Runs DeploymentConfig.model_validate() and reports pydantic's own errors -
              a file that fails here cannot be read or updated by the deployer at all.
@@ -51,6 +51,7 @@ import re
 import subprocess
 import sys
 import textwrap
+import time
 import types
 import urllib.error
 import urllib.request
@@ -133,7 +134,7 @@ CHECK_BLURB = {
     "PENDING": "the next `deploy all` applies these automatically, no flag needed",
     "CONFIG": "settings/chains inputs that ChainConfig rejects - `deploy all` cannot start on these",
     "CONTRACTS": "contract files the deployer would choke on, or whose ABI has drifted",
-    "SCHEMA": "keys the models and curve-api-core disagree about - dropped on round-trip, or expected and never written",
+    "SCHEMA": "keys the models and curve-api-v2 disagree about - dropped on round-trip, or expected and never written",
     "REQUIRED": "model_validate() raises - the deployer cannot read or update these chains",
     "COVERAGE": "deployments and chain configs that do not line up",
     "INTEGRITY": "admin roles that are missing, shared, or collapsed onto one address",
@@ -506,20 +507,37 @@ def _undeclared(raw, model: type[BaseModel], trail=()):
     return out
 
 
-# config.* keys curve-api-core reads (constants/configs/configs.js). A key it reads that
-# nothing writes is served as undefined; walking the models only finds keys that ARE present.
-API_CONSUMED_CONFIG_KEYS = (
-    "file_name",
-    "network_name",
-    "chain_id",
-    "explorer_base_url",
-    "multicall2",
-    "multicall3",
-    "native_currency_symbol",
-    "native_currency_coingecko_id",
-    "platform_coingecko_id",
-    "public_rpc_url",
-)
+# config.* keys the API reads, from curve-api-v2's DeploymentConfig
+# (api/services/curve_core/deployments.py) - a typed model, so this is its own answer rather
+# than one inferred from curve-api-core's javascript. True marks the ones it requires.
+API_CONSUMED_CONFIG_KEYS = {
+    "chain_id": True,
+    "explorer_base_url": True,
+    "file_name": True,
+    "file_path": True,
+    "is_testnet": True,
+    "native_currency_symbol": True,
+    "network_name": True,
+    "public_rpc_url": True,
+    "dao": False,
+    "evm_version": False,
+    "layer": False,
+    "logo_url": False,
+    "multicall2": False,
+    "multicall3": False,
+    "native_currency_coingecko_id": False,
+    "platform_coingecko_id": False,
+    "reference_token_addresses": False,
+    "rollup_type": False,
+    "wrapped_native_token": False,
+}
+
+
+def _api_consequence(key):
+    """A required key fails closed there: pydantic drops the chain, not just the field."""
+    if API_CONSUMED_CONFIG_KEYS[key]:
+        return "the whole chain fails to load there, not just this field"
+    return "served as undefined for every chain"
 
 
 def check_schema(deployments):
@@ -535,8 +553,8 @@ def check_schema(deployments):
         [
             Finding(
                 "SCHEMA",
-                f"config.{key} is read by curve-api-core but written by no chain",
-                "served as undefined for every chain; walking the models cannot catch this, "
+                f"config.{key} is read by curve-api-v2 but written by no chain",
+                f"{_api_consequence(key)}; walking the models cannot catch this, "
                 "since it only sees keys that are present",
             )
             for key in absent
@@ -1023,33 +1041,76 @@ def check_onchain(deployments, workers=12):
         )
         for chain, rows in sorted(ghosts.items())
     ]
-    # A dead public RPC is infrastructure noise, not a deployment finding. Name the reason:
-    # every probe failing usually means back off and re-run, some probes failing usually
-    # means the endpoint is fine and those addresses are the problem.
+    # A URL that answered nothing is something established, not something missed. Congestion
+    # is excluded - already retried, so a busy chain stays below and stays unverified.
+    dead = {chain: labels for chain, labels in errors.items() if _endpoint_is_dead(labels, probed[chain])}
+    findings += [
+        Finding(
+            "ONCHAIN",
+            f"{chain}: public_rpc_url answered none of {probed[chain]} probes ({_dominant(labels)})",
+            "the UI reads this field, so the URL needs replacing - nothing was learned about the addresses",
+            subjects=(chain,),
+        )
+        for chain, labels in sorted(dead.items())
+    ]
     findings += [
         Finding(
             "ONCHAIN",
             f"{chain}: unverified, RPC failed on {sum(labels.values())}/{probed[chain]} "
             f"probes ({_dominant(labels)})",
-            (
-                "every probe failed - public_rpc_url is dead, or rate-limited by an earlier "
-                "run; re-run after a pause before believing it"
-                if sum(labels.values()) == probed[chain]
-                else "some probes failed - no conclusion drawn for those addresses"
-            ),
+            "no conclusion drawn for those addresses - the endpoint is busy, re-run after a pause",
             subjects=(chain,),
             unverified=True,
         )
         for chain, labels in sorted(errors.items())
+        if chain not in dead
     ]
     return findings
+
+
+# Already retried by the time a label survives, so these mean "still busy", not "broken".
+TRANSIENT_LABELS = ("HTTP 429", "HTTP 502", "HTTP 503", "HTTP 504", "timeout")
+
+
+def _endpoint_is_dead(labels, probes):
+    """Every probe failed, and none of it was congestion: the URL itself does not work."""
+    return sum(labels.values()) == probes and not any(
+        label.startswith(TRANSIENT_LABELS) or "limit" in label.lower() for label in labels
+    )
 
 
 class RpcError(RuntimeError):
     """A JSON-RPC call that answered, but with an error object instead of a result."""
 
 
-def _rpc_call(rpc, method, params, timeout=25):
+# "Later", not "no": a dozen workers opening at once earns a 429 from a healthy endpoint.
+RETRY_STATUS = (429, 502, 503, 504)
+RETRY_ATTEMPTS = 3
+RETRY_BACKOFF = 1.5  # seconds before the second attempt, doubled for each one after
+
+
+def _transient(exc):
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code in RETRY_STATUS
+    if isinstance(exc, TimeoutError):
+        return True
+    if isinstance(exc, urllib.error.URLError):
+        # A refused connection or an unresolvable host will not fix itself in 3 seconds.
+        return isinstance(getattr(exc, "reason", None), TimeoutError)
+    return isinstance(exc, RpcError) and "limit" in str(exc).lower()
+
+
+def _rpc_call(rpc, method, params, timeout=25, attempts=RETRY_ATTEMPTS):
+    for attempt in range(attempts):
+        try:
+            return _rpc_once(rpc, method, params, timeout)
+        except Exception as exc:
+            if not _transient(exc) or attempt == attempts - 1:
+                raise
+            time.sleep(RETRY_BACKOFF * 2**attempt)
+
+
+def _rpc_once(rpc, method, params, timeout):
     body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": method, "params": params}).encode()
     request = urllib.request.Request(
         rpc, data=body, headers={"content-type": "application/json", "User-Agent": "Mozilla/5.0"}
@@ -1122,6 +1183,41 @@ DEPLOY_COMMIT_RE = re.compile(r"/blob/([0-9a-f]{7,40})/")
 def _git(*args):
     result = subprocess.run(["git", *args], capture_output=True, text=True, cwd=BASE_DIR)
     return result.stdout.strip() if result.returncode == 0 else None
+
+
+def recorded_compilers(deployments=None):
+    """Every vyper version the fleet records, so CI can install exactly those.
+
+    check_bytecode deliberately does not fetch a missing compiler - vvm would query GitHub's
+    release list once per contract - so the versions have to be known before it runs.
+    """
+    deployments = load_deployments()[0] if deployments is None else deployments
+    versions = set()
+    for _, (_, raw) in deployments.items():
+        for _, row in contract_rows(raw):
+            version = (row.get("compiler_settings") or {}).get("compiler_version")
+            if version:
+                versions.add(str(version))
+    return sorted(versions)
+
+
+def changed_chains(ref):
+    """Chain keys whose deployment file differs from `ref`, or None if the ref is unusable.
+
+    Diffed from the merge base so work that landed on the base branch meanwhile does not read
+    as this branch's - the same reason `compare` uses it. Against the working tree rather than
+    HEAD, so an edit you have not committed yet still counts locally.
+    """
+    base = _git("merge-base", ref, "HEAD")
+    listing = _git("diff", "--name-only", base, "--", "deployments") if base else None
+    if listing is None:
+        return None
+    keys = set()
+    for line in listing.splitlines():
+        path = Path(line)
+        if path.suffix == ".yaml" and not {"debug", "examples"} & set(path.parts):
+            keys.add(f"{path.parent.name}/{path.stem}")
+    return keys
 
 
 def source_provenance(row):
@@ -1563,7 +1659,8 @@ def render_summary(console, deployments, configs, findings, all_deployments=None
 @click.option("--summary", is_flag=True, help="one-row-per-chain table instead of full findings")
 @click.option("--brief", is_flag=True, help="one line per finding, no explanations")
 @click.option("--json", "json_path", metavar="PATH", default=None, help="write findings as JSON")
-def status_command(chain, only, onchain, wiring, bytecode, from_commit, summary, brief, json_path):
+@click.option("--changed-since", metavar="REF", default=None, help="only chains whose deployment file changed vs REF")
+def status_command(chain, only, onchain, wiring, bytecode, from_commit, summary, brief, json_path, changed_since):
     """Report what is deployed and what the next deploy would change."""
     if summary and brief:
         # Both replace the findings list with something else; there is no sensible merge.
@@ -1585,6 +1682,14 @@ def status_command(chain, only, onchain, wiring, bytecode, from_commit, summary,
         # UsageError exits 2, keeping "invoked wrong" apart from "drift found" (1) for CI.
         raise click.UsageError(f"no deployment or chain config found for {chain!r}")
     selected = (set(deployments) | set(unreadable) | ({config_match} if config_match else set())) if chain else None
+
+    if changed_since:
+        touched = changed_chains(changed_since)
+        if touched is None:
+            raise click.UsageError(f"{changed_since!r} is not a ref this clone can diff against")
+        deployments = {k: v for k, v in deployments.items() if k in touched}
+        unreadable = {k: v for k, v in unreadable.items() if k in touched}
+        selected = set(deployments) | set(unreadable)
 
     console = Console()
     prod = sum(1 for path, _ in deployments.values() if path.parent.name == "prod")

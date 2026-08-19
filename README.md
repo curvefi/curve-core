@@ -133,8 +133,35 @@ docker compose up --build
 Upon success, script will generate deployment file with address and other info in [deployments](/deployments) directory.
 File will have the same name as chain. ABI is stored in [abi](/abi) folder.
 Deployments are reusable, so if something fails, it can be fixed and rerun.
-**NOTE:** contracts should be verified separately on explorers like etherscan since it doesn't support Vyper contract
-verification by API.
+
+#### Verifying on explorers
+
+```
+python manage.py verify prod/sonic            # what would be submitted, and where
+python manage.py verify prod/sonic --submit   # send them (needs ETHERSCAN_API_KEY)
+```
+
+Etherscan's v2 API takes Vyper through `codeformat=vyper-json`, on one endpoint keyed by
+chain id, so a single key covers every chain it lists. The deployment file already records
+what an explorer asks for — compiler version, evm version, constructor args and the source
+path — so this assembles a payload rather than gathering facts.
+
+The payload states no optimisation mode on purpose. `deploy all` compiles with
+`evm_version` alone, so a `# pragma optimize` in the source is what chose the mode on chain,
+and Vyper rejects a setting that contradicts one.
+
+Chains missing from the Etherscan v2 chainlist fall back to Blockscout, which takes the same
+standard JSON, needs no key, and matches on runtime rather than creation bytecode. It is a
+fallback rather than a choice: a chain Etherscan lists is never probed for Blockscout. The
+instance is asked whether it is one — most are white-labelled, so the hostname does not say —
+and it publishes the compiler strings it accepts, so `v0.3.10+commit.91361694` is looked up
+rather than guessed.
+
+Already-verified contracts are detected before submitting, because instances disagree about
+what a re-submission means: some answer "verification started", others a bare `404`.
+
+**Blueprints are skipped** on every explorer: what sits on chain for one is the initcode,
+which nothing verifies against a source file.
 
 
 ### Deploy test pools
@@ -151,8 +178,8 @@ use mocks in production.
 `deployments/` is the cross-chain Curve address registry. Two generated files make it
 readable without walking the tree or calling the GitHub API with a token:
 
-- [registry/index.json](/registry/index.json) - every chain, its config essentials, and every
-  recorded address flattened to `amm.stableswap.factory` keys.
+- [registry/index.json](/registry/index.json) - every chain, its `config` block verbatim, and
+  every recorded address flattened to `amm.stableswap.factory` keys.
 - [registry/schema.json](/registry/schema.json) - JSON Schema for a deployment file, generated
   from the pydantic models.
 
@@ -170,6 +197,36 @@ The index covers every recorded chain, including the ones this repo did not depl
 hand-maintained for curve-api-core, so a registry without them would be less useful than the
 directory it replaces. Each carries `deployed_by_core`, set from the same rule `status` uses to
 decide what it checks, so filter on that rather than maintaining a list.
+
+`config` goes out verbatim rather than as a chosen subset. curve-api-core reads `config.*`
+straight off the file, so an allowlist here would serve a key it starts reading as `undefined`
+until someone noticed — which had already happened to `reference_token_addresses`.
+
+The index is the whole chain list in one unauthenticated request:
+
+```
+curl -s https://raw.githubusercontent.com/curvefi/curve-core/main/registry/index.json
+```
+
+Contract entries carry the address only. Anything that needs a row's version or deployment
+metadata should fetch that chain's file by its `file_path`, which is also a raw request and
+also needs no token.
+
+### The registry as a page
+
+Both artifacts are also published on GitHub Pages, alongside one searchable page over them —
+every chain, what it has per contract family, and every address linked to its explorer:
+
+```
+python manage.py site   # write site/
+```
+
+CI builds and deploys it on every push to `main` that touches a deployment. `site/` is not
+committed: it is derived from `registry/index.json`, which is, so the HTML adds nothing to
+review. The page renders from the committed artifact rather than rebuilding the index, so the
+table and the JSON served beside it cannot describe different data.
+
+It reports what is *recorded*, not what is live — `status --onchain` is what checks that.
 
 ## Deployment status and drift
 
@@ -229,8 +286,59 @@ python manage.py status --wiring    # factory pointers and ownership match the f
 python manage.py status --bytecode  # recompile and compare against deployed code
 ```
 
+`--changed-since REF` narrows any of them to the chains whose deployment file differs from
+`REF`, measured from the merge base so work that landed on the base branch meanwhile is not
+counted, and against the working tree so an uncommitted edit still shows. CI runs it on every
+pull request that touches [deployments](/deployments) and comments with what it found on those
+chains — a hand-edited address is exactly what no offline check can catch.
+
+```
+python manage.py status --changed-since origin/main --onchain --wiring
+```
+
+A probe that fails on congestion — `429`, `503`, a timeout — is retried with backoff, since
+a dozen workers opening at once earns a rate limit from an endpoint that is perfectly
+healthy. What survives that is reported two ways: an endpoint that answered *nothing* for a
+reason waiting cannot fix is a broken `public_rpc_url` and a finding in its own right, while
+anything else leaves those addresses unverified rather than judged.
+
 `--bytecode` is the only check that proves `contract_path` / `contract_version` /
 `evm_version` describe what is really on chain. Normal contracts must match by prefix (the
 tail is immutables and constructor args); blueprints must match `blueprint_bytecode` minus
 the 10-byte EIP-5202 wrapper that `deploy_via_create2` prepends. It is slow — compilation
 is cached per source, but it recompiles every distinct contract.
+
+Vyper hashes the source into the *deploy* bytecode, so editing a `.vy` file changes what a
+blueprint puts on chain even when the change is only whitespace — runtime bytecode, and so
+every normal contract, is unaffected. That is why `end-of-file-fixer` skips
+[contracts](/contracts): 110 of the 632 recorded rows are blueprints.
+
+### Nightly monitor
+
+A chain deviates when someone touches it, not when someone opens a PR here, so the on-chain
+checks also run on a schedule and keep one GitHub issue in sync with what they find. Every
+probe goes to the `public_rpc_url` the deployment file already records, so the job needs no
+secrets — and an endpoint that answers nothing is reported as a deviation in its own right,
+since that is the URL the UI reads.
+
+```
+python manage.py status --onchain --wiring --json onchain.json
+python manage.py monitor onchain.json --previous issue.md --body body.md --delta delta.md
+```
+
+The nightly run includes `--bytecode`, which is why it is the slow one: it recompiles every
+distinct contract. CI caches `~/.vvm` keyed on the deployment files, and installs exactly the
+versions they record — `check_bytecode` refuses to fetch a missing compiler, since vvm would
+query GitHub's release list once per contract.
+
+The issue opens on a **prod** deviation, comments when that set changes, and closes itself
+when prod is clean again. Devnet deviations are listed in the body but never open or close
+it: a wiped testnet is real information and not a 6am alert, and devnet churn alone would
+keep the issue open permanently. Probes that got no answer are listed the same way, for the
+same reason — a public endpoint that rate-limits tonight and answers tomorrow would
+otherwise notify the team every other night.
+
+`--body` is empty when prod is clean and `--delta` is empty when nothing changed, which is
+how the workflow decides whether to close and whether to comment. Coverage is counted in
+chains rather than findings, and a chain some other finding already names is not counted as
+unchecked — one unreachable chain otherwise reports itself several times over.

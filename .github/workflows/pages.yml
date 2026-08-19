@@ -1,0 +1,56 @@
+name: pages
+
+# Publishes the registry: index.json and schema.json at a stable URL with a real content
+# type, and one searchable page over them. Built in CI rather than committed - it is derived
+# from registry/index.json, which is committed and checked, so the HTML adds no review value.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "deployments/**"
+      - "registry/**"
+      - "scripts/index.py"
+      - "scripts/site.py"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# A queued run publishing older data would undo a newer one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install poetry==1.8.3
+      - run: poetry install --no-interaction
+
+      # index --check first: the page is rendered from the committed artifact, so publishing
+      # a stale one would put a wrong answer at a stable URL.
+      - run: poetry run python manage.py index --check
+      - run: poetry run python manage.py site
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

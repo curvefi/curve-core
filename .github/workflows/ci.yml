@@ -13,9 +13,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install black==24.4.2 isort==5.13.2
-      - run: black --check --config pyproject.toml .
-      - run: isort --check-only --line-length=120 .
+      # Hooks and their pins come from .pre-commit-config.yaml, so CI and the local hook
+      # cannot drift apart. It also runs end-of-file-fixer, which CI never did - the local
+      # hook only sees staged files, so eight files had been sitting unfixed.
+      - uses: pre-commit/action@v3.0.0
 
   test:
     runs-on: ubuntu-latest
@@ -29,6 +30,24 @@ jobs:
           python-version: "3.11"
       - run: pip install poetry==1.8.3
       - run: poetry install --no-interaction
+
+      # Without a compiler the payload test skips, and it is the one that proves the
+      # verification payload builds what the deployer built.
+      - name: Cache vyper compilers
+        uses: actions/cache@v4
+        with:
+          path: ~/.vvm
+          key: vvm-${{ hashFiles('deployments/**/*.yaml') }}
+          restore-keys: vvm-
+      - name: Install the compilers the fleet records
+        run: |
+          poetry run python -c "
+          import vvm
+          from scripts.status import recorded_compilers
+          for version in recorded_compilers():
+              vvm.install_vyper(version)
+          "
+
       - run: poetry run pytest tests/ -q
 
   artifacts:
@@ -43,6 +62,55 @@ jobs:
       - run: pip install poetry==1.8.3
       - run: poetry install --no-interaction
       - run: poetry run python manage.py index --check
+
+  onchain:
+    # Only the chains this PR touched, and only on chain. The offline checks run in `drift`
+    # for every chain; this catches a hand-edited address, which nothing offline can.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # --changed-since diffs against the merge base
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install poetry==1.8.3
+      - run: poetry install --no-interaction
+
+      - name: Probe the chains this branch changed
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          poetry run python manage.py status --changed-since "$base" --onchain --wiring --json touched.json || true
+          test -f touched.json # no findings still writes a file; a missing one is a broken job
+
+      # --scope all: the nightly run ignores devnet because it churns, but a PR that edited
+      # a devnet file is asking about exactly that chain.
+      - name: Render the report
+        id: report
+        run: |
+          poetry run python manage.py monitor touched.json --scope all --body onchain.md
+          # monitor writes the file either way; empty means nothing deviated.
+          test -s onchain.md && echo "found=true" >> "$GITHUB_OUTPUT" || echo "found=false" >> "$GITHUB_OUTPUT"
+
+      - name: Post
+        if: steps.report.outputs.found == 'true'
+        uses: marocchino/sticky-pull-request-comment@v2
+        continue-on-error: true
+        with:
+          header: onchain-touched
+          path: onchain.md
+
+      - name: Clear
+        if: steps.report.outputs.found == 'false'
+        uses: marocchino/sticky-pull-request-comment@v2
+        continue-on-error: true
+        with:
+          header: onchain-touched
+          delete: true
 
   drift:
     # Compares this branch against its base rather than a committed count: a fix needs no

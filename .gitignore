@@ -119,7 +119,7 @@ venv.bak/
 # Rope project settings
 .ropeproject
 
-# mkdocs documentation
+# mkdocs documentation, and the `manage.py site` output CI builds and publishes
 /site
 
 # mypy

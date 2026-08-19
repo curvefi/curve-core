@@ -30,6 +30,31 @@ def test_index_publishes_every_chain_and_flags_what_status_skips():
     assert {i for i, c in entries.items() if not c["deployed_by_core"]} == skipped
 
 
+def test_the_index_publishes_the_config_verbatim():
+    """It used to publish a chosen subset, which silently dropped reference_token_addresses -
+    a key curve-api-core reads. An allowlist here is a key served as undefined over there."""
+    from scripts.index import build_index
+    from scripts.status import load_deployments
+
+    source = {key: (raw.get("config") or {}) for key, (_, raw) in load_deployments()[0].items()}
+    for chain in build_index()["chains"]:
+        assert chain["config"] == source[chain["id"]], chain["id"]
+
+
+def test_every_config_key_the_api_reads_reaches_the_index():
+    """The other direction: SCHEMA already reports keys curve-api-v2 reads that nothing
+    writes, and this stops one being written but not published."""
+    from scripts.index import build_index
+    from scripts.status import API_CONSUMED_CONFIG_KEYS, load_deployments
+
+    written = {key for _, (_, raw) in load_deployments()[0].items() for key in (raw.get("config") or {})}
+    expected = set(API_CONSUMED_CONFIG_KEYS) & written  # a key no chain writes, no index can publish
+    published = {key for chain in build_index()["chains"] for key in chain["config"]}
+
+    assert expected, "the consumer contract cannot be empty"
+    assert expected <= published, expected - published
+
+
 def test_index_excludes_debug_and_example_files():
     from scripts.index import build_index
 
