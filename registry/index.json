@@ -1,5 +1,5 @@
 {
-  "count": 27,
+  "count": 28,
   "chains": [
     {
       "id": "devnet/arb_sepolia",
@@ -684,6 +684,71 @@
         "registries.metaregistry.registry_handlers.stableswap": "0xA8DbC5Af59D2e4a23a0196656F34D0bbc1F887b8",
         "registries.metaregistry.registry_handlers.tricryptoswap": "0xF0c6FC6170A2C237F4133546cbA1729cBADc31Ad",
         "registries.metaregistry.registry_handlers.twocryptoswap": "0xfc551b9d5D89d3a25124405c55C7033F8F1e5c28"
+      }
+    },
+    {
+      "id": "prod/arc",
+      "file_path": "prod/arc.yaml",
+      "deployed_by_core": true,
+      "config": {
+        "chain_id": 5042,
+        "dao": {
+          "crv": null,
+          "crvusd": null,
+          "emergency_admin": "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF",
+          "ownership_admin": "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF",
+          "parameter_admin": "0xabc336d4C71ad275695744d32DdB1d8266Db1cbF",
+          "vault": "0x193110Ce1542d7371e1515BD6A2E470fDefc310D"
+        },
+        "evm_version": "shanghai",
+        "explorer_base_url": "https://explorer.arc.io/",
+        "file_name": "arc",
+        "file_path": "prod/arc.yaml",
+        "is_testnet": false,
+        "layer": 1,
+        "logo_url": "https://raw.githubusercontent.com/curvefi/curve-assets/refs/heads/main/chains/arc.png",
+        "multicall2": null,
+        "multicall3": "0xcA11bde05977b3631167028862bE2a173976CA11",
+        "native_currency_coingecko_id": "usd-coin",
+        "native_currency_symbol": "USDC",
+        "native_token": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+        "network_name": "Arc",
+        "public_rpc_url": "https://rpc.mainnet.arc.io",
+        "reference_token_addresses": {
+          "usdc": "",
+          "usdt": "",
+          "weth": ""
+        },
+        "rollup_type": "not_rollup",
+        "wrapped_native_token": "0x0000000000000000000000000000000000000000",
+        "wrapper": "0x0000000000000000000000000000000000000000"
+      },
+      "contracts": {
+        "amm.stableswap.factory": "0x8271e06E5887FE5ba05234f5315c19f3Ec90E8aD",
+        "amm.stableswap.implementation": "0xFC687EFAFED297b765eDEcF8179c32195597C2df",
+        "amm.stableswap.math": "0xe460dec242bc0A1a364c250a9D2F731d8D923650",
+        "amm.stableswap.meta_implementation": "0x845b942DeEF9BC20a39A8b34B23e8c33aC2921BF",
+        "amm.stableswap.views": "0xC9459A955a885467f01Ccc531c51dBcC957993c0",
+        "amm.tricryptoswap.factory": "0x6E28493348446503db04A49621d8e6C9A40015FB",
+        "amm.tricryptoswap.implementation": "0x286182220E734AaC601282ba059de531d4BEAC1f",
+        "amm.tricryptoswap.math": "0xA4A2E7E11cBe5213B316E801D2172Ef10e566A96",
+        "amm.tricryptoswap.views": "0x2Fe4A238F6A3BD7fAA68e0B6951e3FAFdB2876Eb",
+        "amm.twocryptoswap.factory": "0xe7FBd704B938cB8fe26313C3464D4b7B7348c88C",
+        "amm.twocryptoswap.implementation": "0x5F870C2cf22ff829B5DC1Da09856B79dA6544f94",
+        "amm.twocryptoswap.math": "0x95249Dd40dDa3c0cbB4A7dd7D287E04aA68A3D4B",
+        "amm.twocryptoswap.views": "0x17c67C3A38F68cbc4dEC77Fd7378978971B6c271",
+        "gauge.child_gauge.factory": "0x41D2c5128A7241EC1f7CE346B162C347C19548B7",
+        "gauge.child_gauge.implementation": "0xbb8A5E91295131Ce07B6Bfe301C49bcD925A2902",
+        "governance.vault": "0x193110Ce1542d7371e1515BD6A2E470fDefc310D",
+        "helpers.deposit_and_stake_zap": "0xB2Be7692B07b640C9f2ee1187cee2fAec741F872",
+        "helpers.rate_provider": "0x129578f94C253b8Bc903Bf2b73D07BF2583cc11d",
+        "helpers.router": "0xFF5Cb29241F002fFeD2eAa224e3e996D24A6E8d1",
+        "helpers.stable_swap_meta_zap": "0x2AF43209B366A4491CCe0A97C5a7B6059fd21295",
+        "registries.address_provider": "0x4574921eb950d3Fd5B01562162EC566Cb8bc3648",
+        "registries.metaregistry": "0xe6dA14500f0b5783E2325F9C5a7eE5d99DA0fB42",
+        "registries.metaregistry.registry_handlers.stableswap": "0x46FEffb8Ed015250Cd48f9bf7F4a4584049Ca4aE",
+        "registries.metaregistry.registry_handlers.tricryptoswap": "0xBBbe22DEe69747e61f676cF50465b1bfbA4a4dD6",
+        "registries.metaregistry.registry_handlers.twocryptoswap": "0x7e595b3b77CC16680C30617b88E9b87F987Ac934"
       }
     },
     {
