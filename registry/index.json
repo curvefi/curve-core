@@ -1179,7 +1179,7 @@
           "vault": "0x193110Ce1542d7371e1515BD6A2E470fDefc310D"
         },
         "evm_version": "shanghai",
-        "explorer_base_url": "https://robinhoodchain.blockscout.com/",
+        "explorer_base_url": "https://robin.etherscan.io/",
         "file_name": "robinhood",
         "file_path": "prod/robinhood.yaml",
         "is_testnet": false,
