@@ -9,7 +9,7 @@
         Can do estimations with get_dy and get_dx
 """
 
-version: public(constant(String[8])) = "1.1.0"  # ng pools
+version: public(constant(String[8])) = "1.1.1"  # ng pools
 
 
 from vyper.interfaces import ERC20
