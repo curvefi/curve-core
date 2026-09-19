@@ -19,7 +19,7 @@ COPY poetry.lock  .
 COPY pyproject.toml .
 
 # Project initialization:
-RUN poetry config virtualenvs.in-project true && poetry install --no-interaction --no-ansi
+RUN poetry config virtualenvs.in-project true && poetry install --no-interaction --no-ansi --no-dev
 
 FROM builder AS final
 
