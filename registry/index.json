@@ -1191,7 +1191,7 @@
         "native_currency_symbol": "ETH",
         "native_token": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
         "network_name": "Robinhood",
-        "public_rpc_url": "https://robinhood.drpc.org",
+        "public_rpc_url": "https://rpc.mainnet.chain.robinhood.com",
         "reference_token_addresses": {
           "usdc": "",
           "usdt": "",
