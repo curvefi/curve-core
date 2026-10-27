@@ -140,7 +140,7 @@ def _psuedo_mint(_gauge: address, _user: address):
             1,
         )
         # update last request time
-        self.gauge_data[_gauge] = block.timestamp << 2 + 3
+        self.gauge_data[_gauge] = (block.timestamp << 2) + 3
 
     assert ChildGauge(_gauge).user_checkpoint(_user)
     total_mint: uint256 = ChildGauge(_gauge).integrate_fraction(_user)
