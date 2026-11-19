@@ -236,13 +236,24 @@ ETHEREUM_ADMINS = (
     "0x467947EE34aF926cF1DCac093870f613C96B1E0c",  # Emergency
 )
 
+# Native bridge broadcasters, storage proof Broadcaster is hardcoded in MessageDigestVerifier
 BROADCASTERS = {
-    RollupType.op_stack: "0xE0fE4416214e95F0C67Dc044AAf1E63d6972e0b9",
     RollupType.polygon_cdk: "0xB5e7fE8eA8ECbd33504485756fCabB5f5D29C051",
     RollupType.arb_orbit: "0x94630a56519c00Be339BBd8BD26f342Bf4bd7eE0",
-    RollupType.taiko: "0x05A3a7B57Cb60419fF0B087e9EAE8469c28aC8CD",
-    RollupType.not_rollup: None,
 }
+
+# Rollups with native Ethereum block hash/state root feed, governance messages are verified via storage proofs
+# against it: BlockHashOracle -> MessageDigestVerifier -> Relayer (generic one, with settable messenger)
+STORAGE_PROOF_ROLLUPS = (RollupType.op_stack, RollupType.taiko)
+# Native feed addresses are hardcoded in Block Hash Oracles (Taiko derives predeploys from chain id)
+BLOCKHASH_ORACLE_CHAIN_IDS = {
+    RollupType.taiko: (167000,),
+}
+
+
+def get_relayer_type(rollup_type: RollupType) -> RollupType:
+    return RollupType.not_rollup if rollup_type in STORAGE_PROOF_ROLLUPS else RollupType(rollup_type)
+
 
 ROOT_GAUGE_FACTORY = "0x306A45a1478A000dC701A6e1f7a569afb8D9DCD6"
 ROOT_GAUGE_IMPLEMENTATION = "0x96720942F9fF22eFd8611F696E5333Fe3671717a"  # ROOT_GAUGE_FACTORY.get_implementation()

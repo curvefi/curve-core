@@ -1,0 +1,244 @@
+[
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_block_hash_oracle",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_relayer",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "inputs": [],
+        "name": "BadAccount",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "BadEmptyRootHash",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "BadNodeHash",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "BadRootHash",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "BadSkipNibbles",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "BlockhashMismatch",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "DivergentNode",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "EmptyInput",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "ExtensionAtLastLevel",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "LeafNode",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "NoChild",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "NotLastLevel",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "NotNibble",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "Unreachable",
+        "type": "error"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "agent",
+                "type": "uint256"
+            },
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "target",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "data",
+                        "type": "bytes"
+                    }
+                ],
+                "indexed": false,
+                "internalType": "struct IRelayer.Message[]",
+                "name": "messages",
+                "type": "tuple[]"
+            }
+        ],
+        "name": "Verify",
+        "type": "event"
+    },
+    {
+        "inputs": [],
+        "name": "BLOCK_HASH_ORACLE",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "RELAYER",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "nonce",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_agent",
+                "type": "uint256"
+            },
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "target",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "data",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct IRelayer.Message[]",
+                "name": "_messages",
+                "type": "tuple[]"
+            },
+            {
+                "internalType": "bytes",
+                "name": "_block_header_rlp",
+                "type": "bytes"
+            },
+            {
+                "internalType": "bytes",
+                "name": "_proof_rlp",
+                "type": "bytes"
+            }
+        ],
+        "name": "verifyMessagesByBlockHash",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_agent",
+                "type": "uint256"
+            },
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "target",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "data",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct IRelayer.Message[]",
+                "name": "_messages",
+                "type": "tuple[]"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_block_number",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bytes",
+                "name": "_proof_rlp",
+                "type": "bytes"
+            }
+        ],
+        "name": "verifyMessagesByStateRoot",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+]

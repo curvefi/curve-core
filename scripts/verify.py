@@ -128,6 +128,8 @@ def plan_row(slot, row, chain_id, route):
         return "skip", "blueprint - the chain holds initcode, which no explorer verifies"
     if not row.get("contract_path"):
         return "skip", "no contract_path recorded"
+    if source_path(row).suffix == ".sol":
+        return "skip", "solidity - only vyper sources are submitted, verify it on the explorer by hand"
     if not source_path(row).exists():
         return "blocked", f"source is gone: {rel(source_path(row))}"
     if not (row.get("compiler_settings") or {}).get("compiler_version"):

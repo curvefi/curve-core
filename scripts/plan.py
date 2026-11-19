@@ -17,6 +17,7 @@ from pathlib import Path
 import click
 import yaml
 
+from scripts.deploy.constants import STORAGE_PROOF_ROLLUPS, get_relayer_type
 from scripts.deploy.utils import (
     fetch_filename_from_version,
     fetch_latest_contract,
@@ -37,10 +38,15 @@ CALL_SITES = (
 # deploy_xgov pins the agent to 0.3.10 on these rollups; agent_v_101.vy is 0.4.0.
 AGENT_PIN = {"arb_orbit", "op_stack", "polygon_cdk"}
 
+# Deployed only on rollups whose x-gov is verified with storage proofs (STORAGE_PROOF_ROLLUPS).
+STORAGE_PROOF_SLOTS = {"governance/blockhash_oracle/{rollup_type}", "governance/verifier"}
+
 # In run_deploy_all order. Second element names the condition that skips the step.
 STEPS = [
+    ("governance/blockhash_oracle/{rollup_type}", "xgov"),
     ("governance/agent", "xgov"),
-    ("governance/relayer/{rollup_type}", "xgov"),
+    ("governance/relayer/{relayer_type}", "xgov"),
+    ("governance/verifier", "xgov"),
     ("governance/vault", "vault"),
     ("gauge/child_gauge/factory", None),
     ("gauge/child_gauge/implementation", None),
@@ -96,8 +102,10 @@ def plan_step(slot, raw, pinned=None):
     folder = BASE_DIR / "contracts" / Path(slot)
     if not folder.is_dir():
         return "BLOCKED", "no such folder"
+    # Solidity contracts (the x-gov verifier) go through deploy_solidity_contract.
+    suffix = ".vy" if any(folder.glob("*_v_*.vy")) else ".sol"
     try:
-        latest = Path(fetch_filename_from_version(folder, pinned)) if pinned else fetch_latest_contract(folder)
+        latest = Path(fetch_filename_from_version(folder, pinned)) if pinned else fetch_latest_contract(folder, suffix)
     except (FileNotFoundError, IndexError):
         return "BLOCKED", f"no {pinned or '_v_NNN'} file the deployer can select"
     version = get_version_from_filename(latest)
@@ -113,6 +121,12 @@ def plan_step(slot, raw, pinned=None):
     return "reuse", f"{current}  {row['address'][:10]}..."
 
 
+def format_slot(slot, chain_settings):
+    """Fill the rollup-dependent segments the way deploy_xgov picks its folders."""
+    rollup_type = chain_settings.rollup_type
+    return slot.format(rollup_type=rollup_type, relayer_type=get_relayer_type(rollup_type))
+
+
 def build_plan(chain_settings, raw):
     """Ordered steps plus the two conditions run_deploy_all evaluates before contracts."""
     dao = chain_settings.dao
@@ -124,7 +138,9 @@ def build_plan(chain_settings, raw):
 
     steps = []
     for slot, condition in STEPS:
-        slot = slot.format(rollup_type=chain_settings.rollup_type)
+        if slot in STORAGE_PROOF_SLOTS and chain_settings.rollup_type not in STORAGE_PROOF_ROLLUPS:
+            continue
+        slot = format_slot(slot, chain_settings)
         if condition in skip:
             steps.append({"slot": slot, "action": "skip", "detail": f"{condition} already set in chain config"})
             continue
@@ -140,7 +156,7 @@ def unknown_folders(chain_settings):
     A call site with a variable segment (relayer/<rollup_type>) extracts only its literal
     prefix, so a planned slot under that prefix counts as covering it.
     """
-    planned = {slot.format(rollup_type=chain_settings.rollup_type) for slot, _ in STEPS}
+    planned = {format_slot(slot, chain_settings) for slot, _ in STEPS}
     return {f for f in deployer_folders() if not any(p == f or p.startswith(f + "/") for p in planned)}
 
 

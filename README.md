@@ -82,8 +82,13 @@ Or copy [the example](/settings/chains/examples/example.yaml) into
 
 - **network_name** - chain name
 - **chain_id** - chain id
-- **rollup_type** - can be _op_stack_, _arb_orbit_, _polygon_cdk_, _zksync_, _taiko_ or _not_rollup_. Zksync rollups
-  currently aren't fully supported
+- **rollup_type** - can be _op_stack_, _arb_orbit_, _polygon_cdk_, _taiko_, _zksync_ or _not_rollup_. Zksync rollups
+  currently aren't fully supported. It defines how DAO votes get from Ethereum to the chain (x-gov):
+  - _arb_orbit_, _polygon_cdk_ - messages are passed through the native bridge
+  - _op_stack_, _taiko_ - messages are proven with storage proofs against Ethereum block hash/state root, which
+    rollup provides natively: Block Hash Oracle -> Verifier (Solidity, `solc` is installed automatically) -> Relayer.
+    Taiko oracle works on Taiko Alethia (chain id 167000) only
+  - _not_rollup_ - Relayer with deployer as temporary messenger, Verifier has to be set up separately
 - **native_wrapped_token** - address of native wrapped token (can be non-eth token)
 - **dao** - params of contracts already present on chain (script will deploy x-gov contracts, CRV and crvUSD should
   be bridged using native bridges)

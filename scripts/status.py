@@ -303,7 +303,7 @@ def norm(addr):
 # comparison entirely - so "latest wins" does not hold for that slot.
 XGOV_PINNED_ROLLUPS = frozenset({"arb_orbit", "op_stack", "polygon_cdk"})
 PINNED_AGENT_VERSION = "1.0.0"
-XGOV_SLOTS = ("governance.agent", "governance.relayer")
+XGOV_SLOTS = ("governance.agent", "governance.blockhash_oracle", "governance.relayer", "governance.verifier")
 
 
 def _xgov_plan(raw, config_path):
@@ -361,7 +361,7 @@ def check_pending(deployments, configs=None, blocked=()):
             if not folder.is_dir():
                 continue
             try:
-                latest = fetch_latest_contract(folder)
+                latest = fetch_latest_contract(folder, suffix=Path(str(contract_path)).suffix)
                 available = get_version_from_filename(latest)
             except (FileNotFoundError, ValueError):
                 continue
@@ -746,7 +746,9 @@ def check_contracts():
 
     # deploy_contract() writes the ABI to the contract path with contracts->abi swapped,
     # so anything else in abi/ is stale and anything missing will appear on next deploy.
+    # Solidity contracts are deployed by deploy_solidity_contract, versioned files only (libs have no ABI).
     expected = {f.relative_to(contracts_dir).as_posix().removesuffix(".vy") for f in contracts_dir.rglob("*.vy")}
+    expected |= {f.relative_to(contracts_dir).with_suffix("").as_posix() for f in contracts_dir.rglob("*_v_*.sol")}
     present = {
         f.relative_to(BASE_DIR / "abi").as_posix().removesuffix(".json") for f in (BASE_DIR / "abi").rglob("*.json")
     }
@@ -767,7 +769,7 @@ def check_contracts():
                 f"{plural(len(missing), 'contract')} have no committed ABI",
                 "written on first deploy; absent until then for anyone consuming abi/",
                 (),
-                tuple(f"contracts/{m}.vy" for m in missing),
+                tuple(f"contracts/{m}.*" for m in missing),
             )
         )
     return findings

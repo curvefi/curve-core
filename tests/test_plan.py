@@ -121,3 +121,29 @@ def test_call_site_scan_catches_both_path_spellings(tmp_path, monkeypatch):
     (tmp_path / "b.py").write_text('deploy_contract(s, BASE_DIR / "contracts" / "helpers" / "two")')
     monkeypatch.setattr(plan_module, "DEPLOY_DIR", tmp_path)
     assert plan_module.deployer_folders() == {"helpers/one", "helpers/two"}
+
+
+def test_plan_lists_storage_proof_xgov_on_rollups_with_native_blockhash():
+    """op_stack/taiko x-gov is Block Hash Oracle -> Verifier -> generic Relayer; the plan must
+    name the same folders deploy_xgov picks, including the Solidity verifier."""
+    from scripts.plan import build_plan, unknown_folders
+    from settings.config import get_chain_settings
+
+    ink = get_chain_settings("prod/ink.yaml").model_copy(update={"dao": None})  # as a fresh op_stack chain
+    assert unknown_folders(ink) == set()
+
+    steps = {s["slot"]: s for s in build_plan(ink, {})}
+    assert steps["governance/blockhash_oracle/op_stack"]["action"] == "deploy"
+    assert steps["governance/relayer/not_rollup"]["action"] == "deploy"
+    assert "governance/relayer/op_stack" not in steps
+    assert steps["governance/verifier"]["action"] == "deploy"
+    assert steps["governance/verifier"]["detail"].startswith("verifier_v_100.sol")
+
+
+def test_plan_has_no_storage_proof_steps_elsewhere():
+    from scripts.plan import build_plan
+    from settings.config import get_chain_settings
+
+    slots = {s["slot"] for s in build_plan(get_chain_settings("prod/sonic.yaml"), {})}
+    assert "governance/relayer/not_rollup" in slots
+    assert not any(slot.startswith(("governance/blockhash_oracle", "governance/verifier")) for slot in slots)

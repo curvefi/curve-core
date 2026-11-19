@@ -114,7 +114,16 @@ class YamlDeploymentFile:
         ctor_args: tuple,
         chain_settings: ChainConfig,
         as_blueprint: bool = False,
+        compiler_settings: dict | None = None,
+        version: str | None = None,
     ):
+        """
+        Save contract deployment metadata
+
+        Args:
+        compiler_settings (dict | None): Preset compiler settings, parsed from Vyper source if not set.
+        version (str | None): Preset contract version, for contracts without `version()` method.
+        """
         deployment_config_dict = self.get_deployment_config().model_dump()
         contract_path_keys = contract_path.parts[contract_path.parts.index("contracts") : -1]
 
@@ -134,16 +143,8 @@ class YamlDeploymentFile:
         with open(BASE_DIR / contract_path) as f:
             source_code = f.read()
 
-        # fetch data from contract pragma:
-        pattern = r"# pragma version ([\d.]+)"
-        match = re.search(pattern, source_code)
-        if match:
-            compiler_version = match.group(1)
-        else:
-            raise ValueError("Compiler Version is set incorrectly")
-
         # latest git commit hash:
-        latest_git_commit_for_file = get_latest_commit_hash(contract_object.filename)
+        latest_git_commit_for_file = get_latest_commit_hash(str(BASE_DIR / contract_path))
         contract_relative_path = get_relative_path(contract_path)
         # curve-lite was renamed to curve-core; already-recorded URLs still redirect.
         github_url = (
@@ -151,17 +152,30 @@ class YamlDeploymentFile:
             f"{'/'.join(contract_relative_path.parts[1:])}"
         )
 
-        optimisation_level = "UNKNOWN"  # it's not in VVM contract, backward compatibility
-        pattern = r"# pragma optimize ([a-z]+)"
-        match = re.search(pattern, source_code)
-        if match:
-            optimisation_level = match.group(1)
+        if compiler_settings is None:
+            # fetch data from contract pragma:
+            pattern = r"# pragma version ([\d.]+)"
+            match = re.search(pattern, source_code)
+            if match:
+                compiler_version = match.group(1)
+            else:
+                raise ValueError("Compiler Version is set incorrectly")
 
-        evm_version = chain_settings.evm_version
+            optimisation_level = "UNKNOWN"  # it's not in VVM contract, backward compatibility
+            pattern = r"# pragma optimize ([a-z]+)"
+            match = re.search(pattern, source_code)
+            if match:
+                optimisation_level = match.group(1)
 
-        if not as_blueprint:
+            compiler_settings = {
+                "compiler_version": compiler_version,
+                "optimisation_level": optimisation_level,
+                "evm_version": chain_settings.evm_version,
+            }
+
+        if version is None and not as_blueprint:
             version = normalise_version(contract_object.version())
-        else:
+        elif version is None:
             match = BLUEPRINT_VERSION_PATTERN.search(source_code)
 
             if match:
@@ -179,11 +193,7 @@ class YamlDeploymentFile:
                 "address": contract_object.address.strip(),
                 "deployment_timestamp": int(time.time()),
                 "constructor_args_encoded": encoded_args,
-                "compiler_settings": {
-                    "compiler_version": compiler_version,
-                    "optimisation_level": optimisation_level,
-                    "evm_version": evm_version,
-                },
+                "compiler_settings": compiler_settings,
             }
         )
 

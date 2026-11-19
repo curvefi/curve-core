@@ -13,6 +13,7 @@ from settings.config import BASE_DIR, settings
 from settings.models import ChainConfig
 
 from .constants import CREATE2_SALT, CREATE2DEPLOYER_ABI, CREATE2DEPLOYER_ADDRESS
+from .solidity import SOLC_EVM_VERSION, SOLC_OPTIMIZER_RUNS, SOLC_VERSION, load_partial_solidity
 from .utils import (
     fetch_filename_from_version,
     fetch_latest_contract,
@@ -133,13 +134,57 @@ def deploy_contract(
     return deployed_contract
 
 
+def deploy_solidity_contract(chain_settings: ChainConfig, contract_folder: Path, contract_name: str, *args):
+    """
+    Deploy latest version of Solidity contract from the folder if it is not deployed yet.
+    Version is taken from the filename, since contracts are not obliged to have `version()` method.
+    """
+    deployment_file = get_deployment_obj(chain_settings)
+
+    contract_to_deploy = fetch_latest_contract(contract_folder, suffix=".sol")
+    version = get_version_from_filename(contract_to_deploy)
+    contract_deployer = load_partial_solidity(contract_to_deploy, contract_name)
+
+    parts = contract_folder.parts
+    deployed_contract = deployment_file.get_contract_deployment(parts[parts.index("contracts") :])
+    if deployed_contract and not version_a_gt_version_b(version, deployed_contract.contract_version):
+        logger.info(f"{parts[-1]} contract already deployed at {deployed_contract.address}. Fetching ...")
+        return contract_deployer.at(deployed_contract.address)
+
+    logger.info(f"Deploying {os.path.basename(contract_to_deploy)} version {version}")
+    deployed_contract = contract_deployer.deploy(*args)
+
+    # store abi
+    abi_path = BASE_DIR / "abi" / get_relative_path(contract_to_deploy).relative_to("/contracts").with_suffix(".json")
+    os.makedirs(abi_path.parent, exist_ok=True)
+    with open(abi_path, "w") as abi_file:
+        json.dump(contract_deployer.abi, abi_file, indent=4)
+        abi_file.write("\n")
+
+    # update deployment yaml file
+    deployment_file.update_contract_deployment(
+        contract_to_deploy,
+        deployed_contract,
+        args,
+        chain_settings,
+        compiler_settings={
+            "compiler_version": SOLC_VERSION,
+            "optimisation_level": f"{SOLC_OPTIMIZER_RUNS} runs",
+            "evm_version": SOLC_EVM_VERSION,
+        },
+        version=version,
+    )
+
+    return deployed_contract
+
+
 def deploy_via_create2(chain_settings: ChainConfig, contract_file, abi_encoded_ctor="", is_blueprint=False):
     create2deployer = boa.loads_abi(CREATE2DEPLOYER_ABI).at(CREATE2DEPLOYER_ADDRESS)
     contract_obj = boa.load_partial(contract_file, compiler_args={"evm_version": chain_settings.evm_version})
     compiled_bytecode = contract_obj.compiler_data.bytecode
     deployment_bytecode = compiled_bytecode + abi_encoded_ctor
     if is_blueprint:
-        blueprint_preamble = b"\xFE\x71\x00"
+        blueprint_preamble = b"\xfe\x71\x00"
         # Add blueprint preamble to disable calling the contract:
         blueprint_bytecode = blueprint_preamble + deployment_bytecode
         # Add code for blueprint deployment:
