@@ -40,10 +40,10 @@ def fetch_filename_from_version(contract_folder: Path, version: str):
     return None
 
 
-def fetch_latest_contract(contract_folder: Path) -> Path:
+def fetch_latest_contract(contract_folder: Path, suffix: str = ".vy") -> Path:
     # Regex pattern to match version numbers in filenames
     contract_name = os.path.basename(contract_folder)
-    pattern = re.compile(rf".*_v_(\d+).vy")
+    pattern = re.compile(rf".*_v_(\d+){re.escape(suffix)}$")
 
     # Filter and sort files by version number
     versions = []

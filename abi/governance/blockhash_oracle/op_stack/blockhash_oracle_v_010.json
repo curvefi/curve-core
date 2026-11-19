@@ -1,0 +1,178 @@
+[
+    {
+        "name": "CommitBlockHash",
+        "inputs": [
+            {
+                "name": "committer",
+                "type": "address",
+                "indexed": true
+            },
+            {
+                "name": "number",
+                "type": "uint256",
+                "indexed": true
+            },
+            {
+                "name": "hash",
+                "type": "bytes32",
+                "indexed": false
+            }
+        ],
+        "anonymous": false,
+        "type": "event"
+    },
+    {
+        "name": "ApplyBlockHash",
+        "inputs": [
+            {
+                "name": "number",
+                "type": "uint256",
+                "indexed": true
+            },
+            {
+                "name": "hash",
+                "type": "bytes32",
+                "indexed": false
+            }
+        ],
+        "anonymous": false,
+        "type": "event"
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "get_block_hash",
+        "inputs": [
+            {
+                "name": "_number",
+                "type": "uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "bytes32"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "get_state_root",
+        "inputs": [
+            {
+                "name": "_number",
+                "type": "uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "bytes32"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "find_known_block_number",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "find_known_block_number",
+        "inputs": [
+            {
+                "name": "_before",
+                "type": "uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "nonpayable",
+        "type": "function",
+        "name": "commit",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "nonpayable",
+        "type": "function",
+        "name": "apply",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "version",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "block_hash",
+        "inputs": [
+            {
+                "name": "arg0",
+                "type": "uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "bytes32"
+            }
+        ]
+    },
+    {
+        "stateMutability": "view",
+        "type": "function",
+        "name": "commitments",
+        "inputs": [
+            {
+                "name": "arg0",
+                "type": "address"
+            },
+            {
+                "name": "arg1",
+                "type": "uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "bytes32"
+            }
+        ]
+    }
+]

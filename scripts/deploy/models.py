@@ -50,6 +50,11 @@ class Contract(BaseModel):
 
     def get_contract(self):
         contract_path = BASE_DIR / Path(self.contract_path.lstrip("/"))
+        if contract_path.suffix == ".sol":
+            return boa.load_abi(
+                str(BASE_DIR / "abi" / Path(self.contract_path).relative_to("/contracts").with_suffix(".json")),
+                name=contract_path.stem,
+            ).at(self.address)
         compiler_args = {}
         if self.compiler_settings.evm_version:
             compiler_args["evm_version"] = self.compiler_settings.evm_version
@@ -106,8 +111,10 @@ class GaugeDeployment(BaseModel):
 
 class GovernanceDeployment(BaseModel):
     agent: Contract | None = None
+    blockhash_oracle: dict[str, Contract] | None = None  # str should be RollupType
     relayer: dict[str, Contract] | None = None  # str should be RollupType
     vault: Contract | None = None
+    verifier: Contract | None = None
 
 
 #  <----------------------------------------------------------------->

@@ -62,6 +62,7 @@ pre-commit==3.7.1 ; python_version >= "3.10" and python_version < "4.0"
 ptyprocess==0.7.0 ; python_version >= "3.10" and python_version < "4.0"
 py-ecc==7.0.1 ; python_version >= "3.10" and python_version < "4"
 py-evm==0.10.1b1 ; python_version >= "3.10" and python_version < "4"
+py-solc-x==2.0.3 ; python_version >= "3.10" and python_version < "4"
 pycparser==2.22 ; python_version >= "3.10" and python_version < "4.0" and (sys_platform == "darwin" or sys_platform == "linux") and (sys_platform == "darwin" or platform_python_implementation != "PyPy")
 pycryptodome==3.20.0 ; python_version >= "3.10" and python_version < "4.0"
 pydantic-core==2.20.1 ; python_version >= "3.10" and python_version < "4"

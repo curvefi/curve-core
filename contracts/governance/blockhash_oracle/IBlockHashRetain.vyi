@@ -1,0 +1,54 @@
+# pragma version ^0.4.0
+"""
+@title BlockHashRetain Interface Definition
+@custom:contract-name IBlockHashRetain
+@custom:version 0.1.0
+@custom:security security@curve.fi
+@license MIT
+@author curve.fi
+@notice Interface for retaining values in contract's storage for future use.
+        Needed when native oracle provides only last value.
+"""
+
+# @dev Emitted when someone commits block hash.
+# Note that not all oracles use commit-apply scheme and this might be ignored.
+event CommitBlockHash:
+    committer: indexed(address)
+    number: indexed(uint256)
+    hash: bytes32
+
+
+# @dev Emitted when commits threshold reached and blockhash is applied.
+# Note that not all oracles use commit-apply scheme and this might be ignored.
+event ApplyBlockHash:
+    number: indexed(uint256)
+    hash: bytes32
+
+
+@external
+@view
+def commitments(_commiter: address, _block_number: uint256) -> bytes32:
+    """
+    @notice Get commitments of block hashes/state roots
+    @param _commiter address that called `commit()`
+    @param _block_number Block number that was retained
+    @return Block hash/state root depending on what is being saved
+    """
+    ...
+
+
+@external
+def commit() -> uint256:
+    """
+    @notice Commit (and apply) a block hash/state root.
+    @dev Same as `apply()` but saves committer
+    """
+    ...
+
+
+@external
+def apply() -> uint256:
+    """
+    @notice Apply a block hash/state root.
+    """
+    ...

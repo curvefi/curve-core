@@ -2,15 +2,53 @@ from pathlib import Path
 
 import boa
 
-from scripts.deploy.constants import BROADCASTERS
+from scripts.deploy.constants import BLOCKHASH_ORACLE_CHAIN_IDS, BROADCASTERS, STORAGE_PROOF_ROLLUPS, get_relayer_type
 from scripts.deploy.deployment_file import get_deployment_obj
-from scripts.deploy.deployment_utils import deploy_contract, update_deployment_chain_config
+from scripts.deploy.deployment_utils import deploy_contract, deploy_solidity_contract, update_deployment_chain_config
 from scripts.deploy.utils import get_relative_path
 from scripts.logging_config import get_logger
 from settings.config import BASE_DIR
 from settings.models import ChainConfig, RollupType
 
 logger = get_logger()
+
+OWNERSHIP_AGENT = 1  # Agent.OWNERSHIP in Relayer
+
+
+def deploy_blockhash_oracle(chain_settings: ChainConfig):
+    """Deploy oracle of Ethereum block hashes/state roots backed by rollup's native L1 feed"""
+    rollup_type = chain_settings.rollup_type
+    supported_chain_ids = BLOCKHASH_ORACLE_CHAIN_IDS.get(rollup_type)
+    if supported_chain_ids is not None and chain_settings.chain_id not in supported_chain_ids:
+        raise NotImplementedError(f"No {rollup_type} Block Hash Oracle for chain {chain_settings.chain_id}")
+
+    blockhash_oracle = deploy_contract(
+        chain_settings, Path(BASE_DIR, "contracts", "governance", "blockhash_oracle", rollup_type)
+    )
+    if rollup_type == RollupType.op_stack and blockhash_oracle.find_known_block_number() == 0:
+        # L1Block predeploy keeps only the latest block, save one to check the feed is alive
+        blockhash_oracle.apply()
+        assert blockhash_oracle.find_known_block_number() > 0, "No L1 block in L1Block predeploy"
+    return blockhash_oracle
+
+
+def deploy_verifier(chain_settings: ChainConfig, blockhash_oracle, relayer):
+    """Deploy storage proofs verifier of governance messages and set it as the only messenger of Relayer"""
+    verifier = deploy_solidity_contract(
+        chain_settings,
+        Path(BASE_DIR, "contracts", "governance", "verifier"),
+        "MessageDigestVerifier",
+        blockhash_oracle.address,
+        relayer.address,
+    )
+    assert verifier.BLOCK_HASH_ORACLE() == blockhash_oracle.address
+    assert verifier.RELAYER() == relayer.address
+
+    if relayer.messenger() != verifier.address:
+        # Deployer is a temporary messenger, hand it over through Ownership Agent
+        relayer.relay(OWNERSHIP_AGENT, [(relayer.address, relayer.set_messenger.prepare_calldata(verifier.address))])
+    assert relayer.messenger() == verifier.address, "Verifier is not set as messenger"
+    return verifier
 
 
 def deploy_xgov(chain_settings: ChainConfig):
@@ -23,6 +61,11 @@ def deploy_xgov(chain_settings: ChainConfig):
     if rollup_type in ["arb_orbit", "op_stack", "polygon_cdk"]:
         version_to_deploy = "v_100"
 
+    # deploy oracle first, so unsupported chains fail before anything is deployed
+    blockhash_oracle = None
+    if rollup_type in STORAGE_PROOF_ROLLUPS:
+        blockhash_oracle = deploy_blockhash_oracle(chain_settings)
+
     agent_blueprint = deploy_contract(
         chain_settings,
         Path(BASE_DIR, "contracts", "governance", "agent"),
@@ -31,40 +74,36 @@ def deploy_xgov(chain_settings: ChainConfig):
     )
 
     match rollup_type:
-        case RollupType.op_stack:
-            r_args = ("0x4200000000000000000000000000000000000007",)  # messenger
         case RollupType.polygon_cdk:
-            r_args = (
+            args = (
+                BROADCASTERS[rollup_type],
+                agent_blueprint.address,
                 "0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe",  # bridge
                 0,  # origin network
             )
         case RollupType.arb_orbit:
-            r_args = ("0x0000000000000000000000000000000000000064",)  # arbsys
-        case RollupType.taiko:
-            r_args = ()
+            args = (
+                BROADCASTERS[rollup_type],
+                agent_blueprint.address,
+                "0x0000000000000000000000000000000000000064",  # arbsys
+            )
+        case RollupType.op_stack | RollupType.taiko:
+            # Deployer is a temporary messenger, replaced with Verifier below
+            args = (agent_blueprint.address, str(boa.env.eoa))
         case RollupType.not_rollup:
             # Currently temporary admin, Verifier with LZ Blockhash provider s00n
-            r_args = (str(boa.env.eoa),)  # messenger
+            args = (agent_blueprint.address, str(boa.env.eoa))  # messenger
         case _:
             raise NotImplementedError(f"{rollup_type} currently not supported")
 
-    if rollup_type == RollupType.not_rollup:
-        args = (
-            agent_blueprint.address,
-            *r_args,
-        )
-    else:
-        args = (
-            BROADCASTERS[rollup_type],
-            agent_blueprint.address,
-            *r_args,
-        )
-
     relayer = deploy_contract(
         chain_settings,
-        Path(BASE_DIR, "contracts", "governance", "relayer", chain_settings.rollup_type),
+        Path(BASE_DIR, "contracts", "governance", "relayer", get_relayer_type(rollup_type)),
         *args,
     )
+    if blockhash_oracle is not None:
+        deploy_verifier(chain_settings, blockhash_oracle, relayer)
+
     update_deployment_chain_config(
         chain_settings,
         {

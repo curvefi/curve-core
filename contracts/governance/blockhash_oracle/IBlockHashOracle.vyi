@@ -1,0 +1,44 @@
+# pragma version ^0.4.0
+"""
+@title BlockHashOracle Interface Definition
+@custom:contract-name IBlockHashOracle
+@custom:version 0.1.0
+@custom:security security@curve.fi
+@license MIT
+@author curve.fi
+@notice Interface for Ethereum block hash and/or state root hash feed on other networks.
+"""
+
+
+@view
+@external
+def get_block_hash(_number: uint256) -> bytes32:
+    """
+    @notice Query the block hash of a block.
+    @dev Reverts for unknown block numbers or if not supported.
+    @param _number Number of the block to look for.
+    """
+    ...
+
+
+@view
+@external
+def get_state_root(_number: uint256) -> bytes32:
+    """
+    @notice Query the state root hash of a block.
+    @dev Reverts for unknown block numbers or if not supported.
+    @param _number Number of the block to look for.
+    """
+    ...
+
+
+@view
+@external
+def find_known_block_number(_before: uint256 = 0) -> uint256:
+    """
+    @notice Find known block number, not optimized for on-chain use.
+        No guarantee to be the last available block.
+    @dev Reverts if not supported or couldn't find.
+    @param _before Max block number to look for (can be used as init search point).
+    """
+    ...
